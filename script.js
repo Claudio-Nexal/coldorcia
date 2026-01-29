@@ -1,4 +1,4 @@
-// v.1.0.0
+// v.1.0.1
 
 <script>
   //animazione menu
@@ -241,9 +241,15 @@
 
 
 <script>
-  // Smooth Scroll con ScrollSmoother - Auto Setup
+  // Smooth Scroll con ScrollSmoother - Auto Setup (solo Desktop)
   (() => {
     function initSmoothScroll() {
+      // Disabilita su mobile e tablet
+      if (window.innerWidth <= 991) {
+        console.log('ScrollSmoother disabilitato su mobile/tablet');
+        return;
+      }
+      
       if (!window.gsap || !window.ScrollTrigger || !window.ScrollSmoother) {
         console.warn('GSAP plugins non trovati');
         return;
@@ -271,18 +277,30 @@
       wrapper.appendChild(content);
       body.appendChild(wrapper);
   
-      // Inizializza ScrollSmoother
+      // Inizializza ScrollSmoother solo su desktop
       const smoother = ScrollSmoother.create({
         wrapper: "#smooth-wrapper",
         content: "#smooth-content",
         smooth: 1.5,
         effects: true,
-        smoothTouch: 0.1,
+        smoothTouch: false,  // Disabilita su touch
         normalizeScroll: false,
         ignoreMobileResize: true
       });
   
-      console.log('ScrollSmoother inizializzato con struttura automatica');
+      console.log('ScrollSmoother inizializzato (solo desktop)');
+      
+      // Gestisci il resize
+      let resizeTimer;
+      window.addEventListener('resize', () => {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(() => {
+          if (window.innerWidth <= 991 && smoother) {
+            smoother.kill();
+            console.log('ScrollSmoother disabilitato dopo resize');
+          }
+        }, 250);
+      });
     }
   
     if (document.readyState === 'loading') {
