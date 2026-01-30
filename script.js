@@ -1,6 +1,5 @@
-// v.1.0.1
+// v.1.0.2
 
-<script>
   //animazione menu
   (() => {
     function initMenu() {
@@ -232,7 +231,6 @@
       initMenu();
     }
   })();
-</script>
 
 
 
@@ -240,7 +238,8 @@
 
 
 
-<script>
+
+
   // Smooth Scroll con ScrollSmoother - Auto Setup (solo Desktop)
   (() => {
     function initSmoothScroll() {
@@ -309,4 +308,4 @@
       initSmoothScroll();
     }
   })();
-</script>
+
