@@ -1,6 +1,8 @@
 // v.1.0.3
+console.log('v.1.0.3');
 
-  //animazione menu
+
+//animazione menu
 (() => {
   function initMenu() {
     if (!window.gsap) return;
