@@ -1,5 +1,4 @@
-// v.1.0.3
-console.log('v.1.0.3');
+console.log('v.1.1.1');
 
 
 //animazione menu
@@ -292,3 +291,56 @@ console.log('v.1.0.3');
     }
   })();
 
+
+
+
+//animazione bordo dei bottoni
+(() => {
+  function initBorderDrawButtons() {
+    if (!window.gsap) return;
+
+    document.querySelectorAll(".button-black").forEach((btn) => {
+      // evita doppia init
+      if (btn.__BORDER_DRAW_INIT__) return;
+      btn.__BORDER_DRAW_INIT__ = true;
+
+      // crea SVG overlay
+      const svgNS = "http://www.w3.org/2000/svg";
+      const svg = document.createElementNS(svgNS, "svg");
+      svg.classList.add("border-draw");
+      svg.setAttribute("viewBox", "0 0 100 40");
+      svg.setAttribute("preserveAspectRatio", "none");
+      svg.setAttribute("aria-hidden", "true");
+
+      const rect = document.createElementNS(svgNS, "rect");
+      rect.setAttribute("x", "1");
+      rect.setAttribute("y", "1");
+      rect.setAttribute("width", "98");
+      rect.setAttribute("height", "38");
+      rect.setAttribute("rx", "999");      // pill
+      rect.setAttribute("ry", "999");
+      rect.setAttribute("pathLength", "1"); // normalizza la lunghezza a 1 (niente calcoli)
+
+      svg.appendChild(rect);
+      btn.prepend(svg);
+
+      // stato iniziale: bordo invisibile
+      gsap.set(rect, { strokeDashoffset: 1 });
+
+      // animazione hover
+      const tl = gsap.timeline({ paused: true, defaults: { duration: 0.6, ease: "power2.out" } });
+      tl.to(rect, { strokeDashoffset: 0 }, 0);
+
+      btn.addEventListener("mouseenter", () => tl.play());
+      btn.addEventListener("mouseleave", () => tl.reverse());
+      btn.addEventListener("focusin", () => tl.play());
+      btn.addEventListener("focusout", () => tl.reverse());
+    });
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initBorderDrawButtons);
+  } else {
+    initBorderDrawButtons();
+  }
+})();
