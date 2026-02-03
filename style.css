@@ -1,4 +1,4 @@
-/* v.1.1.1 */
+/* v.1.1.2 */
 
 
 /* Menu */
@@ -14,27 +14,23 @@ a.nav-link-navbar.w--current{
   display: inline-flex;
   align-items: center;
   gap: 12px;
-  padding: 18px 28px;          /* adegua ai tuoi valori */
   border-radius: 100px;
 }
 
-/* SVG bordo “disegnabile” */
+/* overlay SVG */
 .button-black .border-draw{
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
   pointer-events: none;
-  overflow: visible;
 }
 
 .button-black .border-draw rect{
   fill: none;
-  stroke: currentColor;        /* usa il colore del testo */
+  stroke: currentColor;           /* oppure imposta un colore fisso */
   stroke-width: 2;
   vector-effect: non-scaling-stroke;
-
-  /* “nasconde” il bordo */
-  stroke-dasharray: 1;
-  stroke-dashoffset: 1;
+  stroke-linecap: round;          /* evita artefatti */
+  stroke-linejoin: round;
 }
