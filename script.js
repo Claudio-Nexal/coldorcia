@@ -1,4 +1,4 @@
-console.log('v.1.1.1');
+console.log('v.1.1.2');
 
 
 //animazione menu
@@ -300,7 +300,6 @@ console.log('v.1.1.1');
     if (!window.gsap) return;
 
     document.querySelectorAll(".button-black").forEach((btn) => {
-      // evita doppia init
       if (btn.__BORDER_DRAW_INIT__) return;
       btn.__BORDER_DRAW_INIT__ = true;
 
@@ -308,28 +307,49 @@ console.log('v.1.1.1');
       const svgNS = "http://www.w3.org/2000/svg";
       const svg = document.createElementNS(svgNS, "svg");
       svg.classList.add("border-draw");
-      svg.setAttribute("viewBox", "0 0 100 40");
-      svg.setAttribute("preserveAspectRatio", "none");
       svg.setAttribute("aria-hidden", "true");
 
       const rect = document.createElementNS(svgNS, "rect");
-      rect.setAttribute("x", "1");
-      rect.setAttribute("y", "1");
-      rect.setAttribute("width", "98");
-      rect.setAttribute("height", "38");
-      rect.setAttribute("rx", "999");      // pill
-      rect.setAttribute("ry", "999");
-      rect.setAttribute("pathLength", "1"); // normalizza la lunghezza a 1 (niente calcoli)
-
       svg.appendChild(rect);
       btn.prepend(svg);
 
-      // stato iniziale: bordo invisibile
-      gsap.set(rect, { strokeDashoffset: 1 });
+      let tl = gsap.timeline({ paused: true, defaults: { duration: 0.65, ease: "power2.out" } });
 
-      // animazione hover
-      const tl = gsap.timeline({ paused: true, defaults: { duration: 0.6, ease: "power2.out" } });
-      tl.to(rect, { strokeDashoffset: 0 }, 0);
+      function layout() {
+        const r = btn.getBoundingClientRect();
+
+        // viewBox in px reali (niente stretching “strano”)
+        svg.setAttribute("viewBox", `0 0 ${r.width} ${r.height}`);
+
+        const sw = 2;                 // deve matchare stroke-width
+        const x = sw / 2;
+        const y = sw / 2;
+        const w = Math.max(0, r.width  - sw);
+        const h = Math.max(0, r.height - sw);
+
+        rect.setAttribute("x", x);
+        rect.setAttribute("y", y);
+        rect.setAttribute("width", w);
+        rect.setAttribute("height", h);
+        rect.setAttribute("rx", h / 2); // pill perfetta
+        rect.setAttribute("ry", h / 2);
+
+        // dash “perfetto”
+        const len = rect.getTotalLength();
+        rect.style.strokeDasharray = len;
+        rect.style.strokeDashoffset = len;
+
+        // ricrea timeline (così usa il nuovo offset)
+        tl.kill();
+        tl = gsap.timeline({ paused: true, defaults: { duration: 0.65, ease: "power2.out" } })
+          .to(rect, { strokeDashoffset: 0 }, 0);
+      }
+
+      layout();
+
+      // aggiorna su resize (webflow + responsive)
+      const onResize = () => layout();
+      window.addEventListener("resize", onResize);
 
       btn.addEventListener("mouseenter", () => tl.play());
       btn.addEventListener("mouseleave", () => tl.reverse());
