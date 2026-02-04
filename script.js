@@ -1,4 +1,4 @@
-console.log('v.1.1.3');
+console.log('v.1.2.1');
 
 
 //animazione menu
@@ -222,74 +222,65 @@ console.log('v.1.1.3');
 
 
 
-  // Smooth Scroll con ScrollSmoother - Auto Setup (solo Desktop)
-  (() => {
-    function initSmoothScroll() {
-      // Disabilita su mobile e tablet
-      if (window.innerWidth <= 991) {
-        console.log('ScrollSmoother disabilitato su mobile/tablet');
-        return;
-      }
-      
-      if (!window.gsap || !window.ScrollTrigger || !window.ScrollSmoother) {
-        console.warn('GSAP plugins non trovati');
-        return;
-      }
-  
-      gsap.registerPlugin(ScrollTrigger, ScrollSmoother);
-  
-      // Crea la struttura necessaria automaticamente
-      const body = document.body;
-      
-      // Crea wrapper
-      const wrapper = document.createElement('div');
-      wrapper.id = 'smooth-wrapper';
-      
-      // Crea content
-      const content = document.createElement('div');
-      content.id = 'smooth-content';
-      
-      // Sposta tutti i figli del body dentro content
-      while (body.firstChild) {
-        content.appendChild(body.firstChild);
-      }
-      
-      // Assembla la struttura
-      wrapper.appendChild(content);
-      body.appendChild(wrapper);
-  
-      // Inizializza ScrollSmoother solo su desktop
-      const smoother = ScrollSmoother.create({
-        wrapper: "#smooth-wrapper",
-        content: "#smooth-content",
-        smooth: 1.5,
-        effects: true,
-        smoothTouch: false,  // Disabilita su touch
-        normalizeScroll: false,
-        ignoreMobileResize: true
-      });
-  
-      console.log('ScrollSmoother inizializzato (solo desktop)');
-      
-      // Gestisci il resize
-      let resizeTimer;
-      window.addEventListener('resize', () => {
-        clearTimeout(resizeTimer);
-        resizeTimer = setTimeout(() => {
-          if (window.innerWidth <= 991 && smoother) {
-            smoother.kill();
-            console.log('ScrollSmoother disabilitato dopo resize');
-          }
-        }, 250);
-      });
+// Smooth Scroll con ScrollSmoother - Setup su .content-container (solo Desktop)
+(() => {
+  function initSmoothScroll() {
+    if (window.innerWidth <= 991) return;
+
+    if (!window.gsap || !window.ScrollTrigger || !window.ScrollSmoother) return;
+
+    gsap.registerPlugin(ScrollTrigger, ScrollSmoother);
+
+    const body = document.body;
+
+    // Se già inizializzato, esci
+    if (document.querySelector("#smooth-wrapper")) return;
+
+    // Trova il contenitore che racchiude tutto TRANNE il menu
+    const contentContainer = document.querySelector(".content-container");
+    if (!contentContainer) {
+      console.warn("Non trovo .content-container: non inizializzo ScrollSmoother");
+      return;
     }
-  
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', initSmoothScroll);
-    } else {
-      initSmoothScroll();
-    }
-  })();
+
+    // Crea wrapper/content
+    const wrapper = document.createElement("div");
+    wrapper.id = "smooth-wrapper";
+
+    const content = document.createElement("div");
+    content.id = "smooth-content";
+
+    // Inserisci wrapper PRIMA del contentContainer e poi sposta contentContainer dentro smooth-content
+    body.insertBefore(wrapper, contentContainer);
+    wrapper.appendChild(content);
+    content.appendChild(contentContainer);
+
+    const smoother = ScrollSmoother.create({
+      wrapper: "#smooth-wrapper",
+      content: "#smooth-content",
+      smooth: 1.5,
+      effects: true,
+      smoothTouch: false,
+      normalizeScroll: false,
+      ignoreMobileResize: true
+    });
+
+    // Resize: se scendi sotto 992, kill (opzionale: rimettere a posto DOM richiede più codice)
+    let resizeTimer;
+    window.addEventListener("resize", () => {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(() => {
+        if (window.innerWidth <= 991 && smoother) smoother.kill();
+      }, 250);
+    });
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initSmoothScroll);
+  } else {
+    initSmoothScroll();
+  }
+})();
 
 
 
