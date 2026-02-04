@@ -1,7 +1,7 @@
-console.log('v.1.2.1');
+console.log('v.1.3.1');
 
 
-//animazione menu
+// Animazione menu + gestione scroll (ScrollSmoother compatibile)
 (() => {
   function initMenu() {
     if (!window.gsap) return;
@@ -28,7 +28,6 @@ console.log('v.1.2.1');
     let savedScroll = 0;
     let smoother = null;
 
-    // Rileva ScrollSmoother (potrebbe essere inizializzato dopo)
     function getSmoother() {
       if (!smoother && window.ScrollSmoother) {
         smoother = ScrollSmoother.get();
@@ -40,11 +39,15 @@ console.log('v.1.2.1');
       const smootherInstance = getSmoother();
 
       if (smootherInstance) {
+        // salva posizione corrente
         savedScroll = smootherInstance.scrollTop();
+
+        // metti in pausa ma resta esattamente allo stesso scroll
         smootherInstance.paused(true);
-        console.log("ScrollSmoother in pausa");
+        smootherInstance.scrollTop(savedScroll, false); // false = no animazione
       } else {
         savedScroll = window.scrollY || window.pageYOffset || 0;
+
         document.documentElement.style.overflow = "hidden";
         document.body.style.overflow = "hidden";
         document.body.style.height = "100%";
@@ -59,12 +62,7 @@ console.log('v.1.2.1');
 
       if (smootherInstance) {
         smootherInstance.paused(false);
-
-        requestAnimationFrame(() => {
-          smootherInstance.scrollTop(savedScroll);
-        });
-
-        console.log("ScrollSmoother riattivato");
+        smootherInstance.scrollTop(savedScroll, false);
       } else {
         document.documentElement.style.overflow = "";
         document.documentElement.style.overflowY = "";
@@ -78,6 +76,7 @@ console.log('v.1.2.1');
         document.body.style.top = "";
         document.body.style.width = "";
 
+        // forza repaint
         void document.body.offsetHeight;
 
         requestAnimationFrame(() => {
@@ -86,7 +85,7 @@ console.log('v.1.2.1');
       }
     }
 
-    // Safety: evita lock "appeso" su reload/nav
+    // Safety: evita lock appeso su reload/nav
     window.addEventListener("pagehide", () => {
       try { unlockScroll(); } catch (_) {}
     });
@@ -107,18 +106,35 @@ console.log('v.1.2.1');
       willChange: "transform"
     });
 
-    // NIENTE animazione testi/menu-link: li lasciamo “normali”
-    // (se avevi set precedenti, questo ripulisce eventuali inline props)
-    gsap.set([".menu-link .w-dropdown", ".menu-link a"], { clearProps: "transform,opacity" });
+    // pulizia eventuali set precedenti sui link
+    gsap.set([".menu-link .w-dropdown", ".menu-link a"], {
+      clearProps: "transform,opacity"
+    });
 
     function showOpenIcon() {
-      if (openBtn)  gsap.set(openBtn,  { opacity: 1, x: 0, y: 0, rotation: 0, pointerEvents: "auto" });
-      if (closeBtn) gsap.set(closeBtn, { opacity: 0, x: -5, y: 10, rotation: 5, pointerEvents: "none" });
+      if (openBtn) {
+        gsap.set(openBtn, {
+          opacity: 1, x: 0, y: 0, rotation: 0, pointerEvents: "auto"
+        });
+      }
+      if (closeBtn) {
+        gsap.set(closeBtn, {
+          opacity: 0, x: -5, y: 10, rotation: 5, pointerEvents: "none"
+        });
+      }
     }
 
     function showCloseIcon() {
-      if (openBtn)  gsap.set(openBtn,  { opacity: 0, x: -5, y: -10, rotation: -5, pointerEvents: "none" });
-      if (closeBtn) gsap.set(closeBtn, { opacity: 1, x: 0, y: 0, rotation: 0, pointerEvents: "auto" });
+      if (openBtn) {
+        gsap.set(openBtn, {
+          opacity: 0, x: -5, y: -10, rotation: -5, pointerEvents: "none"
+        });
+      }
+      if (closeBtn) {
+        gsap.set(closeBtn, {
+          opacity: 1, x: 0, y: 0, rotation: 0, pointerEvents: "auto"
+        });
+      }
     }
 
     showOpenIcon();
@@ -183,7 +199,7 @@ console.log('v.1.2.1');
 
           if (brandImg) brandImg.src = defaultBrandSrc;
 
-          // Sblocca scroll DOPO l'animazione
+          // sblocca scroll dopo l’animazione
           unlockScroll();
         }
       });
