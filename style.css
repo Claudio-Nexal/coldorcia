@@ -1,4 +1,4 @@
-/* v.1.1.3 */
+/* v.1.2.1 */
 
 
 /* Menu */
@@ -39,4 +39,8 @@ a.nav-link-navbar.w--current{
 /* variante: button-beige con bordo #31dbd2 */
 .button-beige.border-animation{
   color: #e1dbd2;            /* così currentColor = #31dbd2 SOLO per il bordo */
+}
+
+.button-black.border-animation{
+  color: #000;
 }
