@@ -1,4 +1,4 @@
-console.log('v.1.1.2');
+console.log('v.1.1.3');
 
 
 //animazione menu
@@ -293,6 +293,113 @@ console.log('v.1.1.2');
 
 
 
+
+
+
+
+
+
+
+
+//animazione bordo bottoni
+(() => {
+  function initBorderDrawButtons() {
+    if (!window.gsap) return;
+
+    // Custom ease (una sola volta)
+    if (window.CustomEase && !window.__GL_EASE_CREATED__) {
+      try {
+        gsap.registerPlugin(CustomEase);
+        CustomEase.create(
+          "gl.fastInOut",
+          "M0,0 C0.094,0.026 0.124,0.127 0.157,0.29 0.197,0.486 0.254,0.8 0.348,0.884 0.42,0.949 0.374,1 1,1"
+        );
+        window.__GL_EASE_CREATED__ = true;
+      } catch (_) {}
+    }
+
+    document.querySelectorAll(".border-animation").forEach((btn) => {
+      if (btn.__BORDER_DRAW_INIT__) return;
+      btn.__BORDER_DRAW_INIT__ = true;
+
+      const svgNS = "http://www.w3.org/2000/svg";
+      const svg = document.createElementNS(svgNS, "svg");
+      svg.classList.add("border-draw");
+      svg.setAttribute("aria-hidden", "true");
+
+      const path = document.createElementNS(svgNS, "path");
+      svg.appendChild(path);
+      btn.prepend(svg);
+
+      let tl = null;
+
+      function buildRoundedRectPath(x, y, w, h, r) {
+        const sx = x;
+        const sy = y + h / 2; // start: centro lato sinistro
+        return [
+          `M ${sx} ${sy}`,
+          `L ${x} ${y + r}`,
+          `A ${r} ${r} 0 0 1 ${x + r} ${y}`,
+          `L ${x + w - r} ${y}`,
+          `A ${r} ${r} 0 0 1 ${x + w} ${y + r}`,
+          `L ${x + w} ${y + h - r}`,
+          `A ${r} ${r} 0 0 1 ${x + w - r} ${y + h}`,
+          `L ${x + r} ${y + h}`,
+          `A ${r} ${r} 0 0 1 ${x} ${y + h - r}`,
+          `L ${x} ${sy}`,
+          "Z"
+        ].join(" ");
+      }
+
+      function layout() {
+        const r = btn.getBoundingClientRect();
+
+        const extra = 2; // aumenta qui se vuoi più “respiro” del bordo
+        const vbW = r.width + extra * 2;
+        const vbH = r.height + extra * 2;
+
+        svg.setAttribute("viewBox", `0 0 ${vbW} ${vbH}`);
+
+        const sw = 1;
+        const x = extra + sw / 2;
+        const y = extra + sw / 2;
+        const w = Math.max(0, r.width  - sw);
+        const h = Math.max(0, r.height - sw);
+        const rad = h / 2;
+
+        path.setAttribute("d", buildRoundedRectPath(x, y, w, h, rad));
+
+        const len = path.getTotalLength();
+        path.style.strokeDasharray = `${len}`;
+        path.style.strokeDashoffset = `${len}`;
+
+        gsap.set(path, { opacity: 0 });
+
+        if (tl) tl.kill();
+        tl = gsap.timeline({
+          paused: true,
+          defaults: { ease: "gl.fastInOut" }
+        })
+        .to(path, { opacity: 1, duration: 0.08, ease: "none" }, 0)
+        .to(path, { strokeDashoffset: 0, duration: 0.9 }, 0); // durata bordo qui
+      }
+
+      layout();
+      window.addEventListener("resize", layout);
+
+      btn.addEventListener("mouseenter", () => tl && tl.play());
+      btn.addEventListener("mouseleave", () => tl && tl.reverse());
+      btn.addEventListener("focusin", () => tl && tl.play());
+      btn.addEventListener("focusout", () => tl && tl.reverse());
+    });
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initBorderDrawButtons);
+  } else {
+    initBorderDrawButtons();
+  }
+})();
 
 //animazione bordo dei bottoni
 
