@@ -1,10 +1,20 @@
-console.log('v.1.3.1');
+console.log('v.1.3.2');
 
 
 // Animazione menu + gestione scroll (ScrollSmoother compatibile)
 (() => {
   function initMenu() {
     if (!window.gsap) return;
+
+    // Easing custom per il menu (fallback se CustomEase non è caricato)
+    let menuEase = "power4.inOut";
+    if (window.CustomEase && typeof CustomEase.create === "function") {
+      CustomEase.create(
+        "gl.fastInOut",
+        "M0,0 C0.094,0.026 0.124,0.127 0.157,0.29 0.197,0.486 0.254,0.8 0.348,0.884 0.42,0.949 0.374,1 1,1"
+      );
+      menuEase = "gl.fastInOut";
+    }
 
     const menuOverlay = document.querySelector(".menu-overlay");
     const menuContent = document.querySelector(".menu-content");
@@ -39,21 +49,17 @@ console.log('v.1.3.1');
       const smootherInstance = getSmoother();
 
       if (smootherInstance) {
-        // salva posizione corrente
         savedScroll = smootherInstance.scrollTop();
-
-        // metti in pausa ma resta esattamente allo stesso scroll
         smootherInstance.paused(true);
-        smootherInstance.scrollTop(savedScroll, false); // false = no animazione
+        smootherInstance.scrollTop(savedScroll, false);
       } else {
         savedScroll = window.scrollY || window.pageYOffset || 0;
-
-        document.documentElement.style.overflow = "hidden";
-        document.body.style.overflow = "hidden";
-        document.body.style.height = "100%";
-
-        const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
-        document.body.style.paddingRight = `${scrollbarWidth}px`;
+        // blocco scroll senza far sparire la scrollbar (niente shift layout)
+        document.body.style.position = "fixed";
+        document.body.style.top = `-${savedScroll}px`;
+        document.body.style.left = "0";
+        document.body.style.right = "0";
+        document.body.style.width = "100%";
       }
     }
 
@@ -93,17 +99,16 @@ console.log('v.1.3.1');
     // ----- Stati iniziali -----
     gsap.set(menuOverlay, {
       pointerEvents: "none",
+      autoAlpha: 0,
+      // nascosto in alto: clipPath chiuso
       clipPath: "polygon(0% 0%, 100% 0%, 100% 0%, 0% 0%)"
     });
 
     gsap.set(menuContent, {
-      rotation: -15,
-      x: -100,
-      y: -100,
-      scale: 1.5,
-      opacity: 0.25,
-      transformOrigin: "50% 50%",
-      willChange: "transform"
+      y: -30,
+      opacity: 0,
+      transformOrigin: "50% 0%",
+      willChange: "transform,opacity"
     });
 
     // pulizia eventuali set precedenti sui link
@@ -157,29 +162,29 @@ console.log('v.1.3.1');
       if (brandImg) brandImg.src = openBrandSrc;
       showCloseIcon();
 
-      gsap.set(menuOverlay, { pointerEvents: "auto" });
+      // overlay visibile solo quando il menu si apre
+      gsap.set(menuOverlay, { pointerEvents: "auto", autoAlpha: 1 });
 
       tl?.kill();
       tl = gsap.timeline({
-        defaults: { duration: 1.25, ease: "power4.inOut" },
+        defaults: { duration: 1.1, ease: menuEase },
         onComplete: () => {
           isOpen = true;
           isAnimating = false;
         }
       });
 
-      tl.to(menuContent, {
-        rotation: 0,
-        x: 0,
-        y: 0,
-        scale: 1,
-        opacity: 1,
-        overwrite: "auto"
-      }, 0);
-
+      // overlay: apertura dall'alto verso il basso via clipPath
       tl.to(menuOverlay, {
         clipPath: "polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)"
       }, 0);
+
+      // contenuto: entra leggermente dal basso, senza rotazioni
+      tl.to(menuContent, {
+        y: 0,
+        opacity: 1,
+        overwrite: "auto"
+      }, 0.02);
     }
 
     function closeMenu() {
@@ -190,26 +195,35 @@ console.log('v.1.3.1');
 
       tl?.kill();
       tl = gsap.timeline({
-        defaults: { duration: 1.25, ease: "power4.inOut" },
+        defaults: { duration: 1.1, ease: menuEase },
         onComplete: () => {
           isOpen = false;
           isAnimating = false;
 
-          gsap.set(menuOverlay, { pointerEvents: "none" });
+          // di nuovo nascosto: clipPath chiuso
+          gsap.set(menuOverlay, {
+            pointerEvents: "none",
+            autoAlpha: 0,
+            clipPath: "polygon(0% 0%, 100% 0%, 100% 0%, 0% 0%)"
+          });
+
+          gsap.set(menuContent, {
+            y: -30,
+            opacity: 0
+          });
 
           if (brandImg) brandImg.src = defaultBrandSrc;
-
-          // sblocca scroll dopo l’animazione
-          unlockScroll();
         }
       });
 
+      // sblocca lo scroll subito all'inizio dell'animazione di chiusura
+      tl.add(() => {
+        unlockScroll();
+      }, 0);
+
       tl.to(menuContent, {
-        rotation: -15,
-        x: -100,
-        y: -100,
-        scale: 1.5,
-        opacity: 0.25,
+        y: -30,
+        opacity: 0,
         overwrite: "auto"
       }, 0);
 
