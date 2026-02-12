@@ -1,4 +1,4 @@
-/* v.1.2.1 */
+/* v.1.3.1 (Sottolineatura) */
 
 
 /* Menu */
@@ -43,4 +43,35 @@ a.nav-link-navbar.w--current{
 
 .button-black.border-animation{
   color: #000;
+}
+
+
+
+
+
+
+
+
+
+/* Sottolineatura testi */
+.underline-hover {
+  position: relative;
+  display: inline-block;
+}
+
+/* linea nascosta inizialmente */
+.underline-hover::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -2px;           /* distanza sotto il testo */
+  width: 0;
+  height: 1px;            /* spessore linea */
+  background-color: currentColor; /* usa il colore del testo */
+  transition: width 0.3s ease;
+}
+
+/* in hover la linea si estende da sinistra a destra */
+.underline-hover:hover::after {
+  width: 100%;
 }
