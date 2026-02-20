@@ -1,4 +1,4 @@
-console.log('v.1.4.1 aggiunti script pagine vini');
+console.log('v.1.4.2 aggiunti script pagine vini');
 
 
 // Animazione menu + gestione scroll (ScrollSmoother compatibile)
@@ -436,155 +436,167 @@ console.log('v.1.4.1 aggiunti script pagine vini');
 
 
 
-//script pagine vino
 
-  document.addEventListener('DOMContentLoaded', function () {
-    // ==== 1. Anni attivi: da .lista-annate oppure dalla collection ====
-    var anniAttivi = [];
-    var listaAnnateEl = document.querySelector('.lista-annate');
+//////////////////////////
+// script pagine vino (limitato a page-type="vino")
+//////////////////////////
 
-    if (listaAnnateEl) {
-      anniAttivi = listaAnnateEl.textContent
-        .split(/\s+/)
-        .map(function (a) { return a.trim(); })
-        .filter(Boolean);
-    } else {
-      anniAttivi = Array.prototype.slice.call(
-        document.querySelectorAll('.collection-list-wrapper-3 .annata')
-      )
-        .map(function (el) { return el.textContent.trim(); })
-        .filter(Boolean);
-    }
+function isWinePage() {
+  return (
+    document.body &&
+    document.body.getAttribute('page-type') === 'vino'
+  );
+}
 
-    if (!anniAttivi.length) return;
+/* =======================
+   1) ANNI / CONTENUTI VINO
+======================= */
+document.addEventListener('DOMContentLoaded', function () {
+  if (!isWinePage()) return;
 
-    // ==== 2. Ordino gli anni in modo crescente (più vecchio -> più recente) ====
-    var anniOrdinati = anniAttivi.slice().sort(function (a, b) {
-      var na = parseInt(a, 10);
-      var nb = parseInt(b, 10);
-      if (!isNaN(na) && !isNaN(nb)) return na - nb;
-      return a.localeCompare(b);
-    });
+  // ==== 1. Anni attivi: da .lista-annate oppure dalla collection ====
+  var anniAttivi = [];
+  var listaAnnateEl = document.querySelector('.lista-annate');
 
-    // ==== 3. Mappo tutti i dati per annata dalla collection-list-wrapper-3 ====
-    var annateItems = document.querySelectorAll('.collection-list-wrapper-3 .w-dyn-item');
-    var datiAnnate = {};
+  if (listaAnnateEl) {
+    anniAttivi = listaAnnateEl.textContent
+      .split(/\s+/)
+      .map(function (a) { return a.trim(); })
+      .filter(Boolean);
+  } else {
+    anniAttivi = Array.prototype.slice.call(
+      document.querySelectorAll('.collection-list-wrapper-3 .annata')
+    )
+      .map(function (el) { return el.textContent.trim(); })
+      .filter(Boolean);
+  }
 
-    annateItems.forEach(function (item) {
-      var yearEl = item.querySelector('.annata');
-      if (!yearEl) return;
+  if (!anniAttivi.length) return;
 
-      var year = yearEl.textContent.trim();
-      if (!year) return;
-
-      datiAnnate[year] = {
-        andamento: (item.querySelector('.andamento-climatico, .andatamento-climatico') || {}).innerHTML || '',
-        zona: (item.querySelector('.zona-di-produzione') || {}).innerHTML || '',
-        uva: (item.querySelector('.uva-con-cui-e-prodotto') || {}).innerHTML || '',
-        vinificazione: (item.querySelector('.vinificazione') || {}).innerHTML || '',
-        invecchiamento: (item.querySelector('.invecchiamento') || {}).innerHTML || '',
-        datiOrganolettici: (item.querySelector('.dati-organolettici') || {}).innerHTML || ''
-      };
-    });
-
-    // ==== 4. Annata di base = la più vecchia ====
-    var defaultYear = anniOrdinati[0];
-
-    // ==== 5. Bottoni annate (Text Link) in ordine dalla più vecchia ====
-    var bottoni = Array.prototype.slice.call(
-      document.querySelectorAll('.div-block-421 .bottone-annate-vino')
-    );
-
-    bottoni.forEach(function (btn, index) {
-      var year = anniOrdinati[index];
-      if (year) {
-        btn.textContent = year;
-        btn.setAttribute('data-annata', year);
-        btn.classList.add('annata-attiva');
-      } else {
-        btn.style.display = 'none';
-      }
-    });
-
-    // ==== 6. Target dei testi da aggiornare ====
-    // Andamento climatico visibile (non dentro la collection)
-    var andamentoBlock = null;
-    var allAndamento = document.querySelectorAll('.andamento-climatico');
-    allAndamento.forEach(function (el) {
-      if (!andamentoBlock && !el.closest('.collection-list-wrapper-3')) {
-        andamentoBlock = el;
-      }
-    });
-
-    // Accordion
-    var zonaBlock = document.querySelector('.rich-text-block.zona-di-produzione');
-    var uvaBlock = document.querySelector('.rich-text-block.uva-con-cui-e-prodotto');
-    var vinificazioneBlock = document.querySelector('.rich-text-block.vinificazione');
-    var invecchiamentoBlock = document.querySelector('.rich-text-block.invecchiamento');
-    var datiOrgBlock = document.querySelector('.rich-text-block.dati-organolettici');
-
-    function aggiornaContenutiPerAnnata(year) {
-      var dati = datiAnnate[year];
-      if (!dati) return;
-
-      if (andamentoBlock) andamentoBlock.innerHTML = dati.andamento || '';
-      if (zonaBlock) zonaBlock.innerHTML = dati.zona || '';
-      if (uvaBlock) uvaBlock.innerHTML = dati.uva || '';
-      if (vinificazioneBlock) vinificazioneBlock.innerHTML = dati.vinificazione || '';
-      if (invecchiamentoBlock) invecchiamentoBlock.innerHTML = dati.invecchiamento || '';
-      if (datiOrgBlock) datiOrgBlock.innerHTML = dati.datiOrganolettici || '';
-    }
-
-    // ==== 7. Gestione stato attivo bottoni + click ====
-    function setActiveButton(clickedBtn) {
-      bottoni.forEach(function (b) {
-        b.classList.remove('is-active');
-      });
-      if (clickedBtn) clickedBtn.classList.add('is-active');
-    }
-
-    // Inizializzo con l'annata più vecchia
-    if (defaultYear) {
-      var defaultBtn = bottoni.find(function (b) {
-        return b.getAttribute('data-annata') === defaultYear;
-      });
-
-      if (defaultBtn) {
-        setActiveButton(defaultBtn);
-        aggiornaContenutiPerAnnata(defaultYear);
-      }
-    }
-
-    // Click sui bottoni
-    bottoni.forEach(function (btn) {
-      var year = btn.getAttribute('data-annata');
-      if (!year) return;
-
-      btn.addEventListener('click', function (e) {
-        e.preventDefault();
-        var selectedYear = btn.getAttribute('data-annata');
-        if (!selectedYear) return;
-        if (btn.classList.contains('is-active')) return;
-
-        setActiveButton(btn);
-        aggiornaContenutiPerAnnata(selectedYear);
-      });
-    });
+  // ==== 2. Ordino gli anni in modo crescente (più vecchio -> più recente) ====
+  var anniOrdinati = anniAttivi.slice().sort(function (a, b) {
+    var na = parseInt(a, 10);
+    var nb = parseInt(b, 10);
+    if (!isNaN(na) && !isNaN(nb)) return na - nb;
+    return a.localeCompare(b);
   });
 
+  // ==== 3. Mappo tutti i dati per annata dalla collection-list-wrapper-3 ====
+  var annateItems = document.querySelectorAll('.collection-list-wrapper-3 .w-dyn-item');
+  var datiAnnate = {};
+
+  annateItems.forEach(function (item) {
+    var yearEl = item.querySelector('.annata');
+    if (!yearEl) return;
+
+    var year = yearEl.textContent.trim();
+    if (!year) return;
+
+    datiAnnate[year] = {
+      andamento: (item.querySelector('.andamento-climatico, .andatamento-climatico') || {}).innerHTML || '',
+      zona: (item.querySelector('.zona-di-produzione') || {}).innerHTML || '',
+      uva: (item.querySelector('.uva-con-cui-e-prodotto') || {}).innerHTML || '',
+      vinificazione: (item.querySelector('.vinificazione') || {}).innerHTML || '',
+      invecchiamento: (item.querySelector('.invecchiamento') || {}).innerHTML || '',
+      datiOrganolettici: (item.querySelector('.dati-organolettici') || {}).innerHTML || ''
+    };
+  });
+
+  // ==== 4. Annata di base = la più vecchia ====
+  var defaultYear = anniOrdinati[0];
+
+  // ==== 5. Bottoni annate (Text Link) in ordine dalla più vecchia ====
+  var bottoni = Array.prototype.slice.call(
+    document.querySelectorAll('.div-block-421 .bottone-annate-vino')
+  );
+
+  bottoni.forEach(function (btn, index) {
+    var year = anniOrdinati[index];
+    if (year) {
+      btn.textContent = year;
+      btn.setAttribute('data-annata', year);
+      btn.classList.add('annata-attiva');
+    } else {
+      btn.style.display = 'none';
+    }
+  });
+
+  // ==== 6. Target dei testi da aggiornare ====
+  // Andamento climatico visibile (non dentro la collection)
+  var andamentoBlock = null;
+  var allAndamento = document.querySelectorAll('.andamento-climatico');
+  allAndamento.forEach(function (el) {
+    if (!andamentoBlock && !el.closest('.collection-list-wrapper-3')) {
+      andamentoBlock = el;
+    }
+  });
+
+  // Accordion (rich text)
+  var zonaBlock = document.querySelector('.rich-text-block.zona-di-produzione');
+  var uvaBlock = document.querySelector('.rich-text-block.uva-con-cui-e-prodotto');
+  var vinificazioneBlock = document.querySelector('.rich-text-block.vinificazione');
+  var invecchiamentoBlock = document.querySelector('.rich-text-block.invecchiamento');
+  var datiOrgBlock = document.querySelector('.rich-text-block.dati-organolettici');
+
+  function aggiornaContenutiPerAnnata(year) {
+    var dati = datiAnnate[year];
+    if (!dati) return;
+
+    if (andamentoBlock) andamentoBlock.innerHTML = dati.andamento || '';
+    if (zonaBlock) zonaBlock.innerHTML = dati.zona || '';
+    if (uvaBlock) uvaBlock.innerHTML = dati.uva || '';
+    if (vinificazioneBlock) vinificazioneBlock.innerHTML = dati.vinificazione || '';
+    if (invecchiamentoBlock) invecchiamentoBlock.innerHTML = dati.invecchiamento || '';
+    if (datiOrgBlock) datiOrgBlock.innerHTML = dati.datiOrganolettici || '';
+  }
+
+  // ==== 7. Gestione stato attivo bottoni + click ====
+  function setActiveButton(clickedBtn) {
+    bottoni.forEach(function (b) {
+      b.classList.remove('is-active');
+    });
+    if (clickedBtn) clickedBtn.classList.add('is-active');
+  }
+
+  // Inizializzo con l'annata più vecchia
+  if (defaultYear) {
+    var defaultBtn = bottoni.find(function (b) {
+      return b.getAttribute('data-annata') === defaultYear;
+    });
+
+    if (defaultBtn) {
+      setActiveButton(defaultBtn);
+      aggiornaContenutiPerAnnata(defaultYear);
+    }
+  }
+
+  // Click sui bottoni
+  bottoni.forEach(function (btn) {
+    var year = btn.getAttribute('data-annata');
+    if (!year) return;
+
+    btn.addEventListener('click', function (e) {
+      e.preventDefault();
+      var selectedYear = btn.getAttribute('data-annata');
+      if (!selectedYear) return;
+      if (btn.classList.contains('is-active')) return;
+
+      setActiveButton(btn);
+      aggiornaContenutiPerAnnata(selectedYear);
+    });
+  });
+});
 
 
-
-
-
-
-
-
-
-
-
+/* =======================
+   2) ACCORDION (GSAP)
+======================= */
 document.addEventListener('DOMContentLoaded', function () {
+  if (!isWinePage()) return;
+  if (typeof window.gsap === 'undefined') return;
+
   const items = document.querySelectorAll('.accordion-wrap .faq-item');
+  if (!items.length) return;
 
   function openItem(item) {
     const answer = item.querySelector('.faq-answer');
@@ -595,7 +607,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
     item.classList.add('is-open');
 
-    // apertura pannello
     gsap.killTweensOf(answer);
     answer.style.display = 'block';
     gsap.fromTo(
@@ -605,13 +616,10 @@ document.addEventListener('DOMContentLoaded', function () {
         height: answer.scrollHeight,
         duration: 0.4,
         ease: 'power2.out',
-        onComplete: () => {
-          answer.style.height = 'auto';
-        }
+        onComplete: () => { answer.style.height = 'auto'; }
       }
     );
 
-    // plus: ruota e poi viene nascosto
     if (plus) {
       gsap.killTweensOf(plus);
       gsap.fromTo(
@@ -621,14 +629,11 @@ document.addEventListener('DOMContentLoaded', function () {
           rotation: 90,
           duration: 0.4,
           ease: 'power2.out',
-          onComplete: () => {
-            plus.style.display = 'none';
-          }
+          onComplete: () => { plus.style.display = 'none'; }
         }
       );
     }
 
-    // minus sempre visibile
     if (minus) {
       minus.style.display = 'block';
     }
@@ -640,7 +645,6 @@ document.addEventListener('DOMContentLoaded', function () {
     const minus = item.querySelector('.minus');
 
     if (!item.classList.contains('is-open')) {
-      // già chiuso
       if (plus) {
         plus.style.display = 'block';
         gsap.set(plus, { rotation: 0 });
@@ -653,7 +657,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
     item.classList.remove('is-open');
 
-    // chiusura pannello
     gsap.killTweensOf(answer);
     const currentHeight = answer.offsetHeight || answer.scrollHeight;
 
@@ -664,28 +667,20 @@ document.addEventListener('DOMContentLoaded', function () {
         height: 0,
         duration: 0.4,
         ease: 'power2.in',
-        onComplete: () => {
-          answer.style.display = 'none';
-        }
+        onComplete: () => { answer.style.display = 'none'; }
       }
     );
 
-    // plus: torna visibile e ruota indietro
     if (plus) {
       plus.style.display = 'block';
       gsap.killTweensOf(plus);
       gsap.fromTo(
         plus,
         { rotation: 90 },
-        {
-          rotation: 0,
-          duration: 0.4,
-          ease: 'power2.out'
-        }
+        { rotation: 0, duration: 0.4, ease: 'power2.out' }
       );
     }
 
-    // minus sempre visibile
     if (minus) {
       minus.style.display = 'block';
     }
@@ -699,7 +694,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
     if (!question || !answer) return;
 
-    // stato iniziale: tutti chiusi
     item.classList.remove('is-open');
     answer.style.display = 'none';
     answer.style.height = 0;
@@ -724,7 +718,15 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 
 
-$(document).ready(function() {
+/* =======================
+   3) SLICK CAROUSEL (jQuery)
+======================= */
+$(document).ready(function () {
+  if (!isWinePage()) return;
+  if (typeof window.jQuery === 'undefined') return;
+  if (!jQuery.fn || !jQuery.fn.slick) return;
+  if (!document.querySelector('.three-carousel')) return;
+
   $('.three-carousel').slick({
     dots: false,
     arrows: true,
@@ -738,22 +740,9 @@ $(document).ready(function() {
     prevArrow: '<button type="button" class="slick-prev"><img src="https://cdn.prod.website-files.com/6942d44283c82467823141dd/698d8c095fe43eff79680d68_Arrow_white_left.svg" alt="Previous"></button>',
     nextArrow: '<button type="button" class="slick-next"><img src="https://cdn.prod.website-files.com/6942d44283c82467823141dd/698d8b592f666ba797dcc19a_Arrow_white_right.svg" alt="Next"></button>',
     responsive: [
-      {
-        breakpoint: 992,
-        settings: {
-          slidesToShow: 2,
-          slidesToScroll: 1
-        }
-      },
-      {
-        breakpoint: 768,
-        settings: {
-          slidesToShow: 1,
-          slidesToScroll: 1
-        }
-      }
+      { breakpoint: 992, settings: { slidesToShow: 2, slidesToScroll: 1 } },
+      { breakpoint: 768, settings: { slidesToShow: 1, slidesToScroll: 1 } }
     ]
   });
 });
-
 
