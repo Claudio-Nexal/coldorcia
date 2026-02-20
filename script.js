@@ -1,4 +1,4 @@
-console.log('v.1.4.3 aggiunti script pagine vini');
+console.log('v.1.4.3.1 aggiunti script pagine vini');
 
 
 // Animazione menu + gestione scroll (ScrollSmoother compatibile)
@@ -460,13 +460,18 @@ document.addEventListener('DOMContentLoaded', function () {
   // helper: imposta href su <a> e disabilita se vuoto
   function setLink(aEl, url) {
     if (!aEl) return;
-    if (!url) {
-      aEl.removeAttribute('href');
+  
+    var clean = (url || '').trim();
+  
+    if (!clean) {
+      aEl.setAttribute('data-disabled', 'true');
       aEl.style.pointerEvents = 'none';
       aEl.style.opacity = '0.5';
       return;
     }
-    aEl.setAttribute('href', url);
+  
+    aEl.removeAttribute('data-disabled');
+    aEl.setAttribute('href', clean);
     aEl.style.pointerEvents = '';
     aEl.style.opacity = '';
   }
