@@ -1,4 +1,4 @@
-/* v.1.3.1 (Sottolineatura) */
+/* v.1.4.1 stili pagine vini */
 
 
 /* Menu */
@@ -78,3 +78,183 @@ a.nav-link-navbar.w--current{
 .link-15-36.underline-hover::after {
   bottom: 9px;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* 
+
+////////////////////////
+Stile pagine vini 
+////////////////////////
+
+*/
+
+.bottone-annate-vino {
+  background-color: transparent;
+  text-decoration: none;
+  transition: background-color 0.2s ease, text-decoration-color 0.2s ease;
+}
+
+.bottone-annate-vino.is-active {
+  background-color: #ffffff;
+  text-decoration: underline;
+  text-underline-offset: 3px; /* opzionale, più elegante */
+}
+
+.immagine-vino-singolo {
+	background-position: center;
+  background-size: cover;
+}
+
+
+
+
+
+/* Wrapper generale */
+.three-carousel-wrapper {
+  position: relative;
+  width: 100%;
+  height: 80vh;
+  overflow: hidden;
+  background: #000; /* cambia se serve */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Contenitore Slick */
+.three-carousel {
+  width: 100%;
+  height: 100vh;
+}
+
+/* Singola slide */
+.three-slide {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* Background immagine */
+.three-slide-bg {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+/* Allineamento verticale delle slide */
+.three-carousel .slick-track {
+  display: flex !important;
+  align-items: stretch;
+}
+
+.three-carousel .slick-slide {
+  height: 100vh;
+}
+
+/* Rimozione overflow interno */
+.three-carousel .slick-list {
+  overflow: hidden;
+  height: 100vh;
+}
+
+/* FRECCE (bottoni circolari con SVG dentro) */
+.three-carousel .slick-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 10;
+  width: 50px;
+  height: 50px;
+  border: 1.5px solid rgba(255, 255, 255, 0.6);
+  border-radius: 50%;
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+/* niente pseudo-frecce “disegnate” */
+.three-carousel .slick-arrow::before {
+  content: none;
+}
+
+/* icone SVG */
+.three-carousel .slick-arrow img {
+  width: 15px;
+  height: auto;
+}
+
+/* posizionamento orizzontale frecce */
+.three-carousel .slick-prev {
+  left: 3%;
+}
+
+.three-carousel .slick-next {
+  right: 3%;
+}
+
+/* hover frecce */
+.three-carousel .slick-arrow:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: #ffffff;
+}
+
+/* RESPONSIVE */
+@media (max-width: 991px) {
+  .three-carousel .slick-prev {
+    left: 8%;
+  }
+
+  .three-carousel .slick-next {
+    right: 8%;
+  }
+}
+
+@media (max-width: 768px) {
+  .three-carousel-wrapper,
+  .three-carousel,
+  .three-slide,
+  .three-carousel .slick-slide,
+  .three-carousel .slick-list {
+    height: 100vh;
+  }
+
+  .three-carousel .slick-arrow {
+    width: 40px;
+    height: 40px;
+  }
+
+  .three-carousel .slick-prev {
+    left: 20px;
+  }
+
+  .three-carousel .slick-next {
+    right: 20px;
+  }
+}
+
