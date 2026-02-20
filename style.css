@@ -241,7 +241,7 @@ Stile pagine vini
   .three-slide,
   .three-carousel .slick-slide,
   .three-carousel .slick-list {
-    height: 100vh;
+    height: 50vh;
   }
 
   .three-carousel .slick-arrow {
