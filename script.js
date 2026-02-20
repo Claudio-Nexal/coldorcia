@@ -1,4 +1,4 @@
-console.log('v.1.4.2 aggiunti script pagine vini');
+console.log('v.1.4.3 aggiunti script pagine vini');
 
 
 // Animazione menu + gestione scroll (ScrollSmoother compatibile)
@@ -441,18 +441,35 @@ console.log('v.1.4.2 aggiunti script pagine vini');
 // script pagine vino (limitato a page-type="vino")
 //////////////////////////
 
+// script pagine vino (limitato a page-type="vino")
 function isWinePage() {
-  return (
-    document.body &&
-    document.body.getAttribute('page-type') === 'vino'
-  );
+  return document.body && document.body.getAttribute('page-type') === 'vino';
 }
 
-/* =======================
-   1) ANNI / CONTENUTI VINO
-======================= */
 document.addEventListener('DOMContentLoaded', function () {
   if (!isWinePage()) return;
+
+  // helper: legge un url da un elemento (se è <a> prende href, altrimenti testo)
+  function readUrlFrom(el) {
+    if (!el) return '';
+    var href = el.getAttribute && el.getAttribute('href');
+    if (href) return href.trim();
+    return (el.textContent || '').trim();
+  }
+
+  // helper: imposta href su <a> e disabilita se vuoto
+  function setLink(aEl, url) {
+    if (!aEl) return;
+    if (!url) {
+      aEl.removeAttribute('href');
+      aEl.style.pointerEvents = 'none';
+      aEl.style.opacity = '0.5';
+      return;
+    }
+    aEl.setAttribute('href', url);
+    aEl.style.pointerEvents = '';
+    aEl.style.opacity = '';
+  }
 
   // ==== 1. Anni attivi: da .lista-annate oppure dalla collection ====
   var anniAttivi = [];
@@ -492,13 +509,21 @@ document.addEventListener('DOMContentLoaded', function () {
     var year = yearEl.textContent.trim();
     if (!year) return;
 
+    var bottigliaEl = item.querySelector('.bottiglia');
+    var schedaEl = item.querySelector('.scheda-tecnica');
+    var etichettaEl = item.querySelector('.etichetta');
+
     datiAnnate[year] = {
       andamento: (item.querySelector('.andamento-climatico, .andatamento-climatico') || {}).innerHTML || '',
       zona: (item.querySelector('.zona-di-produzione') || {}).innerHTML || '',
       uva: (item.querySelector('.uva-con-cui-e-prodotto') || {}).innerHTML || '',
       vinificazione: (item.querySelector('.vinificazione') || {}).innerHTML || '',
       invecchiamento: (item.querySelector('.invecchiamento') || {}).innerHTML || '',
-      datiOrganolettici: (item.querySelector('.dati-organolettici') || {}).innerHTML || ''
+      datiOrganolettici: (item.querySelector('.dati-organolettici') || {}).innerHTML || '',
+
+      bottigliaUrl: readUrlFrom(bottigliaEl),
+      schedaTecnicaUrl: readUrlFrom(schedaEl),
+      etichettaUrl: readUrlFrom(etichettaEl)
     };
   });
 
@@ -521,22 +546,30 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   });
 
-  // ==== 6. Target dei testi da aggiornare ====
-  // Andamento climatico visibile (non dentro la collection)
+  // ==== 6. Target dei testi da aggiornare (fuori dalla collection) ====
   var andamentoBlock = null;
   var allAndamento = document.querySelectorAll('.andamento-climatico');
   allAndamento.forEach(function (el) {
-    if (!andamentoBlock && !el.closest('.collection-list-wrapper-3')) {
-      andamentoBlock = el;
-    }
+    if (!andamentoBlock && !el.closest('.collection-list-wrapper-3')) andamentoBlock = el;
   });
 
-  // Accordion (rich text)
   var zonaBlock = document.querySelector('.rich-text-block.zona-di-produzione');
   var uvaBlock = document.querySelector('.rich-text-block.uva-con-cui-e-prodotto');
   var vinificazioneBlock = document.querySelector('.rich-text-block.vinificazione');
   var invecchiamentoBlock = document.querySelector('.rich-text-block.invecchiamento');
   var datiOrgBlock = document.querySelector('.rich-text-block.dati-organolettici');
+
+  function pickVisibleAnchor(selector) {
+    var candidates = Array.prototype.slice.call(document.querySelectorAll('a' + selector));
+    for (var i = 0; i < candidates.length; i++) {
+      if (!candidates[i].closest('.collection-list-wrapper-3')) return candidates[i];
+    }
+    return null;
+  }
+
+  var bottigliaLink = pickVisibleAnchor('.bottiglia');
+  var schedaLink = pickVisibleAnchor('.scheda-tecnica');
+  var etichettaLink = pickVisibleAnchor('.etichetta');
 
   function aggiornaContenutiPerAnnata(year) {
     var dati = datiAnnate[year];
@@ -548,22 +581,23 @@ document.addEventListener('DOMContentLoaded', function () {
     if (vinificazioneBlock) vinificazioneBlock.innerHTML = dati.vinificazione || '';
     if (invecchiamentoBlock) invecchiamentoBlock.innerHTML = dati.invecchiamento || '';
     if (datiOrgBlock) datiOrgBlock.innerHTML = dati.datiOrganolettici || '';
+
+    setLink(bottigliaLink, dati.bottigliaUrl);
+    setLink(schedaLink, dati.schedaTecnicaUrl);
+    setLink(etichettaLink, dati.etichettaUrl);
   }
 
   // ==== 7. Gestione stato attivo bottoni + click ====
   function setActiveButton(clickedBtn) {
-    bottoni.forEach(function (b) {
-      b.classList.remove('is-active');
-    });
+    bottoni.forEach(function (b) { b.classList.remove('is-active'); });
     if (clickedBtn) clickedBtn.classList.add('is-active');
   }
 
-  // Inizializzo con l'annata più vecchia
+  // Init con annata più vecchia
   if (defaultYear) {
     var defaultBtn = bottoni.find(function (b) {
       return b.getAttribute('data-annata') === defaultYear;
     });
-
     if (defaultBtn) {
       setActiveButton(defaultBtn);
       aggiornaContenutiPerAnnata(defaultYear);
