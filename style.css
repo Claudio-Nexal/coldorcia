@@ -1,9 +1,19 @@
-/* v.1.4.1 stili pagine vini */
+/* v.1.4.1 modifiche a menu */
 
 
 /* Menu */
 a.nav-link-navbar.w--current{
   color: white;
+}
+
+.menu-overlay{
+  position: fixed;
+  inset: 0;
+  height: 100vh;         /* o 100dvh se preferisci */
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain; /* evita che lo scroll “sfondi” sulla pagina */
 }
 
 
