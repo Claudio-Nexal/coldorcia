@@ -1,4 +1,4 @@
-console.log('v.1.4.4.7 aggiornato script menu');
+console.log('v.1.4.4.8 aggiornato script menu');
 
 
 // Animazione menu + gestione scroll (ScrollSmoother compatibile)
@@ -269,6 +269,71 @@ console.log('v.1.4.4.7 aggiornato script menu');
     initMenu();
   }
 })();
+
+
+
+
+
+
+
+
+//animazione illustrazione su menu
+window.Webflow ||= [];
+window.Webflow.push(function () {
+  // no animation on mobile
+  if (window.matchMedia("(max-width: 767px)").matches) return;
+
+  const original = document.querySelector(".coldorcia-illustration");
+  if (!original || typeof gsap === "undefined") return;
+
+  const start = () => {
+    const rect = original.getBoundingClientRect();
+
+    const clone = original.cloneNode(true);
+    clone.classList.add("coldorcia-illustration--fixed-clone");
+    document.body.appendChild(clone);
+
+    // keep layout space, avoid jumps
+    original.style.visibility = "hidden";
+
+    gsap.set(clone, {
+      position: "fixed",
+      top: rect.top,
+      left: rect.left,
+      width: rect.width,
+      height: rect.height,
+      margin: 0,
+      transformOrigin: "50% 50%",
+      x: 0,
+      y: 0,
+      scale: 1
+    });
+
+    // Use .custom-navbar for measurements
+    const nav = document.querySelector(".custom-navbar");
+    const navRect = nav ? nav.getBoundingClientRect() : null;
+    const navCenterY = navRect ? (navRect.top + navRect.height / 2) : 10;
+
+    // target width = 1.5vw
+    const targetW = window.innerWidth * 0.015;
+    const scale = targetW / rect.width;
+
+    gsap.to(clone, {
+      duration: 1.1,
+      ease: "power3.inOut",
+      top: navCenterY,
+      left: (window.innerWidth / 2),
+      xPercent: -50,
+      yPercent: -50,
+      scale: scale
+    });
+  };
+
+  if (document.readyState === "complete") start();
+  else window.addEventListener("load", start, { once: true });
+});
+
+
 
 
 
