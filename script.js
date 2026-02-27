@@ -1,4 +1,4 @@
-console.log('v.1.4.4.1 aggiornato script menu');
+console.log('v.1.4.4.2 aggiornato script menu');
 
 
 // Animazione menu + gestione scroll (ScrollSmoother compatibile)
@@ -149,21 +149,12 @@ console.log('v.1.4.4.1 aggiornato script menu');
 
     function hideIllustration() {
       const clone = document.querySelector(".coldorcia-illustration--fixed-clone");
-      const orig  = document.querySelector(".coldorcia-illustration");
       if (clone) gsap.set(clone, { autoAlpha: 0, pointerEvents: "none" });
-      if (orig)  gsap.set(orig,  { autoAlpha: 0 });
     }
     
     function showIllustration() {
       const clone = document.querySelector(".coldorcia-illustration--fixed-clone");
-      const orig  = document.querySelector(".coldorcia-illustration");
       if (clone) gsap.set(clone, { autoAlpha: 1, pointerEvents: "auto" });
-    
-      // Se l’altro script usa visibility:hidden sull’originale, qui devi ripristinarla
-      if (orig) {
-        orig.style.visibility = "visible";
-        gsap.set(orig, { autoAlpha: 1 });
-      }
     }
 
     openBtn?.addEventListener("click", (e) => {
@@ -194,6 +185,7 @@ console.log('v.1.4.4.1 aggiornato script menu');
         onComplete: () => {
           isOpen = true;
           isAnimating = false;
+          document.body.classList.add("menu-is-open");
         }
       });
 
@@ -222,6 +214,7 @@ console.log('v.1.4.4.1 aggiornato script menu');
         onComplete: () => {
           isOpen = false;
           isAnimating = false;
+          document.body.classList.remove("menu-is-open");
 
           // di nuovo nascosto: clipPath chiuso
           gsap.set(menuOverlay, {
