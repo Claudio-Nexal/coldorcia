@@ -1,4 +1,4 @@
-console.log('v.1.4.4 aggiornato script menu');
+console.log('v.1.4.4.1 aggiornato script menu');
 
 
 // Animazione menu + gestione scroll (ScrollSmoother compatibile)
@@ -148,13 +148,22 @@ console.log('v.1.4.4 aggiornato script menu');
     showOpenIcon();
 
     function hideIllustration() {
-      if (illusClone) gsap.set(illusClone, { autoAlpha: 0, pointerEvents: "none" });
-      if (illusOrig)  gsap.set(illusOrig,  { autoAlpha: 0 });
+      const clone = document.querySelector(".coldorcia-illustration--fixed-clone");
+      const orig  = document.querySelector(".coldorcia-illustration");
+      if (clone) gsap.set(clone, { autoAlpha: 0, pointerEvents: "none" });
+      if (orig)  gsap.set(orig,  { autoAlpha: 0 });
     }
     
     function showIllustration() {
-      if (illusClone) gsap.set(illusClone, { autoAlpha: 1, pointerEvents: "auto" });
-      if (illusOrig)  gsap.set(illusOrig,  { autoAlpha: 1 });
+      const clone = document.querySelector(".coldorcia-illustration--fixed-clone");
+      const orig  = document.querySelector(".coldorcia-illustration");
+      if (clone) gsap.set(clone, { autoAlpha: 1, pointerEvents: "auto" });
+    
+      // Se l’altro script usa visibility:hidden sull’originale, qui devi ripristinarla
+      if (orig) {
+        orig.style.visibility = "visible";
+        gsap.set(orig, { autoAlpha: 1 });
+      }
     }
 
     openBtn?.addEventListener("click", (e) => {
