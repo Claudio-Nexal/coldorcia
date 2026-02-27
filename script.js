@@ -1,4 +1,4 @@
-console.log('v.1.4.4.2 aggiornato script menu');
+console.log('v.1.4.4.3 aggiornato script menu');
 
 
 // Animazione menu + gestione scroll (ScrollSmoother compatibile)
@@ -223,13 +223,14 @@ console.log('v.1.4.4.2 aggiornato script menu');
             clipPath: "polygon(0% 0%, 100% 0%, 100% 0%, 0% 0%)"
           });
 
+          showIllustration();
+
           gsap.set(menuContent, {
             y: -30,
             opacity: 0
           });
 
           if (brandImg) brandImg.src = defaultBrandSrc;
-          showIllustration();
         }
       });
 
