@@ -1,4 +1,4 @@
-console.log('v.1.4.4.5 aggiornato script menu');
+console.log('v.1.4.4.6 aggiornato script menu');
 
 
 // Animazione menu + gestione scroll (ScrollSmoother compatibile)
@@ -206,9 +206,7 @@ console.log('v.1.4.4.5 aggiornato script menu');
       if (isAnimating || !isOpen) return;
       isAnimating = true;
 
-      document.body.classList.remove("menu-is-open");
-      showOpenIcon();
-      showIllustration();
+      showOpenIcon();      
 
       tl?.kill();
       tl = gsap.timeline({
@@ -216,6 +214,9 @@ console.log('v.1.4.4.5 aggiornato script menu');
         onComplete: () => {
           isOpen = false;
           isAnimating = false;
+
+          document.body.classList.remove("menu-is-open");
+          showIllustration();
 
           // di nuovo nascosto: clipPath chiuso
           gsap.set(menuOverlay, {
