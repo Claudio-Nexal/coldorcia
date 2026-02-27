@@ -6,6 +6,8 @@ a.nav-link-navbar.w--current{
   color: white;
 }
 
+body.menu-is-open .coldorcia-illustration--fixed-clone { opacity: 0 !important; pointer-events: none !important; }
+
 .menu-overlay{
   position: fixed;
   inset: 0;
