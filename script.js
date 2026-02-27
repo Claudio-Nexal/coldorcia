@@ -1,4 +1,4 @@
-console.log('v.1.4.4.6 aggiornato script menu');
+console.log('v.1.4.4.7 aggiornato script menu');
 
 
 // Animazione menu + gestione scroll (ScrollSmoother compatibile)
@@ -147,15 +147,23 @@ console.log('v.1.4.4.6 aggiornato script menu');
 
     showOpenIcon();
 
-    function hideIllustration() {
-      const clone = document.querySelector(".coldorcia-illustration--fixed-clone");
-      if (clone) gsap.set(clone, { autoAlpha: 0, pointerEvents: "none" });
-    }
-    
-    function showIllustration() {
-      const clone = document.querySelector(".coldorcia-illustration--fixed-clone");
-      if (clone) gsap.set(clone, { autoAlpha: 1, pointerEvents: "auto" });
-    }
+  function hideIllustration() {
+    const clone = document.querySelector(".coldorcia-illustration--fixed-clone");
+    if (!clone) return;
+    gsap.killTweensOf(clone);
+    gsap.to(clone, {
+      opacity: 0, x: -5, y: -10, rotation: -5, pointerEvents: "none"
+    });
+  }
+  
+  function showIllustration() {
+    const clone = document.querySelector(".coldorcia-illustration--fixed-clone");
+    if (!clone) return;
+    gsap.killTweensOf(clone);
+    gsap.to(clone, {
+      opacity: 1, x: 0, y: 0, rotation: 0, pointerEvents: "auto"
+    });
+  }
 
     openBtn?.addEventListener("click", (e) => {
       e.preventDefault();
@@ -206,7 +214,9 @@ console.log('v.1.4.4.6 aggiornato script menu');
       if (isAnimating || !isOpen) return;
       isAnimating = true;
 
-      showOpenIcon();      
+      showOpenIcon();    
+      document.body.classList.remove("menu-is-open");
+      showIllustration();
 
       tl?.kill();
       tl = gsap.timeline({
@@ -214,9 +224,6 @@ console.log('v.1.4.4.6 aggiornato script menu');
         onComplete: () => {
           isOpen = false;
           isAnimating = false;
-
-          document.body.classList.remove("menu-is-open");
-          showIllustration();
 
           // di nuovo nascosto: clipPath chiuso
           gsap.set(menuOverlay, {
