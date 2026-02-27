@@ -1,4 +1,4 @@
-console.log('v.1.4.3.1 aggiunti script pagine vini');
+console.log('v.1.4.4 aggiornato script menu');
 
 
 // Animazione menu + gestione scroll (ScrollSmoother compatibile)
