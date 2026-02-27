@@ -1,4 +1,4 @@
-console.log('v.1.4.4.3 aggiornato script menu');
+console.log('v.1.4.4.4 aggiornato script menu');
 
 
 // Animazione menu + gestione scroll (ScrollSmoother compatibile)
@@ -170,10 +170,10 @@ console.log('v.1.4.4.3 aggiornato script menu');
     function openMenu() {
       if (isAnimating || isOpen) return;
       isAnimating = true;
-      hideIllustration();
-
+      
       lockScroll();
       if (brandImg) brandImg.src = openBrandSrc;
+      hideIllustration();
       showCloseIcon();
 
       // overlay visibile solo quando il menu si apre
@@ -207,6 +207,7 @@ console.log('v.1.4.4.3 aggiornato script menu');
       isAnimating = true;
 
       showOpenIcon();
+      showIllustration();
 
       tl?.kill();
       tl = gsap.timeline({
@@ -222,8 +223,6 @@ console.log('v.1.4.4.3 aggiornato script menu');
             autoAlpha: 0,
             clipPath: "polygon(0% 0%, 100% 0%, 100% 0%, 0% 0%)"
           });
-
-          showIllustration();
 
           gsap.set(menuContent, {
             y: -30,
