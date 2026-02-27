@@ -20,6 +20,9 @@ console.log('v.1.4.3.1 aggiunti script pagine vini');
     const menuContent = document.querySelector(".menu-content");
     const brandImg    = document.querySelector(".nav-brand img");
 
+    const illusClone = document.querySelector(".coldorcia-illustration--fixed-clone");
+    const illusOrig  = document.querySelector(".coldorcia-illustration");
+
     const openBtn  = document.querySelector("img.menu-open");
     const closeBtn = document.querySelector("img.menu-close");
 
@@ -144,6 +147,16 @@ console.log('v.1.4.3.1 aggiunti script pagine vini');
 
     showOpenIcon();
 
+    function hideIllustration() {
+      if (illusClone) gsap.set(illusClone, { autoAlpha: 0, pointerEvents: "none" });
+      if (illusOrig)  gsap.set(illusOrig,  { autoAlpha: 0 });
+    }
+    
+    function showIllustration() {
+      if (illusClone) gsap.set(illusClone, { autoAlpha: 1, pointerEvents: "auto" });
+      if (illusOrig)  gsap.set(illusOrig,  { autoAlpha: 1 });
+    }
+
     openBtn?.addEventListener("click", (e) => {
       e.preventDefault();
       openMenu();
@@ -157,6 +170,7 @@ console.log('v.1.4.3.1 aggiunti script pagine vini');
     function openMenu() {
       if (isAnimating || isOpen) return;
       isAnimating = true;
+      hideIllustration();
 
       lockScroll();
       if (brandImg) brandImg.src = openBrandSrc;
@@ -213,6 +227,7 @@ console.log('v.1.4.3.1 aggiunti script pagine vini');
           });
 
           if (brandImg) brandImg.src = defaultBrandSrc;
+          showIllustration();
         }
       });
 
