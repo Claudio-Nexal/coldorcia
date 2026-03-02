@@ -281,3 +281,8 @@ Stile pagine vini
   .collection-list-2{ display:flex !important; flex-wrap:wrap !important; }
   .collection-item-2{ width:50% !important; max-width:50% !important; flex:0 0 50% !important; }
 }
+
+
+a.wine-card{
+	text-decoration: none !important;
+}
