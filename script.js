@@ -1,4 +1,4 @@
-console.log('v.1.5.6');
+console.log('v.1.5.7');
 
 
 
@@ -17,7 +17,7 @@ console.log('v.1.5.6');
     var BOTTOM_CLASS = 'wine-card-border-bottom';
 
     function apply() {
-      if (!window.matchMedia('(max-width:' + MOBILE_MAX + 'px)').matches) return;
+      var isMobile = window.matchMedia('(max-width:' + MOBILE_MAX + 'px)').matches;
 
       document.querySelectorAll(LIST_SELECTOR).forEach(function (list) {
         var items = Array.from(list.querySelectorAll(ITEM_SELECTOR));
@@ -26,25 +26,45 @@ console.log('v.1.5.6');
           var card = item.querySelector(CARD_SELECTOR);
           if (!card) return;
 
-          var col = i % 2;              // 0 = sinistra, 1 = destra
-          var row = Math.floor(i / 2);  // 0 = prima riga
+          // reset pulito
+          card.classList.remove(
+            TOP_CLASS,
+            RIGHT_CLASS,
+            BOTTOM_CLASS,
+            'wine-no-left',
+            'wine-no-right',
+            'wine-no-top'
+          );
 
-          // pulizia
-          card.classList.remove(TOP_CLASS, RIGHT_CLASS, 'wine-no-left', 'wine-no-right', 'wine-no-top');
-
-          // bottom a tutte
+          // bottom sempre
           card.classList.add(BOTTOM_CLASS);
 
-          // top solo prima riga
-          if (row === 0) card.classList.add(TOP_CLASS);
-          else card.classList.add('wine-no-top');
+          if (isMobile) {
+            // ===== MOBILE: 2 colonne =====
+            var col = i % 2;               // 0 sinistra, 1 destra
+            var row = Math.floor(i / 2);   // 0 prima riga
 
-          // right solo prima card di ogni riga (colonna sinistra)
-          if (col === 0) {
-            card.classList.add(RIGHT_CLASS);
+            // top solo prima riga (prime 2)
+            if (row === 0) card.classList.add(TOP_CLASS);
+            else card.classList.add('wine-no-top');
+
+            // right solo prima card di ogni riga (colonna sinistra)
+            if (col === 0) card.classList.add(RIGHT_CLASS);
+            else card.classList.add('wine-no-left', 'wine-no-right');
+
           } else {
-            // niente bordo interno doppio sulla colonna destra
-            card.classList.add('wine-no-left', 'wine-no-right');
+            // ===== DESKTOP: 4 colonne (singola riga da 4) =====
+            var colD = i % 4;              // 0..3
+
+            // top solo prima riga (qui è sempre la prima riga)
+            card.classList.add(TOP_CLASS);
+
+            // right alle prime 3 (colonna 0,1,2) per dividere, no right sull’ultima
+            if (colD < 3) card.classList.add(RIGHT_CLASS);
+            else card.classList.add('wine-no-right');
+
+            // evita doppio bordo interno: togli il left a tutte tranne la prima
+            if (colD > 0) card.classList.add('wine-no-left');
           }
         });
       });
