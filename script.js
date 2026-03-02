@@ -1,4 +1,4 @@
-console.log('v.1.5.1');
+console.log('v.1.5.2');
 
 
 // Animazione menu + gestione scroll (ScrollSmoother compatibile)
@@ -884,12 +884,13 @@ $(document).ready(function () {
 
 
 
+
 (function () {
   // Webflow ready
   var Webflow = window.Webflow || [];
   Webflow.push(function () {
-    var LIST_SELECTOR = '.griglia-altri-vini';     // wrapper cards
-    var ITEM_SELECTOR = '.griglia-altri-vini-item';     // each CMS item (w-col)
+    var LIST_SELECTOR = '.collection-list-2';     // wrapper cards
+    var ITEM_SELECTOR = '.collection-item-2';     // each CMS item (w-col)
     var MOBILE_MAX = 767;                         // Webflow mobile breakpoint
 
     function setWidths(isMobile) {
@@ -925,4 +926,5 @@ $(document).ready(function () {
     window.addEventListener('resize', applyLayout);
   });
 })();
+
 
