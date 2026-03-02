@@ -1,4 +1,4 @@
-/* v.1.4.1 modifiche a menu */
+/* v.1.5.1 */
 
 
 /* Menu */
@@ -274,3 +274,8 @@ Stile pagine vini
   }
 }
 
+
+
+@media (max-width: 767px){
+  .griglia-altri-vini{ display:flex; flex-wrap:wrap; }
+}
