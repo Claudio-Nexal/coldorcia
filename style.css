@@ -1,4 +1,4 @@
-/* v.1.5.2 */
+/* v.1.5.3 */
 
 
 /* Menu */
@@ -277,9 +277,14 @@ Stile pagine vini
 
 
 @media (max-width: 767px){
-  /* 2 colonne (2 righe da 2) */
+  /* 2 colonne */
   .collection-list-2{ display:flex !important; flex-wrap:wrap !important; }
   .collection-item-2{ width:50% !important; max-width:50% !important; flex:0 0 50% !important; }
+
+  /* helper per evitare doppi bordi */
+  .wine-no-left{ border-left: 0 !important; }
+  .wine-no-right{ border-right: 0 !important; }
+  .wine-no-top{ border-top: 0 !important; }
 }
 
 
