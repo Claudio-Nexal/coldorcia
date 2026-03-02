@@ -1,4 +1,55 @@
-console.log('v.1.5.4');
+console.log('v.1.5.5');
+
+
+
+// creazione griglia altri vini in pagina vino singolo
+(function () {
+  var Webflow = window.Webflow || [];
+  Webflow.push(function () {
+    var MOBILE_MAX = 767;
+
+    var LIST_SELECTOR = '.collection-list-2';
+    var ITEM_SELECTOR = '.collection-item-2';
+    var CARD_SELECTOR = 'a.wine-card';
+
+    var TOP_CLASS = 'wine-card-border-top';
+    var RIGHT_CLASS = 'wine-card-border-right';
+    var BOTTOM_CLASS = 'wine-card-border-bottom'; // se non esiste, sostituiscila con la tua classe
+
+    function apply() {
+      if (!window.matchMedia('(max-width:' + MOBILE_MAX + 'px)').matches) return;
+
+      document.querySelectorAll(LIST_SELECTOR).forEach(function (list) {
+        var items = Array.from(list.querySelectorAll(ITEM_SELECTOR));
+
+        items.forEach(function (item, i) {
+          var card = item.querySelector(CARD_SELECTOR);
+          if (!card) return;
+
+          // reset (per evitare "assegnazioni sporche")
+          card.classList.remove(TOP_CLASS, RIGHT_CLASS);
+
+          // bottom a tutte
+          card.classList.add(BOTTOM_CLASS);
+
+          // top solo prima riga (prime 2 card)
+          if (i < 2) card.classList.add(TOP_CLASS);
+
+          // right solo prima card di ogni riga (colonna sinistra) => 0,2,4...
+          if (i % 2 === 0) card.classList.add(RIGHT_CLASS);
+        });
+      });
+    }
+
+    apply();
+    window.addEventListener('resize', apply);
+  });
+})();
+
+
+
+
+
 
 
 // Animazione menu + gestione scroll (ScrollSmoother compatibile)
@@ -885,56 +936,8 @@ $(document).ready(function () {
 
 
 
-// creazione griglia altri vini in pagina vino singolo
-(function () {
-  var Webflow = window.Webflow || [];
-  Webflow.push(function () {
-    var MOBILE_MAX = 767;
 
-    var LIST_SELECTOR = '.collection-list-2';
-    var ITEM_SELECTOR = '.collection-item-2';
-    var CARD_SELECTOR = 'a.wine-card';
 
-    var TOP_CLASS = 'wine-card-border-top';
-    var RIGHT_CLASS = 'wine-card-border-right';
-    var BOTTOM_CLASS = 'wine-card-border-bottom'; // se non esiste, rimuovi queste 2 righe sotto (add/remove)
-
-    function applyMobileBorders(list) {
-      var items = list.querySelectorAll(ITEM_SELECTOR);
-
-      items.forEach(function (item, index) {
-        var card = item.querySelector(CARD_SELECTOR);
-        if (!card) return;
-
-        // bottom a tutte
-        card.classList.add(BOTTOM_CLASS);
-
-        // top solo ai primi due
-        if (index === 0 || index === 1) card.classList.add(TOP_CLASS);
-        else card.classList.remove(TOP_CLASS);
-
-        // right al primo della riga (colonna sinistra) => 0,2,4...
-        if (index % 2 === 0) card.classList.add(RIGHT_CLASS);
-        else card.classList.remove(RIGHT_CLASS);
-      });
-    }
-
-    function run() {
-      if (!window.matchMedia('(max-width: ' + MOBILE_MAX + 'px)').matches) return;
-
-      document.querySelectorAll(LIST_SELECTOR).forEach(function (list) {
-        // backup JS nel caso qualche CSS rompa il flex
-        list.style.display = 'flex';
-        list.style.flexWrap = 'wrap';
-
-        applyMobileBorders(list);
-      });
-    }
-
-    run();
-    window.addEventListener('resize', run);
-  });
-})();
 
 
 
