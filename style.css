@@ -291,3 +291,14 @@ Stile pagine vini
 a.wine-card{
 	text-decoration: none !important;
 }
+
+
+.wine-card-border-bottom{
+	border-bottom: .5px solid #000;
+}
+.wine-card-border-top{
+	border-top: .5px solid #000;
+}
+.wine-card-border-right{
+	border-right: .5px solid #000;
+}
