@@ -1,4 +1,4 @@
-console.log('v.1.5.2');
+console.log('v.1.5.3');
 
 
 // Animazione menu + gestione scroll (ScrollSmoother compatibile)
@@ -885,46 +885,74 @@ $(document).ready(function () {
 
 
 
+
 (function () {
-  // Webflow ready
   var Webflow = window.Webflow || [];
   Webflow.push(function () {
-    var LIST_SELECTOR = '.collection-list-2';     // wrapper cards
-    var ITEM_SELECTOR = '.collection-item-2';     // each CMS item (w-col)
-    var MOBILE_MAX = 767;                         // Webflow mobile breakpoint
+    var LIST_SELECTOR = '.collection-list-2';
+    var ITEM_SELECTOR = '.collection-item-2';
+    var CARD_SELECTOR = 'a.wine-card';
 
-    function setWidths(isMobile) {
-      var lists = document.querySelectorAll(LIST_SELECTOR);
-      if (!lists.length) return;
+    var MOBILE_MAX = 767;
+    var TOP_CLASS = 'wine-card-border-top';
+    var RIGHT_CLASS = 'wine-card-border-right';
+    var BOTTOM_CLASS = 'wine-card-border-bottom';
 
-      lists.forEach(function (list) {
-        var items = list.querySelectorAll(ITEM_SELECTOR);
-        if (!items.length) return;
+    function initOriginalState(card) {
+      if (card.dataset.bordersInit) return;
+      card.dataset.bordersInit = '1';
+      card.dataset.hadTop = card.classList.contains(TOP_CLASS) ? '1' : '0';
+      card.dataset.hadRight = card.classList.contains(RIGHT_CLASS) ? '1' : '0';
+      card.dataset.hadBottom = card.classList.contains(BOTTOM_CLASS) ? '1' : '0';
+    }
 
-        items.forEach(function (item) {
-          if (isMobile) {
-            // 2 per row
-            item.style.width = '50%';
-            item.style.flexBasis = '50%';
-            item.style.maxWidth = '50%';
-          } else {
-            // reset to Webflow (4 per row via w-col-3)
-            item.style.width = '';
-            item.style.flexBasis = '';
-            item.style.maxWidth = '';
-          }
-        });
+    function restoreOriginal(card) {
+      if (card.dataset.hadTop === '1') card.classList.add(TOP_CLASS); else card.classList.remove(TOP_CLASS);
+      if (card.dataset.hadRight === '1') card.classList.add(RIGHT_CLASS); else card.classList.remove(RIGHT_CLASS);
+      if (card.dataset.hadBottom === '1') card.classList.add(BOTTOM_CLASS); else card.classList.remove(BOTTOM_CLASS);
+    }
+
+    function applyMobileBorders(list) {
+      var items = list.querySelectorAll(ITEM_SELECTOR);
+      items.forEach(function (item, index) {
+        var card = item.querySelector(CARD_SELECTOR);
+        if (!card) return;
+
+        initOriginalState(card);
+
+        // bottom: a tutte
+        card.classList.add(BOTTOM_CLASS);
+
+        // top: solo ai primi due (prima riga)
+        if (index === 0 || index === 1) card.classList.add(TOP_CLASS);
+        else card.classList.remove(TOP_CLASS);
+
+        // right: al primo della riga (colonna 1) => index pari: 0,2,4...
+        if (index % 2 === 0) card.classList.add(RIGHT_CLASS);
+        else card.classList.remove(RIGHT_CLASS);
       });
     }
 
-    function applyLayout() {
-      var isMobile = window.matchMedia('(max-width: ' + MOBILE_MAX + 'px)').matches;
-      setWidths(isMobile);
+    function applyDesktopReset(list) {
+      var cards = list.querySelectorAll(CARD_SELECTOR);
+      cards.forEach(function (card) {
+        initOriginalState(card);
+        restoreOriginal(card);
+      });
     }
 
-    applyLayout();
-    window.addEventListener('resize', applyLayout);
+    function apply() {
+      var isMobile = window.matchMedia('(max-width: ' + MOBILE_MAX + 'px)').matches;
+      document.querySelectorAll(LIST_SELECTOR).forEach(function (list) {
+        if (isMobile) applyMobileBorders(list);
+        else applyDesktopReset(list);
+      });
+    }
+
+    apply();
+    window.addEventListener('resize', apply);
   });
 })();
+
 
 
