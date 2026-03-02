@@ -1,4 +1,4 @@
-console.log('v.1.5.5');
+console.log('v.1.5.6');
 
 
 
@@ -14,7 +14,7 @@ console.log('v.1.5.5');
 
     var TOP_CLASS = 'wine-card-border-top';
     var RIGHT_CLASS = 'wine-card-border-right';
-    var BOTTOM_CLASS = 'wine-card-border-bottom'; // se non esiste, sostituiscila con la tua classe
+    var BOTTOM_CLASS = 'wine-card-border-bottom';
 
     function apply() {
       if (!window.matchMedia('(max-width:' + MOBILE_MAX + 'px)').matches) return;
@@ -26,17 +26,26 @@ console.log('v.1.5.5');
           var card = item.querySelector(CARD_SELECTOR);
           if (!card) return;
 
-          // reset (per evitare "assegnazioni sporche")
-          card.classList.remove(TOP_CLASS, RIGHT_CLASS);
+          var col = i % 2;              // 0 = sinistra, 1 = destra
+          var row = Math.floor(i / 2);  // 0 = prima riga
+
+          // pulizia
+          card.classList.remove(TOP_CLASS, RIGHT_CLASS, 'wine-no-left', 'wine-no-right', 'wine-no-top');
 
           // bottom a tutte
           card.classList.add(BOTTOM_CLASS);
 
-          // top solo prima riga (prime 2 card)
-          if (i < 2) card.classList.add(TOP_CLASS);
+          // top solo prima riga
+          if (row === 0) card.classList.add(TOP_CLASS);
+          else card.classList.add('wine-no-top');
 
-          // right solo prima card di ogni riga (colonna sinistra) => 0,2,4...
-          if (i % 2 === 0) card.classList.add(RIGHT_CLASS);
+          // right solo prima card di ogni riga (colonna sinistra)
+          if (col === 0) {
+            card.classList.add(RIGHT_CLASS);
+          } else {
+            // niente bordo interno doppio sulla colonna destra
+            card.classList.add('wine-no-left', 'wine-no-right');
+          }
         });
       });
     }
@@ -45,6 +54,7 @@ console.log('v.1.5.5');
     window.addEventListener('resize', apply);
   });
 })();
+
 
 
 
