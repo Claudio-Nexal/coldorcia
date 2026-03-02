@@ -277,5 +277,5 @@ Stile pagine vini
 
 
 @media (max-width: 767px){
-  .griglia-altri-vini{ display:flex; flex-wrap:wrap; }
+  .collection-list-2{ display:flex; flex-wrap:wrap; }
 }
