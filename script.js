@@ -1,4 +1,4 @@
-console.log('v.1.8.3');
+console.log('v.1.8.4');
 
 
 
@@ -745,6 +745,11 @@ function isMobile() {
 document.addEventListener('DOMContentLoaded', function () {
   if (!isWinePage()) return;
 
+    // ====== CONFIG WRAPPER ANNATE (NUOVO) ======
+  var ANNATE_WRAP = '.informazioni-annate';
+
+  console.log('[annate] wrapper:', ANNATE_WRAP, 'found:', !!document.querySelector(ANNATE_WRAP));
+
   // helper: legge un url da un elemento (se è <a> prende href, altrimenti testo)
   function readUrlFrom(el) {
     if (!el) return '';
@@ -760,6 +765,7 @@ document.addEventListener('DOMContentLoaded', function () {
     var clean = (url || '').trim();
 
     if (!clean) {
+      console.warn('[annate] empty url -> disable link', aEl);
       aEl.setAttribute('data-disabled', 'true');
       aEl.style.pointerEvents = 'none';
       aEl.style.opacity = '0.5';
@@ -773,7 +779,7 @@ document.addEventListener('DOMContentLoaded', function () {
     aEl.style.opacity = '';
   }
 
-  // ==== 1. Anni attivi: da .lista-annate oppure dalla collection ====
+  // ==== 1. Anni attivi: da .lista-annate oppure dalla collection (wrapper nuovo) ====
   var anniAttivi = [];
   var listaAnnateEl = document.querySelector('.lista-annate');
 
@@ -784,13 +790,18 @@ document.addEventListener('DOMContentLoaded', function () {
       .filter(Boolean);
   } else {
     anniAttivi = Array.prototype.slice.call(
-      document.querySelectorAll('.informazioni-annate .annata')
+      document.querySelectorAll(ANNATE_WRAP + ' .annata')
     )
       .map(function (el) { return el.textContent.trim(); })
       .filter(Boolean);
   }
 
-  if (!anniAttivi.length) return;
+  console.log('[annate] anniAttivi:', anniAttivi);
+
+  if (!anniAttivi.length) {
+    console.warn('[annate] Nessuna annata trovata. Controlla che esistano .annata dentro', ANNATE_WRAP);
+    return;
+  }
 
   // ==== 2. Ordino gli anni in modo crescente (più vecchio -> più recente) ====
   var anniOrdinati = anniAttivi.slice().sort(function (a, b) {
@@ -800,11 +811,13 @@ document.addEventListener('DOMContentLoaded', function () {
     return a.localeCompare(b);
   });
 
-  // ==== 3. Mappo tutti i dati per annata dalla informazioni-annate ====
-  var annateItems = document.querySelectorAll('.informazioni-annate .w-dyn-item');
+  // ==== 3. Mappo tutti i dati per annata dal wrapper nuovo ====
+  var annateItems = document.querySelectorAll(ANNATE_WRAP + ' .w-dyn-item');
+  console.log('[annate] w-dyn-item found:', annateItems.length);
+
   var datiAnnate = {};
 
-  annateItems.forEach(function (item) {
+  annateItems.forEach(function (item, i) {
     var yearEl = item.querySelector('.annata');
     if (!yearEl) return;
 
@@ -815,6 +828,10 @@ document.addEventListener('DOMContentLoaded', function () {
     var schedaEl = item.querySelector('.scheda-tecnica');
     var etichettaEl = item.querySelector('.etichetta');
 
+    var bottigliaUrl = readUrlFrom(bottigliaEl);
+    var schedaTecnicaUrl = readUrlFrom(schedaEl);
+    var etichettaUrl = readUrlFrom(etichettaEl);
+
     datiAnnate[year] = {
       andamento: (item.querySelector('.andamento-climatico, .andatamento-climatico') || {}).innerHTML || '',
       zona: (item.querySelector('.zona-di-produzione') || {}).innerHTML || '',
@@ -822,12 +839,21 @@ document.addEventListener('DOMContentLoaded', function () {
       vinificazione: (item.querySelector('.vinificazione') || {}).innerHTML || '',
       invecchiamento: (item.querySelector('.invecchiamento') || {}).innerHTML || '',
       datiOrganolettici: (item.querySelector('.dati-organolettici') || {}).innerHTML || '',
-
-      bottigliaUrl: readUrlFrom(bottigliaEl),
-      schedaTecnicaUrl: readUrlFrom(schedaEl),
-      etichettaUrl: readUrlFrom(etichettaEl)
+      bottigliaUrl: bottigliaUrl,
+      schedaTecnicaUrl: schedaTecnicaUrl,
+      etichettaUrl: etichettaUrl
     };
+
+    if (i < 3) {
+      console.log('[annate] map', year, {
+        bottigliaUrl: bottigliaUrl,
+        schedaTecnicaUrl: schedaTecnicaUrl,
+        etichettaUrl: etichettaUrl
+      });
+    }
   });
+
+  console.log('[annate] datiAnnate keys:', Object.keys(datiAnnate));
 
   // ==== 4. Annata di base = la più vecchia ====
   var defaultYear = anniOrdinati[0];
@@ -837,16 +863,14 @@ document.addEventListener('DOMContentLoaded', function () {
     document.querySelectorAll('.annate-wrap .bottone-annate-vino')
   );
 
-  // fallback se non esiste .annate-wrap (robustezza)
+  // fallback: prendi tutti, ma escludi quelli dentro wrapper mobile
   if (!bottoni.length) {
     bottoni = Array.prototype.slice.call(document.querySelectorAll('.bottone-annate-vino'))
-      .filter(function (btn) {
-        // escludi eventuali duplicati dentro wrapper mobile
-        return !btn.closest('.annate-select-wrap');
-      });
+      .filter(function (btn) { return !btn.closest('.annate-select-wrap'); });
   }
 
-  // assegna anni ai bottoni in ordine (solo se esistono)
+  console.log('[annate] bottoni desktop found:', bottoni.length);
+
   bottoni.forEach(function (btn, index) {
     var year = anniOrdinati[index];
     if (year) {
@@ -859,11 +883,11 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   });
 
-  // ==== 6. Target dei testi da aggiornare (fuori dalla collection) ====
+  // ==== 6. Target dei testi da aggiornare (fuori dal wrapper annate) ====
   var andamentoBlock = null;
   var allAndamento = document.querySelectorAll('.andamento-climatico, .andatamento-climatico');
   allAndamento.forEach(function (el) {
-    if (!andamentoBlock && !el.closest('.informazioni-annate')) andamentoBlock = el;
+    if (!andamentoBlock && !el.closest(ANNATE_WRAP)) andamentoBlock = el;
   });
 
   var zonaBlock = document.querySelector('.rich-text-block.zona-di-produzione');
@@ -875,7 +899,7 @@ document.addEventListener('DOMContentLoaded', function () {
   function pickVisibleAnchor(selector) {
     var candidates = Array.prototype.slice.call(document.querySelectorAll('a' + selector));
     for (var i = 0; i < candidates.length; i++) {
-      if (!candidates[i].closest('.informazioni-annate')) return candidates[i];
+      if (!candidates[i].closest(ANNATE_WRAP)) return candidates[i];
     }
     return null;
   }
@@ -884,9 +908,18 @@ document.addEventListener('DOMContentLoaded', function () {
   var schedaLink = pickVisibleAnchor('.scheda-tecnica');
   var etichettaLink = pickVisibleAnchor('.etichetta');
 
+  console.log('[annate] visible links:', {
+    bottigliaLink: !!bottigliaLink,
+    schedaLink: !!schedaLink,
+    etichettaLink: !!etichettaLink
+  });
+
   function aggiornaContenutiPerAnnata(year) {
     var dati = datiAnnate[year];
-    if (!dati) return;
+    if (!dati) {
+      console.warn('[annate] dati non trovati per year:', year);
+      return;
+    }
 
     if (andamentoBlock) andamentoBlock.innerHTML = dati.andamento || '';
     if (zonaBlock) zonaBlock.innerHTML = dati.zona || '';
@@ -895,18 +928,23 @@ document.addEventListener('DOMContentLoaded', function () {
     if (invecchiamentoBlock) invecchiamentoBlock.innerHTML = dati.invecchiamento || '';
     if (datiOrgBlock) datiOrgBlock.innerHTML = dati.datiOrganolettici || '';
 
+    console.log('[annate] set links for', year, {
+      bottigliaUrl: dati.bottigliaUrl,
+      schedaTecnicaUrl: dati.schedaTecnicaUrl,
+      etichettaUrl: dati.etichettaUrl
+    });
+
     setLink(bottigliaLink, dati.bottigliaUrl);
     setLink(schedaLink, dati.schedaTecnicaUrl);
     setLink(etichettaLink, dati.etichettaUrl);
   }
 
-  // ==== 7. Stato attivo bottoni (desktop) ====
   function setActiveButton(clickedBtn) {
     bottoni.forEach(function (b) { b.classList.remove('is-active'); });
     if (clickedBtn) clickedBtn.classList.add('is-active');
   }
 
-  // ==== 8. MOBILE: creazione select dentro .annate-select-wrap ====
+  // ==== 7. MOBILE: select (se presente) ====
   var annateSelect = null;
 
   function buildAnnateSelect() {
@@ -939,10 +977,8 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   function initControls() {
-    // costruisci select solo se wrapper mobile esiste (anche se sei desktop: non dà fastidio)
     annateSelect = buildAnnateSelect();
 
-    // init default
     if (defaultYear) {
       aggiornaContenutiPerAnnata(defaultYear);
       syncSelectValue(defaultYear);
@@ -953,7 +989,6 @@ document.addEventListener('DOMContentLoaded', function () {
       if (defaultBtn) setActiveButton(defaultBtn);
     }
 
-    // click bottoni desktop
     bottoni.forEach(function (btn) {
       btn.addEventListener('click', function (e) {
         e.preventDefault();
@@ -967,7 +1002,6 @@ document.addEventListener('DOMContentLoaded', function () {
       });
     });
 
-    // change select mobile
     if (annateSelect) {
       annateSelect.addEventListener('change', function () {
         var selectedYear = annateSelect.value;
@@ -1144,6 +1178,13 @@ $(document).ready(function () {
     ]
   });
 });
+
+
+
+
+
+
+
 
 
 
