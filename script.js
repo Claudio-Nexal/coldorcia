@@ -1,4 +1,4 @@
-console.log('v.1.6.2');
+console.log('v.1.7.1');
 
 
 
@@ -1083,7 +1083,45 @@ $(document).ready(function () {
 
 
 
+//animazione card vino
+var Webflow = Webflow || [];
+Webflow.push(function () {
+ if (!window.gsap) return;
 
+ const cards = document.querySelectorAll(".wine-card");
+ if (!cards.length) return;
+
+ cards.forEach((card) => {
+   const img = card.querySelector(".wine-card-image");
+   if (!img) return;
+
+   // salva lo scale originale UNA volta (quello “di default”)
+   const originalScale = (() => {
+     const v = parseFloat(gsap.getProperty(img, "scale"));
+     return isFinite(v) && v > 0 ? v : 1;
+   })();
+
+   const targetScale = originalScale * (65 / 60);
+
+   card.addEventListener("mouseenter", () => {
+     gsap.to(img, {
+       scale: targetScale,
+       duration: 0.35,
+       ease: "power2.out",
+       overwrite: true,
+     });
+   });
+
+   card.addEventListener("mouseleave", () => {
+     gsap.to(img, {
+       scale: originalScale,
+       duration: 0.35,
+       ease: "power2.out",
+       overwrite: true,
+     });
+   });
+ });
+});
 
 
 
