@@ -1,4 +1,4 @@
-console.log('v.1.8.1');
+console.log('v.1.8.2');
 
 
 
@@ -734,10 +734,12 @@ window.Webflow.push(function () {
 //////////////////////////
 // script pagine vino (limitato a page-type="vino")
 //////////////////////////
-
-// script pagine vino (limitato a page-type="vino")
 function isWinePage() {
   return document.body && document.body.getAttribute('page-type') === 'vino';
+}
+
+function isMobile() {
+  return window.matchMedia && window.matchMedia('(max-width: 767px)').matches;
 }
 
 document.addEventListener('DOMContentLoaded', function () {
@@ -754,16 +756,17 @@ document.addEventListener('DOMContentLoaded', function () {
   // helper: imposta href su <a> e disabilita se vuoto
   function setLink(aEl, url) {
     if (!aEl) return;
-  
+
     var clean = (url || '').trim();
-  
+
     if (!clean) {
       aEl.setAttribute('data-disabled', 'true');
       aEl.style.pointerEvents = 'none';
       aEl.style.opacity = '0.5';
+      aEl.removeAttribute('href');
       return;
     }
-  
+
     aEl.removeAttribute('data-disabled');
     aEl.setAttribute('href', clean);
     aEl.style.pointerEvents = '';
@@ -829,17 +832,28 @@ document.addEventListener('DOMContentLoaded', function () {
   // ==== 4. Annata di base = la più vecchia ====
   var defaultYear = anniOrdinati[0];
 
-  // ==== 5. Bottoni annate (Text Link) in ordine dalla più vecchia ====
+  // ==== 5. Bottoni annate DESKTOP (solo dentro .annate-wrap) ====
   var bottoni = Array.prototype.slice.call(
-    document.querySelectorAll('.div-block-421 .bottone-annate-vino')
+    document.querySelectorAll('.annate-wrap .bottone-annate-vino')
   );
 
+  // fallback se non esiste .annate-wrap (robustezza)
+  if (!bottoni.length) {
+    bottoni = Array.prototype.slice.call(document.querySelectorAll('.bottone-annate-vino'))
+      .filter(function (btn) {
+        // escludi eventuali duplicati dentro wrapper mobile
+        return !btn.closest('.annate-select-wrap');
+      });
+  }
+
+  // assegna anni ai bottoni in ordine (solo se esistono)
   bottoni.forEach(function (btn, index) {
     var year = anniOrdinati[index];
     if (year) {
       btn.textContent = year;
       btn.setAttribute('data-annata', year);
       btn.classList.add('annata-attiva');
+      btn.style.display = '';
     } else {
       btn.style.display = 'none';
     }
@@ -847,7 +861,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
   // ==== 6. Target dei testi da aggiornare (fuori dalla collection) ====
   var andamentoBlock = null;
-  var allAndamento = document.querySelectorAll('.andamento-climatico');
+  var allAndamento = document.querySelectorAll('.andamento-climatico, .andatamento-climatico');
   allAndamento.forEach(function (el) {
     if (!andamentoBlock && !el.closest('.collection-list-wrapper-3')) andamentoBlock = el;
   });
@@ -886,98 +900,90 @@ document.addEventListener('DOMContentLoaded', function () {
     setLink(etichettaLink, dati.etichettaUrl);
   }
 
-  // ==== 7. Gestione stato attivo bottoni + click ====
+  // ==== 7. Stato attivo bottoni (desktop) ====
   function setActiveButton(clickedBtn) {
     bottoni.forEach(function (b) { b.classList.remove('is-active'); });
     if (clickedBtn) clickedBtn.classList.add('is-active');
   }
 
-   // ==== 8. MOBILE: Select annate (creata via JS) ====
-   function isMobile() {
-     return window.matchMedia && window.matchMedia('(max-width: 767px)').matches;
-   }
-   
-   function buildAnnateSelect() {
-     var wrap = document.querySelector('.annate-select-wrap');
-     if (!wrap) return null;
-   
-     // evita doppioni
-     wrap.innerHTML = '';
-   
-     var select = document.createElement('select');
-     select.className = 'annate-select';
-   
-     anniOrdinati.forEach(function(year){
-       var opt = document.createElement('option');
-       opt.value = year;
-       opt.textContent = year;
-       select.appendChild(opt);
-     });
-   
-     wrap.appendChild(select);
-     return select;
-   }
-   
-   var annateSelect = buildAnnateSelect();
-   
-   function setSelectValue(year) {
-     if (!annateSelect) return;
-     annateSelect.value = year;
-   }
-   
-   if (annateSelect) {
-     // init valore = annata di default
-     if (defaultYear) setSelectValue(defaultYear);
-   
-     annateSelect.addEventListener('change', function () {
-       var selectedYear = annateSelect.value;
-       if (!selectedYear) return;
-   
-       // aggiorna contenuti
-       aggiornaContenutiPerAnnata(selectedYear);
-   
-       // allinea anche lo stato dei bottoni (utile quando torni desktop o per coerenza)
-       var btn = bottoni.find(function (b) {
-         return b.getAttribute('data-annata') === selectedYear;
-       });
-       if (btn) setActiveButton(btn);
-     });
-   }
-   
-   // quando clicchi un bottone (desktop), allinea anche la select (mobile)
-   bottoni.forEach(function (btn) {
-     btn.addEventListener('click', function () {
-       var selectedYear = btn.getAttribute('data-annata');
-       if (selectedYear) setSelectValue(selectedYear);
-     });
-   });
+  // ==== 8. MOBILE: creazione select dentro .annate-select-wrap ====
+  var annateSelect = null;
 
-  // Init con annata più vecchia
-  if (defaultYear) {
-    var defaultBtn = bottoni.find(function (b) {
-      return b.getAttribute('data-annata') === defaultYear;
+  function buildAnnateSelect() {
+    var mount = document.querySelector('.annate-select-wrap .annate-select-mount');
+    if (!mount) return null;
+
+    mount.innerHTML = '';
+
+    var wrap = document.createElement('div');
+    wrap.className = 'annate-select-wrap-inner';
+
+    var select = document.createElement('select');
+    select.className = 'annate-select';
+
+    anniOrdinati.forEach(function (year) {
+      var opt = document.createElement('option');
+      opt.value = year;
+      opt.textContent = year;
+      select.appendChild(opt);
     });
-    if (defaultBtn) {
-      setActiveButton(defaultBtn);
+
+    wrap.appendChild(select);
+    mount.appendChild(wrap);
+    return select;
+  }
+
+  function syncSelectValue(year) {
+    if (!annateSelect) return;
+    annateSelect.value = year;
+  }
+
+  function initControls() {
+    // costruisci select solo se wrapper mobile esiste (anche se sei desktop: non dà fastidio)
+    annateSelect = buildAnnateSelect();
+
+    // init default
+    if (defaultYear) {
       aggiornaContenutiPerAnnata(defaultYear);
+      syncSelectValue(defaultYear);
+
+      var defaultBtn = bottoni.find(function (b) {
+        return b.getAttribute('data-annata') === defaultYear;
+      });
+      if (defaultBtn) setActiveButton(defaultBtn);
+    }
+
+    // click bottoni desktop
+    bottoni.forEach(function (btn) {
+      btn.addEventListener('click', function (e) {
+        e.preventDefault();
+        var selectedYear = btn.getAttribute('data-annata');
+        if (!selectedYear) return;
+        if (btn.classList.contains('is-active')) return;
+
+        setActiveButton(btn);
+        aggiornaContenutiPerAnnata(selectedYear);
+        syncSelectValue(selectedYear);
+      });
+    });
+
+    // change select mobile
+    if (annateSelect) {
+      annateSelect.addEventListener('change', function () {
+        var selectedYear = annateSelect.value;
+        if (!selectedYear) return;
+
+        aggiornaContenutiPerAnnata(selectedYear);
+
+        var btn = bottoni.find(function (b) {
+          return b.getAttribute('data-annata') === selectedYear;
+        });
+        if (btn) setActiveButton(btn);
+      });
     }
   }
 
-  // Click sui bottoni
-  bottoni.forEach(function (btn) {
-    var year = btn.getAttribute('data-annata');
-    if (!year) return;
-
-    btn.addEventListener('click', function (e) {
-      e.preventDefault();
-      var selectedYear = btn.getAttribute('data-annata');
-      if (!selectedYear) return;
-      if (btn.classList.contains('is-active')) return;
-
-      setActiveButton(btn);
-      aggiornaContenutiPerAnnata(selectedYear);
-    });
-  });
+  initControls();
 });
 
 
@@ -1101,11 +1107,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
     question.addEventListener('click', function (e) {
       e.preventDefault();
-      if (item.classList.contains('is-open')) {
-        closeItem(item);
-      } else {
-        openItem(item);
-      }
+      if (item.classList.contains('is-open')) closeItem(item);
+      else openItem(item);
     });
   });
 });
@@ -1119,6 +1122,9 @@ $(document).ready(function () {
   if (typeof window.jQuery === 'undefined') return;
   if (!jQuery.fn || !jQuery.fn.slick) return;
   if (!document.querySelector('.three-carousel')) return;
+
+  // evita doppia init
+  if ($('.three-carousel').hasClass('slick-initialized')) return;
 
   $('.three-carousel').slick({
     dots: false,
@@ -1138,7 +1144,6 @@ $(document).ready(function () {
     ]
   });
 });
-
 
 
 
