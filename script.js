@@ -1,4 +1,84 @@
-console.log('v.1.5.7');
+console.log('v.1.6.1');
+
+
+
+/* =======================
+   NEWS: SLICK CAROUSEL (stesse impostazioni dei vini)
+   ======================= */
+function isNewsPage() {
+  return document.body && document.body.getAttribute("page-type") === "news";
+}
+
+$(document).ready(function () {
+  if (!isNewsPage()) return;
+  if (typeof window.jQuery === "undefined") return;
+  if (!jQuery.fn || !jQuery.fn.slick) return;
+
+  var $carousel = $(".carousel-news");
+  if (!$carousel.length) return;
+
+  // sorgenti (immagini dentro la pagina news)
+  var $sources = $("img.carousel-source").filter(function () {
+    return this.currentSrc || this.src;
+  });
+  if (!$sources.length) return;
+
+  // costruisci markup slide (una slide per immagine)
+  var slidesHtml = $sources
+    .map(function () {
+      var src = this.currentSrc || this.src;
+      var srcset = this.getAttribute("srcset");
+      var sizes = this.getAttribute("sizes");
+      var alt = this.getAttribute("alt") || "";
+
+      var attrs =
+        ' src="' + src + '" alt="' + alt.replace(/"/g, "&quot;") + '" loading="lazy"';
+      if (srcset) attrs += ' srcset="' + srcset.replace(/"/g, "&quot;") + '"';
+      if (sizes) attrs += ' sizes="' + sizes.replace(/"/g, "&quot;") + '"';
+
+      return '<div class="carousel-news-slide"><img' + attrs + "></div>";
+    })
+    .get()
+    .join("");
+
+  // sostituisci le slide esistenti
+  if ($carousel.hasClass("slick-initialized")) {
+    $carousel.slick("unslick");
+  }
+  $carousel.html(slidesHtml);
+
+  // init slick (stesso setup dei vini)
+  $carousel.slick({
+    dots: false,
+    arrows: true,
+    infinite: true,
+    speed: 800,
+    slidesToShow: 3,
+    slidesToScroll: 1,
+    centerMode: false,
+    autoplay: false,
+    cssEase: "cubic-bezier(0.7, 0, 0.3, 1)",
+    prevArrow:
+      '<button type="button" class="slick-prev" aria-label="Previous"><img src="https://cdn.prod.website-files.com/6942d44283c82467823141dd/698d8c095fe43eff79680d68_Arrow_white_left.svg" alt="Previous"></button>',
+    nextArrow:
+      '<button type="button" class="slick-next" aria-label="Next"><img src="https://cdn.prod.website-files.com/6942d44283c82467823141dd/698d8b592f666ba797dcc19a_Arrow_white_right.svg" alt="Next"></button>',
+    responsive: [
+      { breakpoint: 992, settings: { slidesToShow: 2, slidesToScroll: 1 } },
+      { breakpoint: 768, settings: { slidesToShow: 1, slidesToScroll: 1 } },
+    ],
+  });
+
+  // opzionale: nascondi le sorgenti
+  $sources.css("display", "none");
+});
+
+
+
+
+
+
+
+
 
 
 
