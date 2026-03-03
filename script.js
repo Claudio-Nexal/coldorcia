@@ -1,54 +1,102 @@
-console.log('v.1.6.1');
+console.log('v.1.6.2');
 
 
 
 /* =======================
    NEWS: SLICK CAROUSEL (stesse impostazioni dei vini)
    ======================= */
+/* =======================
+   NEWS: SLICK CAROUSEL (stesse impostazioni dei vini)
+   ======================= */
 function isNewsPage() {
-  return document.body && document.body.getAttribute("page-type") === "news";
+  return document.body && document.body.getAttribute('page-type') === 'news';
+}
+
+function buildNewsCarouselSlides() {
+  var carouselRoot = document.querySelector('.carousel-news');
+  if (!carouselRoot) return;
+
+  var track = carouselRoot.querySelector('.three-carousel');
+  if (!track) return;
+
+  var sources = Array.prototype.slice
+    .call(document.querySelectorAll('img.carousel-source'))
+    .filter(function (img) { return (img.currentSrc || img.src); });
+
+  if (!sources.length) return;
+
+  // Template: prendo la prima slide già presente (creata in Webflow)
+  var templateSlide = track.querySelector('.three-slide');
+  if (!templateSlide) return;
+
+  var template = templateSlide.cloneNode(true);
+
+  // svuota track e ricrea N slide
+  track.innerHTML = '';
+
+  sources.forEach(function (imgEl) {
+    var slide = template.cloneNode(true);
+    var bg = slide.querySelector('.three-slide-bg');
+
+    var url = imgEl.currentSrc || imgEl.src;
+
+    if (bg) {
+      bg.style.backgroundImage = 'url("' + url + '")';
+      bg.style.backgroundSize = 'cover';
+      bg.style.backgroundPosition = 'center';
+      bg.style.backgroundRepeat = 'no-repeat';
+    }
+
+    track.appendChild(slide);
+  });
+
+  // opzionale: nascondi le immagini sorgente
+  sources.forEach(function (imgEl) { imgEl.style.display = 'none'; });
 }
 
 $(document).ready(function () {
+  // VINO: lascia il tuo com'è
+  if (typeof isWinePage === 'function' && isWinePage()) {
+    if (typeof window.jQuery === 'undefined') return;
+    if (!jQuery.fn || !jQuery.fn.slick) return;
+    if (!document.querySelector('.three-carousel')) return;
+
+    $('.three-carousel').slick({
+      dots: false,
+      arrows: true,
+      infinite: true,
+      speed: 800,
+      slidesToShow: 3,
+      slidesToScroll: 1,
+      centerMode: false,
+      autoplay: false,
+      cssEase: 'cubic-bezier(0.7, 0, 0.3, 1)',
+      prevArrow: '<button type="button" class="slick-prev" aria-label="Previous"><img src="https://cdn.prod.website-files.com/6942d44283c82467823141dd/698d8c095fe43eff79680d68_Arrow_white_left.svg" alt="Previous"></button>',
+      nextArrow: '<button type="button" class="slick-next" aria-label="Next"><img src="https://cdn.prod.website-files.com/6942d44283c82467823141dd/698d8b592f666ba797dcc19a_Arrow_white_right.svg" alt="Next"></button>',
+      responsive: [
+        { breakpoint: 992, settings: { slidesToShow: 2, slidesToScroll: 1 } },
+        { breakpoint: 768, settings: { slidesToShow: 1, slidesToScroll: 1 } }
+      ]
+    });
+
+    return;
+  }
+
+  // NEWS: build slide + init slick solo sul carousel-news
   if (!isNewsPage()) return;
-  if (typeof window.jQuery === "undefined") return;
+  if (typeof window.jQuery === 'undefined') return;
   if (!jQuery.fn || !jQuery.fn.slick) return;
 
-  var $carousel = $(".carousel-news");
-  if (!$carousel.length) return;
+  buildNewsCarouselSlides();
 
-  // sorgenti (immagini dentro la pagina news)
-  var $sources = $("img.carousel-source").filter(function () {
-    return this.currentSrc || this.src;
-  });
-  if (!$sources.length) return;
+  var $newsTrack = $('.carousel-news .three-carousel');
+  if (!$newsTrack.length) return;
 
-  // costruisci markup slide (una slide per immagine)
-  var slidesHtml = $sources
-    .map(function () {
-      var src = this.currentSrc || this.src;
-      var srcset = this.getAttribute("srcset");
-      var sizes = this.getAttribute("sizes");
-      var alt = this.getAttribute("alt") || "";
-
-      var attrs =
-        ' src="' + src + '" alt="' + alt.replace(/"/g, "&quot;") + '" loading="lazy"';
-      if (srcset) attrs += ' srcset="' + srcset.replace(/"/g, "&quot;") + '"';
-      if (sizes) attrs += ' sizes="' + sizes.replace(/"/g, "&quot;") + '"';
-
-      return '<div class="carousel-news-slide"><img' + attrs + "></div>";
-    })
-    .get()
-    .join("");
-
-  // sostituisci le slide esistenti
-  if ($carousel.hasClass("slick-initialized")) {
-    $carousel.slick("unslick");
+  if ($newsTrack.hasClass('slick-initialized')) {
+    $newsTrack.slick('unslick');
   }
-  $carousel.html(slidesHtml);
 
-  // init slick (stesso setup dei vini)
-  $carousel.slick({
+  $newsTrack.slick({
     dots: false,
     arrows: true,
     infinite: true,
@@ -57,19 +105,14 @@ $(document).ready(function () {
     slidesToScroll: 1,
     centerMode: false,
     autoplay: false,
-    cssEase: "cubic-bezier(0.7, 0, 0.3, 1)",
-    prevArrow:
-      '<button type="button" class="slick-prev" aria-label="Previous"><img src="https://cdn.prod.website-files.com/6942d44283c82467823141dd/698d8c095fe43eff79680d68_Arrow_white_left.svg" alt="Previous"></button>',
-    nextArrow:
-      '<button type="button" class="slick-next" aria-label="Next"><img src="https://cdn.prod.website-files.com/6942d44283c82467823141dd/698d8b592f666ba797dcc19a_Arrow_white_right.svg" alt="Next"></button>',
+    cssEase: 'cubic-bezier(0.7, 0, 0.3, 1)',
+    prevArrow: '<button type="button" class="slick-prev" aria-label="Previous"><img src="https://cdn.prod.website-files.com/6942d44283c82467823141dd/698d8c095fe43eff79680d68_Arrow_white_left.svg" alt="Previous"></button>',
+    nextArrow: '<button type="button" class="slick-next" aria-label="Next"><img src="https://cdn.prod.website-files.com/6942d44283c82467823141dd/698d8b592f666ba797dcc19a_Arrow_white_right.svg" alt="Next"></button>',
     responsive: [
       { breakpoint: 992, settings: { slidesToShow: 2, slidesToScroll: 1 } },
-      { breakpoint: 768, settings: { slidesToShow: 1, slidesToScroll: 1 } },
-    ],
+      { breakpoint: 768, settings: { slidesToShow: 1, slidesToScroll: 1 } }
+    ]
   });
-
-  // opzionale: nascondi le sorgenti
-  $sources.css("display", "none");
 });
 
 
