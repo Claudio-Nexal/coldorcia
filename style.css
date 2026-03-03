@@ -1,4 +1,4 @@
-/* v.1.5.3 */
+/* v.1.6.1 */
 
 
 /* Menu */
@@ -301,4 +301,110 @@ a.wine-card{
 }
 .wine-card-border-right{
 	border-right: .5px solid #000;
+}
+
+
+
+
+
+
+
+
+
+/* Select annate vino */
+/* VISIBILITÀ ANNATE (override) */
+/* Desktop (>= 768): bottoni */
+@media (min-width: 768px){
+  .annate-wrap{ display:flex !important; }
+  .annate-select-wrap{ display:none !important; }
+}
+
+/* Mobile (<= 767): select */
+@media (max-width: 767px){
+  .annate-wrap{ display:none !important; }
+  .annate-select-wrap{ display:flex !important; }
+}
+
+/* evita che il mount venga nascosto da regole interne */
+.annate-select-wrap .annate-select-mount{ display:block !important; width:100%; }
+.annate-select{ display:block !important; }
+
+/* wrapper SOLO della select */
+.annate-select-wrap-inner{
+  position: relative;
+  width: 100%;
+  max-width: 520px; /* opzionale */
+}
+
+/* freccia a destra centrata sulla select */
+.annate-select-wrap-inner::after{
+  content: "";
+  position: absolute;
+  right: 22px;
+  top: 50%;
+  width: 12px;
+  height: 12px;
+  transform: translateY(-50%);
+  background: url("https://cdn.prod.website-files.com/6942d44283c82467823141dd/6979de976d4b9fc33943bd54_Arrow_down_biege.svg") no-repeat center / contain;
+  pointer-events: none;
+}
+
+/* mobile tweak */
+@media (max-width: 767px){
+  .annate-select-wrap-inner::after{
+    right: 18px;
+  }
+}
+
+/* SELECT */
+.annate-select{
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+
+  width: 100%;
+  height: 64px;
+  padding: 0 64px 0 24px;
+
+  border: 1px solid #E1DBD2;
+  background: transparent;
+  border-radius: 0;
+
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: #111;
+
+  cursor: pointer;
+  outline: none;
+}
+
+/* hover/focus (molto leggero) */
+.annate-select:hover{
+  border-color: rgba(0,0,0,0.28);
+}
+.annate-select:focus{
+  border-color: rgba(0,0,0,0.38);
+}
+
+/* opzionale: se vuoi stessa “aria” anche su iOS */
+.annate-select::-ms-expand{
+  display: none;
+}
+
+/* mobile */
+@media (max-width: 767px){
+	.annate-select {
+    height: 58px;
+    font-size: 3.7vw;
+    padding-left: 20px;
+    padding-right: 56px;
+    font-family: Effra, Arial, sans-serif;
+  }
+}
+
+@media (max-width: 767px){
+  .annate-select-wrap .bottone-annate-vino{
+    display: none !important;
+  }
 }
