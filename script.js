@@ -1,4 +1,4 @@
-console.log('v.1.8.2');
+console.log('v.1.8.3');
 
 
 
@@ -784,7 +784,7 @@ document.addEventListener('DOMContentLoaded', function () {
       .filter(Boolean);
   } else {
     anniAttivi = Array.prototype.slice.call(
-      document.querySelectorAll('.collection-list-wrapper-3 .annata')
+      document.querySelectorAll('.informazioni-annate .annata')
     )
       .map(function (el) { return el.textContent.trim(); })
       .filter(Boolean);
@@ -800,8 +800,8 @@ document.addEventListener('DOMContentLoaded', function () {
     return a.localeCompare(b);
   });
 
-  // ==== 3. Mappo tutti i dati per annata dalla collection-list-wrapper-3 ====
-  var annateItems = document.querySelectorAll('.collection-list-wrapper-3 .w-dyn-item');
+  // ==== 3. Mappo tutti i dati per annata dalla informazioni-annate ====
+  var annateItems = document.querySelectorAll('.informazioni-annate .w-dyn-item');
   var datiAnnate = {};
 
   annateItems.forEach(function (item) {
@@ -863,7 +863,7 @@ document.addEventListener('DOMContentLoaded', function () {
   var andamentoBlock = null;
   var allAndamento = document.querySelectorAll('.andamento-climatico, .andatamento-climatico');
   allAndamento.forEach(function (el) {
-    if (!andamentoBlock && !el.closest('.collection-list-wrapper-3')) andamentoBlock = el;
+    if (!andamentoBlock && !el.closest('.informazioni-annate')) andamentoBlock = el;
   });
 
   var zonaBlock = document.querySelector('.rich-text-block.zona-di-produzione');
@@ -875,7 +875,7 @@ document.addEventListener('DOMContentLoaded', function () {
   function pickVisibleAnchor(selector) {
     var candidates = Array.prototype.slice.call(document.querySelectorAll('a' + selector));
     for (var i = 0; i < candidates.length; i++) {
-      if (!candidates[i].closest('.collection-list-wrapper-3')) return candidates[i];
+      if (!candidates[i].closest('.informazioni-annate')) return candidates[i];
     }
     return null;
   }
