@@ -1,4 +1,4 @@
-console.log('v.1.7.1');
+console.log('v.1.8.1');
 
 
 
@@ -891,6 +891,66 @@ document.addEventListener('DOMContentLoaded', function () {
     bottoni.forEach(function (b) { b.classList.remove('is-active'); });
     if (clickedBtn) clickedBtn.classList.add('is-active');
   }
+
+   // ==== 8. MOBILE: Select annate (creata via JS) ====
+   function isMobile() {
+     return window.matchMedia && window.matchMedia('(max-width: 767px)').matches;
+   }
+   
+   function buildAnnateSelect() {
+     var wrap = document.querySelector('.annate-select-wrap');
+     if (!wrap) return null;
+   
+     // evita doppioni
+     wrap.innerHTML = '';
+   
+     var select = document.createElement('select');
+     select.className = 'annate-select';
+   
+     anniOrdinati.forEach(function(year){
+       var opt = document.createElement('option');
+       opt.value = year;
+       opt.textContent = year;
+       select.appendChild(opt);
+     });
+   
+     wrap.appendChild(select);
+     return select;
+   }
+   
+   var annateSelect = buildAnnateSelect();
+   
+   function setSelectValue(year) {
+     if (!annateSelect) return;
+     annateSelect.value = year;
+   }
+   
+   if (annateSelect) {
+     // init valore = annata di default
+     if (defaultYear) setSelectValue(defaultYear);
+   
+     annateSelect.addEventListener('change', function () {
+       var selectedYear = annateSelect.value;
+       if (!selectedYear) return;
+   
+       // aggiorna contenuti
+       aggiornaContenutiPerAnnata(selectedYear);
+   
+       // allinea anche lo stato dei bottoni (utile quando torni desktop o per coerenza)
+       var btn = bottoni.find(function (b) {
+         return b.getAttribute('data-annata') === selectedYear;
+       });
+       if (btn) setActiveButton(btn);
+     });
+   }
+   
+   // quando clicchi un bottone (desktop), allinea anche la select (mobile)
+   bottoni.forEach(function (btn) {
+     btn.addEventListener('click', function () {
+       var selectedYear = btn.getAttribute('data-annata');
+       if (selectedYear) setSelectValue(selectedYear);
+     });
+   });
 
   // Init con annata più vecchia
   if (defaultYear) {
