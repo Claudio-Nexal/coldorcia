@@ -1,10 +1,7 @@
-console.log('v.1.8.4');
+console.log('v.2.0.1');
 
 
 
-/* =======================
-   NEWS: SLICK CAROUSEL (stesse impostazioni dei vini)
-   ======================= */
 /* =======================
    NEWS: SLICK CAROUSEL (stesse impostazioni dei vini)
    ======================= */
@@ -481,17 +478,42 @@ $(document).ready(function () {
 
 
 
-//animazione illustrazione su menu
+// animazione illustrazione su menu
 window.Webflow ||= [];
 window.Webflow.push(function () {
+  function isHomePage() {
+    const body = document.body;
+    if (!body) return false;
+
+    return (
+      body.classList.contains("home") ||
+      body.classList.contains("homepage") ||
+      body.getAttribute("page-type") === "home" ||
+      body.getAttribute("page-type") === "homepage" ||
+      body.getAttribute("data-page") === "home" ||
+      body.getAttribute("data-page") === "homepage"
+    );
+  }
+
   // no animation on mobile
   if (window.matchMedia("(max-width: 767px)").matches) return;
 
   const original = document.querySelector(".coldorcia-illustration");
   if (!original || typeof gsap === "undefined") return;
 
+  // IN HOMEPAGE: nessuna animazione, nessun clone, elemento visibile normale
+  if (isHomePage()) {
+    original.style.visibility = "";
+    const existingClone = document.querySelector(".coldorcia-illustration--fixed-clone");
+    if (existingClone) existingClone.remove();
+    return;
+  }
+
   const start = () => {
     const rect = original.getBoundingClientRect();
+
+    const existingClone = document.querySelector(".coldorcia-illustration--fixed-clone");
+    if (existingClone) existingClone.remove();
 
     const clone = original.cloneNode(true);
     clone.classList.add("coldorcia-illustration--fixed-clone");
@@ -510,15 +532,15 @@ window.Webflow.push(function () {
       transformOrigin: "50% 50%",
       x: 0,
       y: 0,
+      xPercent: 0,
+      yPercent: 0,
       scale: 1
     });
 
-    // Use .custom-navbar for measurements
     const nav = document.querySelector(".custom-navbar");
     const navRect = nav ? nav.getBoundingClientRect() : null;
     const navCenterY = navRect ? (navRect.top + navRect.height / 2) : 10;
 
-    // target width = 1.5vw
     const targetW = window.innerWidth * 0.015;
     const scale = targetW / rect.width;
 
@@ -526,8 +548,8 @@ window.Webflow.push(function () {
       duration: 1.1,
       ease: "power3.inOut",
       top: navCenterY,
-      left: (window.innerWidth / 2),
-      xPercent: -50,
+      left: (window.innerWidth / 2) - (targetW / 2),
+      xPercent: 0,
       yPercent: -50,
       scale: scale
     });
