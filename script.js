@@ -202,7 +202,7 @@ $(document).ready(function () {
 
 
 
-
+//menu
 (() => {
   function initMenu() {
     if (!window.gsap) return;
@@ -659,13 +659,10 @@ $(document).ready(function () {
             opacity: 0
           });
 
+          unlockScroll();
           applyClosedHeaderState();
         }
       });
-
-      tl.add(() => {
-        unlockScroll();
-      }, 0);
 
       tl.to(menuContent, {
         y: -30,
