@@ -203,7 +203,7 @@ $(document).ready(function () {
 
 
 // Animazione menu + gestione scroll (ScrollSmoother compatibile)
-(() => {
+/* (() => {
   function initMenu() {
     if (!window.gsap) return;
 
@@ -469,7 +469,7 @@ $(document).ready(function () {
   } else {
     initMenu();
   }
-})();
+})(); */
 
 
 
