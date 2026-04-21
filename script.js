@@ -202,13 +202,12 @@ $(document).ready(function () {
 
 
 
-// Animazione menu + gestione scroll (ScrollSmoother compatibile)
-/* (() => {
+<script>
+(() => {
   function initMenu() {
     if (!window.gsap) return;
 
-    // Easing custom per il menu (fallback se CustomEase non è caricato)
-    let menuEase = "power4.inOut";
+    let menuEase = "gl.fastInOut";
     if (window.CustomEase && typeof CustomEase.create === "function") {
       CustomEase.create(
         "gl.fastInOut",
@@ -217,18 +216,35 @@ $(document).ready(function () {
       menuEase = "gl.fastInOut";
     }
 
+    const header =
+      document.querySelector(".custom-navbar") ||
+      document.querySelector(".navbar") ||
+      document.querySelector("header");
+
+    const hero =
+      document.querySelector(".hero-section")
+
     const menuOverlay = document.querySelector(".menu-overlay");
     const menuContent = document.querySelector(".menu-content");
-    const brandImg    = document.querySelector(".nav-brand img");
-
-    const illusClone = document.querySelector(".coldorcia-illustration--fixed-clone");
-    const illusOrig  = document.querySelector(".coldorcia-illustration");
-
-    const openBtn  = document.querySelector("img.menu-open");
+    const brandImg = document.querySelector(".nav-brand img");
+    const centerLogo = document.querySelector(".image-19");
+    const shopText = document.querySelector(".shop");
+    const openBtn = document.querySelector("img.menu-open");
     const closeBtn = document.querySelector("img.menu-close");
 
-    const openBrandSrc    = "https://cdn.prod.website-files.com/6942d44283c82467823141dd/6979ec00e495d8e5d5cd2ad8_Coldorcia_logo_beige.svg";
-    const defaultBrandSrc = brandImg?.src;
+    const redBrandSrc = "https://cdn.prod.website-files.com/6942d44283c82467823141dd/69e753685665a08e9c624425_Logo-red.svg";
+    const blackHamburgerSrc = "https://cdn.prod.website-files.com/6942d44283c82467823141dd/697b444ddf924a86a7fd4944_hamburger_black.svg";
+    const defaultBrandSrc = brandImg?.src || "";
+    const isHomePage = document.body.classList.contains("home");
+    const defaultHamburgerSrc = openBtn?.src || "";
+    const defaultHeaderBg = header ? window.getComputedStyle(header).backgroundColor : "";
+    const activeHeaderBg = "#F8F8F3";
+    const defaultShopColor = shopText ? window.getComputedStyle(shopText).color : "";
+    const compactBrandWidth = "4.8vw";
+    let defaultCenterLogoWidth = centerLogo ? window.getComputedStyle(centerLogo).width : "";
+    let defaultCenterLogoHeight = centerLogo ? window.getComputedStyle(centerLogo).height : "";
+    const stateTransitionDuration = 1;
+    const mobileBreakpoint = 767;
 
     if (!menuOverlay || !menuContent || (!openBtn && !closeBtn)) return;
     if (window.__MENU_ANIM_INIT__) return;
@@ -236,17 +252,112 @@ $(document).ready(function () {
 
     let isOpen = false;
     let isAnimating = false;
+    let isPastHero = false;
     let tl = null;
+    let hasInitializedHeaderState = false;
 
-    // ----- Scroll lock con supporto ScrollSmoother -----
     let savedScroll = 0;
     let smoother = null;
+    let lastScrollY = window.scrollY || window.pageYOffset || 0;
+    let headerHidden = false;
+    let scrollTicking = false;
+    const scrollDeltaThreshold = 8;
+    const hideOffsetThreshold = 120;
+    const afterHeroHideDelay = 200;
+    let pastHeroStartScrollY = null;
+
+    function isFullyTransparentColor(value) {
+      if (!value) return true;
+      const normalized = value.replace(/\s+/g, "").toLowerCase();
+      return normalized === "transparent" || normalized.endsWith(",0)") || normalized.endsWith(",0.0)");
+    }
+
+    const defaultHeaderBgTweenTarget = isFullyTransparentColor(defaultHeaderBg)
+      ? "rgba(248,248,243,0)"
+      : defaultHeaderBg;
+
+    function refreshDefaultCenterLogoSize() {
+      if (!centerLogo) return;
+      const rect = centerLogo.getBoundingClientRect();
+      if (rect.width > 0 && rect.height > 0) {
+        defaultCenterLogoWidth = `${rect.width}px`;
+        defaultCenterLogoHeight = `${rect.height}px`;
+      }
+    }
+
+    function isMobileViewport() {
+      return window.matchMedia(`(max-width: ${mobileBreakpoint}px)`).matches;
+    }
+
 
     function getSmoother() {
       if (!smoother && window.ScrollSmoother) {
         smoother = ScrollSmoother.get();
       }
       return smoother;
+    }
+
+    function getCurrentScrollY() {
+      const smootherInstance = getSmoother();
+      if (smootherInstance) return smootherInstance.scrollTop();
+      return window.scrollY || window.pageYOffset || 0;
+    }
+
+    function showHeaderOnScroll() {
+      if (!header || !headerHidden) return;
+      headerHidden = false;
+      gsap.to(header, {
+        yPercent: 0,
+        duration: 1.5,
+        ease: menuEase,
+        overwrite: "auto"
+      });
+    }
+
+    function hideHeaderOnScroll() {
+      if (!header || headerHidden) return;
+      headerHidden = true;
+      gsap.to(header, {
+        yPercent: -120,
+        duration: 1.5,
+        ease: menuEase,
+        overwrite: "auto"
+      });
+    }
+
+    function handleHeaderAutoHide() {
+      if (!header || isOpen) return;
+      if (!isPastHero) {
+        showHeaderOnScroll();
+        lastScrollY = getCurrentScrollY();
+        return;
+      }
+      const currentY = getCurrentScrollY();
+      if (pastHeroStartScrollY !== null && currentY < pastHeroStartScrollY + afterHeroHideDelay) {
+        showHeaderOnScroll();
+        lastScrollY = currentY;
+        return;
+      }
+      const delta = currentY - lastScrollY;
+
+      if (Math.abs(delta) < scrollDeltaThreshold) return;
+
+      if (delta > 0 && currentY > hideOffsetThreshold) {
+        hideHeaderOnScroll();
+      } else if (delta < 0) {
+        showHeaderOnScroll();
+      }
+
+      lastScrollY = currentY;
+    }
+
+    function onScrollForHeaderAutoHide() {
+      if (scrollTicking) return;
+      scrollTicking = true;
+      requestAnimationFrame(() => {
+        handleHeaderAutoHide();
+        scrollTicking = false;
+      });
     }
 
     function lockScroll() {
@@ -258,7 +369,6 @@ $(document).ready(function () {
         smootherInstance.scrollTop(savedScroll, false);
       } else {
         savedScroll = window.scrollY || window.pageYOffset || 0;
-        // blocco scroll senza far sparire la scrollbar (niente shift layout)
         document.body.style.position = "fixed";
         document.body.style.top = `-${savedScroll}px`;
         document.body.style.left = "0";
@@ -286,25 +396,22 @@ $(document).ready(function () {
         document.body.style.top = "";
         document.body.style.width = "";
 
-        // forza repaint
         void document.body.offsetHeight;
 
         requestAnimationFrame(() => {
           window.scrollTo(0, savedScroll);
         });
       }
+      lastScrollY = getCurrentScrollY();
     }
 
-    // Safety: evita lock appeso su reload/nav
     window.addEventListener("pagehide", () => {
       try { unlockScroll(); } catch (_) {}
     });
 
-    // ----- Stati iniziali -----
     gsap.set(menuOverlay, {
       pointerEvents: "none",
       autoAlpha: 0,
-      // nascosto in alto: clipPath chiuso
       clipPath: "polygon(0% 0%, 100% 0%, 100% 0%, 0% 0%)"
     });
 
@@ -315,10 +422,20 @@ $(document).ready(function () {
       willChange: "transform,opacity"
     });
 
-    // pulizia eventuali set precedenti sui link
     gsap.set([".menu-link .w-dropdown", ".menu-link a"], {
       clearProps: "transform,opacity"
     });
+
+    if (header) {
+      header.style.transition = "";
+    }
+    if (shopText) {
+      shopText.style.transition = "";
+    }
+    if (brandImg) brandImg.style.transition = "";
+    if (centerLogo) {
+      centerLogo.style.transition = "";
+    }
 
     function showOpenIcon() {
       if (openBtn) {
@@ -346,25 +463,128 @@ $(document).ready(function () {
       }
     }
 
-    showOpenIcon();
+    function applyClosedHeaderState() {
+      if (isOpen) return;
+      if (!hasInitializedHeaderState) {
+        if (isPastHero) {
+          if (header) gsap.set(header, { backgroundColor: activeHeaderBg });
+          if (shopText) gsap.set(shopText, { color: "#000000" });
+          if (centerLogo && !isMobileViewport()) {
+            gsap.set(centerLogo, { width: compactBrandWidth, height: compactBrandWidth });
+          }
+          if (openBtn) openBtn.src = blackHamburgerSrc;
+          if (brandImg) {
+            brandImg.src = redBrandSrc;
+            gsap.set(brandImg, { opacity: 1 });
+          }
+        } else {
+          if (header) gsap.set(header, { backgroundColor: defaultHeaderBg });
+          if (shopText) gsap.set(shopText, { color: defaultShopColor });
+          if (centerLogo) gsap.set(centerLogo, { clearProps: "width,height" });
+          if (openBtn) openBtn.src = defaultHamburgerSrc;
+          if (brandImg) {
+            if (!isHomePage && defaultBrandSrc) brandImg.src = defaultBrandSrc;
+            gsap.set(brandImg, { opacity: isHomePage ? 0 : 1 });
+          }
+        }
+        hasInitializedHeaderState = true;
+        return;
+      }
 
-  function hideIllustration() {
-    const clone = document.querySelector(".coldorcia-illustration--fixed-clone");
-    if (!clone) return;
-    gsap.killTweensOf(clone);
-    gsap.to(clone, {
-      opacity: 0, x: -5, y: -10, rotation: -5, pointerEvents: "none"
-    });
-  }
-  
-  function showIllustration() {
-    const clone = document.querySelector(".coldorcia-illustration--fixed-clone");
-    if (!clone) return;
-    gsap.killTweensOf(clone);
-    gsap.to(clone, {
-      opacity: 1, x: 0, y: 0, rotation: 0, pointerEvents: "auto"
-    });
-  }
+      if (isPastHero) {
+        refreshDefaultCenterLogoSize();
+        const stateTl = gsap.timeline({ defaults: { duration: stateTransitionDuration, ease: menuEase } });
+        if (header) {
+          stateTl.to(header, { backgroundColor: activeHeaderBg, overwrite: "auto" }, 0);
+        }
+        if (shopText) {
+          stateTl.to(shopText, { color: "#000000", overwrite: "auto" }, 0);
+        }
+        if (centerLogo) {
+          if (!isMobileViewport()) {
+            stateTl.to(centerLogo, {
+              width: compactBrandWidth,
+              height: compactBrandWidth,
+              overwrite: "auto"
+            }, 0);
+          }
+        }
+        if (openBtn) openBtn.src = blackHamburgerSrc;
+        if (brandImg) {
+          brandImg.src = redBrandSrc;
+          stateTl.to(brandImg, { opacity: 1, overwrite: "auto" }, 0);
+        }
+      } else {
+        const stateTl = gsap.timeline({ defaults: { duration: stateTransitionDuration, ease: menuEase } });
+        if (centerLogo) {
+          if (!isMobileViewport()) {
+            const hasValidDefaultSize =
+              Number.parseFloat(defaultCenterLogoWidth) > 0 &&
+              Number.parseFloat(defaultCenterLogoHeight) > 0;
+
+            if (hasValidDefaultSize) {
+              stateTl.to(centerLogo, {
+                width: defaultCenterLogoWidth,
+                height: defaultCenterLogoHeight,
+                overwrite: "auto"
+              }, 0);
+            } else {
+              stateTl.to(centerLogo, {
+                width: "7vw",
+                height: "7vw",
+                overwrite: "auto"
+              }, 0);
+            }
+          }
+        }
+        if (header) {
+          stateTl.to(header, {
+            backgroundColor: defaultHeaderBgTweenTarget,
+            overwrite: "auto"
+          }, 0);
+        }
+        if (shopText) {
+          stateTl.to(shopText, {
+            color: defaultShopColor,
+            overwrite: "auto"
+          }, 0);
+        }
+        if (openBtn) openBtn.src = defaultHamburgerSrc;
+        if (brandImg) {
+          if (isHomePage) {
+            stateTl.to(brandImg, { opacity: 0, overwrite: "auto" }, 0);
+          } else {
+            if (defaultBrandSrc) brandImg.src = defaultBrandSrc;
+            stateTl.to(brandImg, { opacity: 1, overwrite: "auto" }, 0);
+          }
+        }
+      }
+    }
+
+    function setPastHeroState(value) {
+      const wasPastHero = isPastHero;
+      isPastHero = !!value;
+      if (!wasPastHero && isPastHero) {
+        pastHeroStartScrollY = getCurrentScrollY();
+      }
+      if (wasPastHero && !isPastHero) {
+        pastHeroStartScrollY = null;
+        showHeaderOnScroll();
+      }
+      applyClosedHeaderState();
+    }
+
+    function updateHeroStateFallback() {
+      if (!hero) return;
+      const headerHeight = header ? header.offsetHeight : 0;
+      const past = hero.getBoundingClientRect().bottom <= headerHeight;
+      setPastHeroState(past);
+    }
+
+    showOpenIcon();
+    refreshDefaultCenterLogoSize();
+    window.addEventListener("load", refreshDefaultCenterLogoSize);
+    applyClosedHeaderState();
 
     openBtn?.addEventListener("click", (e) => {
       e.preventDefault();
@@ -379,13 +599,11 @@ $(document).ready(function () {
     function openMenu() {
       if (isAnimating || isOpen) return;
       isAnimating = true;
-      
+
       lockScroll();
-      if (brandImg) brandImg.src = openBrandSrc;
-      hideIllustration();
+      showHeaderOnScroll();
       showCloseIcon();
 
-      // overlay visibile solo quando il menu si apre
       gsap.set(menuOverlay, { pointerEvents: "auto", autoAlpha: 1 });
 
       tl?.kill();
@@ -398,12 +616,10 @@ $(document).ready(function () {
         }
       });
 
-      // overlay: apertura dall'alto verso il basso via clipPath
       tl.to(menuOverlay, {
         clipPath: "polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)"
       }, 0);
 
-      // contenuto: entra leggermente dal basso, senza rotazioni
       tl.to(menuContent, {
         y: 0,
         opacity: 1,
@@ -415,9 +631,8 @@ $(document).ready(function () {
       if (isAnimating || !isOpen) return;
       isAnimating = true;
 
-      showOpenIcon();    
+      showOpenIcon();
       document.body.classList.remove("menu-is-open");
-      showIllustration();
 
       tl?.kill();
       tl = gsap.timeline({
@@ -426,7 +641,6 @@ $(document).ready(function () {
           isOpen = false;
           isAnimating = false;
 
-          // di nuovo nascosto: clipPath chiuso
           gsap.set(menuOverlay, {
             pointerEvents: "none",
             autoAlpha: 0,
@@ -438,11 +652,10 @@ $(document).ready(function () {
             opacity: 0
           });
 
-          if (brandImg) brandImg.src = defaultBrandSrc;
+          applyClosedHeaderState();
         }
       });
 
-      // sblocca lo scroll subito all'inizio dell'animazione di chiusura
       tl.add(() => {
         unlockScroll();
       }, 0);
@@ -458,10 +671,32 @@ $(document).ready(function () {
       }, 0);
     }
 
-    // Chiudi menu con ESC
     window.addEventListener("keydown", (e) => {
       if (e.key === "Escape" && isOpen) closeMenu();
     });
+
+    window.addEventListener("scroll", onScrollForHeaderAutoHide, { passive: true });
+    window.addEventListener("resize", () => {
+      showHeaderOnScroll();
+      lastScrollY = getCurrentScrollY();
+    });
+
+    if (window.ScrollTrigger && hero) {
+      gsap.registerPlugin(ScrollTrigger);
+
+      ScrollTrigger.create({
+        trigger: hero,
+        start: "bottom top",
+        onEnter: () => setPastHeroState(true),
+        onLeaveBack: () => setPastHeroState(false)
+      });
+
+      ScrollTrigger.refresh();
+    } else {
+      updateHeroStateFallback();
+      window.addEventListener("scroll", updateHeroStateFallback, { passive: true });
+      window.addEventListener("resize", updateHeroStateFallback);
+    }
   }
 
   if (document.readyState === "loading") {
@@ -469,8 +704,8 @@ $(document).ready(function () {
   } else {
     initMenu();
   }
-})(); */
-
+})();
+</script>
 
 
 
