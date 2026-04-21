@@ -202,7 +202,7 @@ $(document).ready(function () {
 
 
 
-<script>
+
 (() => {
   function initMenu() {
     if (!window.gsap) return;
@@ -705,7 +705,7 @@ $(document).ready(function () {
     initMenu();
   }
 })();
-</script>
+
 
 
 
