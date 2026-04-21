@@ -265,6 +265,7 @@ $(document).ready(function () {
     const hideOffsetThreshold = 120;
     const afterHeroHideDelay = 200;
     let pastHeroStartScrollY = null;
+    let scrollbarCompensation = 0;
 
     function isFullyTransparentColor(value) {
       if (!value) return true;
@@ -362,18 +363,22 @@ $(document).ready(function () {
 
     function lockScroll() {
       const smootherInstance = getSmoother();
+      scrollbarCompensation = Math.max(0, window.innerWidth - document.documentElement.clientWidth);
 
       if (smootherInstance) {
         savedScroll = smootherInstance.scrollTop();
         smootherInstance.paused(true);
         smootherInstance.scrollTop(savedScroll, false);
+        if (menuOverlay) menuOverlay.style.paddingRight = `${scrollbarCompensation}px`;
       } else {
         savedScroll = window.scrollY || window.pageYOffset || 0;
+        document.body.style.paddingRight = `${scrollbarCompensation}px`;
         document.body.style.position = "fixed";
         document.body.style.top = `-${savedScroll}px`;
         document.body.style.left = "0";
         document.body.style.right = "0";
         document.body.style.width = "100%";
+        if (menuOverlay) menuOverlay.style.paddingRight = `${scrollbarCompensation}px`;
       }
     }
 
@@ -383,6 +388,7 @@ $(document).ready(function () {
       if (smootherInstance) {
         smootherInstance.paused(false);
         smootherInstance.scrollTop(savedScroll, false);
+        if (menuOverlay) menuOverlay.style.paddingRight = "";
       } else {
         document.documentElement.style.overflow = "";
         document.documentElement.style.overflowY = "";
@@ -395,6 +401,7 @@ $(document).ready(function () {
         document.body.style.position = "";
         document.body.style.top = "";
         document.body.style.width = "";
+        if (menuOverlay) menuOverlay.style.paddingRight = "";
 
         void document.body.offsetHeight;
 
@@ -705,6 +712,7 @@ $(document).ready(function () {
     initMenu();
   }
 })();
+
 
 
 
