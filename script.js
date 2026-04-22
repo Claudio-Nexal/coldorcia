@@ -1,4 +1,4 @@
-console.log('v.2.1.1 Modifiche a menu');
+console.log('v.2.1.2 Modifiche a menu');
 
 
 
@@ -263,7 +263,7 @@ $(document).ready(function () {
     let scrollTicking = false;
     const scrollDeltaThreshold = 8;
     const hideOffsetThreshold = 120;
-    const afterHeroHideDelay = 200;
+    const afterHeroHideDelay = 800;
     let pastHeroStartScrollY = null;
     let scrollbarCompensation = 0;
 
