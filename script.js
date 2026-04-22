@@ -221,8 +221,8 @@ $(document).ready(function () {
       document.querySelector(".navbar") ||
       document.querySelector("header");
 
-    const hero =
-      document.querySelector(".hero-section")
+    const hero = document.querySelector(".hero-section");
+    const hasHero = !!hero;
 
     const menuOverlay = document.querySelector(".menu-overlay");
     const menuContent = document.querySelector(".menu-content");
@@ -234,17 +234,23 @@ $(document).ready(function () {
 
     const redBrandSrc = "https://cdn.prod.website-files.com/6942d44283c82467823141dd/69e753685665a08e9c624425_Logo-red.svg";
     const blackHamburgerSrc = "https://cdn.prod.website-files.com/6942d44283c82467823141dd/697b444ddf924a86a7fd4944_hamburger_black.svg";
+
     const defaultBrandSrc = brandImg?.src || "";
-    const isHomePage = document.body.classList.contains("home");
     const defaultHamburgerSrc = openBtn?.src || "";
+    const isHomePage = document.body.classList.contains("home");
+
     const defaultHeaderBg = header ? window.getComputedStyle(header).backgroundColor : "";
     const activeHeaderBg = "#F8F8F3";
     const defaultShopColor = shopText ? window.getComputedStyle(shopText).color : "";
+
     const compactBrandWidth = "4.8vw";
     let defaultCenterLogoWidth = centerLogo ? window.getComputedStyle(centerLogo).width : "";
     let defaultCenterLogoHeight = centerLogo ? window.getComputedStyle(centerLogo).height : "";
+
     const stateTransitionDuration = 1;
     const mobileBreakpoint = 767;
+
+    const noHeroHideStart = 1200;
 
     if (!menuOverlay || !menuContent || (!openBtn && !closeBtn)) return;
     if (window.__MENU_ANIM_INIT__) return;
@@ -252,7 +258,10 @@ $(document).ready(function () {
 
     let isOpen = false;
     let isAnimating = false;
-    let isPastHero = false;
+
+    // qui mantiene SOLO lo stato grafico "attivo"
+    let isPastHero = !hasHero;
+
     let tl = null;
     let hasInitializedHeaderState = false;
 
@@ -261,10 +270,12 @@ $(document).ready(function () {
     let lastScrollY = window.scrollY || window.pageYOffset || 0;
     let headerHidden = false;
     let scrollTicking = false;
+
     const scrollDeltaThreshold = 8;
     const hideOffsetThreshold = 120;
     const afterHeroHideDelay = 800;
-    let pastHeroStartScrollY = null;
+
+    let pastHeroStartScrollY = !hasHero ? noHeroHideStart : null;
     let scrollbarCompensation = 0;
 
     function isFullyTransparentColor(value) {
@@ -289,7 +300,6 @@ $(document).ready(function () {
     function isMobileViewport() {
       return window.matchMedia(`(max-width: ${mobileBreakpoint}px)`).matches;
     }
-
 
     function getSmoother() {
       if (!smoother && window.ScrollSmoother) {
@@ -326,19 +336,33 @@ $(document).ready(function () {
       });
     }
 
+    function isAutoHideEnabled() {
+      const currentY = getCurrentScrollY();
+
+      if (!hasHero) {
+        return currentY >= noHeroHideStart;
+      }
+
+      return isPastHero;
+    }
+
     function handleHeaderAutoHide() {
       if (!header || isOpen) return;
-      if (!isPastHero) {
+
+      const currentY = getCurrentScrollY();
+
+      if (!isAutoHideEnabled()) {
         showHeaderOnScroll();
-        lastScrollY = getCurrentScrollY();
+        lastScrollY = currentY;
         return;
       }
-      const currentY = getCurrentScrollY();
+
       if (pastHeroStartScrollY !== null && currentY < pastHeroStartScrollY + afterHeroHideDelay) {
         showHeaderOnScroll();
         lastScrollY = currentY;
         return;
       }
+
       const delta = currentY - lastScrollY;
 
       if (Math.abs(delta) < scrollDeltaThreshold) return;
@@ -409,6 +433,7 @@ $(document).ready(function () {
           window.scrollTo(0, savedScroll);
         });
       }
+
       lastScrollY = getCurrentScrollY();
     }
 
@@ -433,26 +458,28 @@ $(document).ready(function () {
       clearProps: "transform,opacity"
     });
 
-    if (header) {
-      header.style.transition = "";
-    }
-    if (shopText) {
-      shopText.style.transition = "";
-    }
+    if (header) header.style.transition = "";
+    if (shopText) shopText.style.transition = "";
     if (brandImg) brandImg.style.transition = "";
-    if (centerLogo) {
-      centerLogo.style.transition = "";
-    }
+    if (centerLogo) centerLogo.style.transition = "";
 
     function showOpenIcon() {
       if (openBtn) {
         gsap.set(openBtn, {
-          opacity: 1, x: 0, y: 0, rotation: 0, pointerEvents: "auto"
+          opacity: 1,
+          x: 0,
+          y: 0,
+          rotation: 0,
+          pointerEvents: "auto"
         });
       }
       if (closeBtn) {
         gsap.set(closeBtn, {
-          opacity: 0, x: -5, y: 10, rotation: 5, pointerEvents: "none"
+          opacity: 0,
+          x: -5,
+          y: 10,
+          rotation: 5,
+          pointerEvents: "none"
         });
       }
     }
@@ -460,26 +487,43 @@ $(document).ready(function () {
     function showCloseIcon() {
       if (openBtn) {
         gsap.set(openBtn, {
-          opacity: 0, x: -5, y: -10, rotation: -5, pointerEvents: "none"
+          opacity: 0,
+          x: -5,
+          y: -10,
+          rotation: -5,
+          pointerEvents: "none"
         });
       }
       if (closeBtn) {
         gsap.set(closeBtn, {
-          opacity: 1, x: 0, y: 0, rotation: 0, pointerEvents: "auto"
+          opacity: 1,
+          x: 0,
+          y: 0,
+          rotation: 0,
+          pointerEvents: "auto"
         });
       }
     }
 
     function applyClosedHeaderState() {
       if (isOpen) return;
+
+      const shouldUseActiveStyle = !hasHero || isPastHero;
+
       if (!hasInitializedHeaderState) {
-        if (isPastHero) {
+        if (shouldUseActiveStyle) {
           if (header) gsap.set(header, { backgroundColor: activeHeaderBg });
           if (shopText) gsap.set(shopText, { color: "#000000" });
+
           if (centerLogo && !isMobileViewport()) {
-            gsap.set(centerLogo, { width: compactBrandWidth, height: compactBrandWidth });
+            gsap.set(centerLogo, {
+              width: compactBrandWidth,
+              height: compactBrandWidth
+            });
           }
+
           if (openBtn) openBtn.src = blackHamburgerSrc;
+
           if (brandImg) {
             brandImg.src = redBrandSrc;
             gsap.set(brandImg, { opacity: 1 });
@@ -489,80 +533,108 @@ $(document).ready(function () {
           if (shopText) gsap.set(shopText, { color: defaultShopColor });
           if (centerLogo) gsap.set(centerLogo, { clearProps: "width,height" });
           if (openBtn) openBtn.src = defaultHamburgerSrc;
+
           if (brandImg) {
             if (!isHomePage && defaultBrandSrc) brandImg.src = defaultBrandSrc;
             gsap.set(brandImg, { opacity: isHomePage ? 0 : 1 });
           }
         }
+
         hasInitializedHeaderState = true;
         return;
       }
 
-      if (isPastHero) {
+      if (shouldUseActiveStyle) {
         refreshDefaultCenterLogoSize();
-        const stateTl = gsap.timeline({ defaults: { duration: stateTransitionDuration, ease: menuEase } });
+
+        const stateTl = gsap.timeline({
+          defaults: { duration: stateTransitionDuration, ease: menuEase }
+        });
+
         if (header) {
-          stateTl.to(header, { backgroundColor: activeHeaderBg, overwrite: "auto" }, 0);
+          stateTl.to(header, {
+            backgroundColor: activeHeaderBg,
+            overwrite: "auto"
+          }, 0);
         }
+
         if (shopText) {
-          stateTl.to(shopText, { color: "#000000", overwrite: "auto" }, 0);
+          stateTl.to(shopText, {
+            color: "#000000",
+            overwrite: "auto"
+          }, 0);
         }
-        if (centerLogo) {
-          if (!isMobileViewport()) {
+
+        if (centerLogo && !isMobileViewport()) {
+          stateTl.to(centerLogo, {
+            width: compactBrandWidth,
+            height: compactBrandWidth,
+            overwrite: "auto"
+          }, 0);
+        }
+
+        if (openBtn) openBtn.src = blackHamburgerSrc;
+
+        if (brandImg) {
+          brandImg.src = redBrandSrc;
+          stateTl.to(brandImg, {
+            opacity: 1,
+            overwrite: "auto"
+          }, 0);
+        }
+      } else {
+        const stateTl = gsap.timeline({
+          defaults: { duration: stateTransitionDuration, ease: menuEase }
+        });
+
+        if (centerLogo && !isMobileViewport()) {
+          const hasValidDefaultSize =
+            Number.parseFloat(defaultCenterLogoWidth) > 0 &&
+            Number.parseFloat(defaultCenterLogoHeight) > 0;
+
+          if (hasValidDefaultSize) {
             stateTl.to(centerLogo, {
-              width: compactBrandWidth,
-              height: compactBrandWidth,
+              width: defaultCenterLogoWidth,
+              height: defaultCenterLogoHeight,
+              overwrite: "auto"
+            }, 0);
+          } else {
+            stateTl.to(centerLogo, {
+              width: "7vw",
+              height: "7vw",
               overwrite: "auto"
             }, 0);
           }
         }
-        if (openBtn) openBtn.src = blackHamburgerSrc;
-        if (brandImg) {
-          brandImg.src = redBrandSrc;
-          stateTl.to(brandImg, { opacity: 1, overwrite: "auto" }, 0);
-        }
-      } else {
-        const stateTl = gsap.timeline({ defaults: { duration: stateTransitionDuration, ease: menuEase } });
-        if (centerLogo) {
-          if (!isMobileViewport()) {
-            const hasValidDefaultSize =
-              Number.parseFloat(defaultCenterLogoWidth) > 0 &&
-              Number.parseFloat(defaultCenterLogoHeight) > 0;
 
-            if (hasValidDefaultSize) {
-              stateTl.to(centerLogo, {
-                width: defaultCenterLogoWidth,
-                height: defaultCenterLogoHeight,
-                overwrite: "auto"
-              }, 0);
-            } else {
-              stateTl.to(centerLogo, {
-                width: "7vw",
-                height: "7vw",
-                overwrite: "auto"
-              }, 0);
-            }
-          }
-        }
         if (header) {
           stateTl.to(header, {
             backgroundColor: defaultHeaderBgTweenTarget,
             overwrite: "auto"
           }, 0);
         }
+
         if (shopText) {
           stateTl.to(shopText, {
             color: defaultShopColor,
             overwrite: "auto"
           }, 0);
         }
+
         if (openBtn) openBtn.src = defaultHamburgerSrc;
+
         if (brandImg) {
           if (isHomePage) {
-            stateTl.to(brandImg, { opacity: 0, overwrite: "auto" }, 0);
+            stateTl.to(brandImg, {
+              opacity: 0,
+              overwrite: "auto"
+            }, 0);
           } else {
             if (defaultBrandSrc) brandImg.src = defaultBrandSrc;
-            stateTl.to(brandImg, { opacity: 1, overwrite: "auto" }, 0);
+            stateTl.to(brandImg, {
+              opacity: 1,
+              overwrite: "auto"
+            }, 0);
           }
         }
       }
@@ -571,13 +643,16 @@ $(document).ready(function () {
     function setPastHeroState(value) {
       const wasPastHero = isPastHero;
       isPastHero = !!value;
+
       if (!wasPastHero && isPastHero) {
         pastHeroStartScrollY = getCurrentScrollY();
       }
+
       if (wasPastHero && !isPastHero) {
         pastHeroStartScrollY = null;
         showHeaderOnScroll();
       }
+
       applyClosedHeaderState();
     }
 
@@ -586,6 +661,21 @@ $(document).ready(function () {
       const headerHeight = header ? header.offsetHeight : 0;
       const past = hero.getBoundingClientRect().bottom <= headerHeight;
       setPastHeroState(past);
+    }
+
+    function updateNoHeroHideThreshold() {
+      if (hasHero) return;
+
+      const currentY = getCurrentScrollY();
+
+      if (currentY >= noHeroHideStart && pastHeroStartScrollY === noHeroHideStart) {
+        // prima attivazione reale della logica auto-hide
+        pastHeroStartScrollY = currentY;
+      }
+
+      if (currentY < noHeroHideStart) {
+        showHeaderOnScroll();
+      }
     }
 
     showOpenIcon();
@@ -679,10 +769,15 @@ $(document).ready(function () {
       if (e.key === "Escape" && isOpen) closeMenu();
     });
 
-    window.addEventListener("scroll", onScrollForHeaderAutoHide, { passive: true });
+    window.addEventListener("scroll", () => {
+      if (!hasHero) updateNoHeroHideThreshold();
+      onScrollForHeaderAutoHide();
+    }, { passive: true });
+
     window.addEventListener("resize", () => {
       showHeaderOnScroll();
       lastScrollY = getCurrentScrollY();
+      if (!hasHero) updateNoHeroHideThreshold();
     });
 
     if (window.ScrollTrigger && hero) {
@@ -696,10 +791,14 @@ $(document).ready(function () {
       });
 
       ScrollTrigger.refresh();
-    } else {
+    } else if (hero) {
       updateHeroStateFallback();
       window.addEventListener("scroll", updateHeroStateFallback, { passive: true });
       window.addEventListener("resize", updateHeroStateFallback);
+    } else {
+      // niente hero: stato attivo subito
+      applyClosedHeaderState();
+      updateNoHeroHideThreshold();
     }
   }
 
@@ -709,6 +808,7 @@ $(document).ready(function () {
     initMenu();
   }
 })();
+
 
 
 
