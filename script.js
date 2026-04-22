@@ -1,4 +1,4 @@
-console.log('v.2.1.4 Modifiche a menu');
+console.log('v.2.1.5 Modifiche a menu');
 
 
 
@@ -238,9 +238,13 @@ $(document).ready(function () {
     const defaultBrandSrc = brandImg?.src || "";
     const defaultHamburgerSrc = openBtn?.src || "";
     const isHomePage = document.body.classList.contains("home");
+    const isNewsSinglePage = document.body.classList.contains("news-singola");
 
     const defaultHeaderBg = header ? window.getComputedStyle(header).backgroundColor : "";
     const activeHeaderBg = "#F8F8F3";
+    const transparentHeaderBg = "rgba(255,255,255,0)";
+    const activeHeaderBgTarget = isNewsSinglePage ? transparentHeaderBg : activeHeaderBg;
+    const defaultHeaderBgTarget = isNewsSinglePage ? transparentHeaderBg : defaultHeaderBg;
     const defaultShopColor = shopText ? window.getComputedStyle(shopText).color : "";
 
     const compactBrandWidth = "4.8vw";
@@ -284,9 +288,11 @@ $(document).ready(function () {
       return normalized === "transparent" || normalized.endsWith(",0)") || normalized.endsWith(",0.0)");
     }
 
-    const defaultHeaderBgTweenTarget = isFullyTransparentColor(defaultHeaderBg)
+    const defaultHeaderBgTweenTarget = isNewsSinglePage
+      ? transparentHeaderBg
+      : isFullyTransparentColor(defaultHeaderBgTarget)
       ? "rgba(248,248,243,0)"
-      : defaultHeaderBg;
+      : defaultHeaderBgTarget;
 
     function refreshDefaultCenterLogoSize() {
       if (!centerLogo) return;
@@ -512,7 +518,7 @@ $(document).ready(function () {
 
       if (!hasInitializedHeaderState) {
         if (shouldUseActiveStyle) {
-          if (header) gsap.set(header, { backgroundColor: activeHeaderBg });
+          if (header) gsap.set(header, { backgroundColor: activeHeaderBgTarget });
           if (shopText) gsap.set(shopText, { color: "#000000" });
 
           if (centerLogo && !isMobileViewport()) {
@@ -529,7 +535,7 @@ $(document).ready(function () {
             gsap.set(brandImg, { opacity: 1 });
           }
         } else {
-          if (header) gsap.set(header, { backgroundColor: defaultHeaderBg });
+          if (header) gsap.set(header, { backgroundColor: defaultHeaderBgTarget });
           if (shopText) gsap.set(shopText, { color: defaultShopColor });
           if (centerLogo) gsap.set(centerLogo, { clearProps: "width,height" });
           if (openBtn) openBtn.src = defaultHamburgerSrc;
@@ -553,7 +559,7 @@ $(document).ready(function () {
 
         if (header) {
           stateTl.to(header, {
-            backgroundColor: activeHeaderBg,
+            backgroundColor: activeHeaderBgTarget,
             overwrite: "auto"
           }, 0);
         }
