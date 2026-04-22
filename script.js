@@ -1,4 +1,4 @@
-console.log('v.2.1.2 Modifiche a menu');
+console.log('v.2.1.4 Modifiche a menu');
 
 
 
@@ -250,7 +250,7 @@ $(document).ready(function () {
     const stateTransitionDuration = 1;
     const mobileBreakpoint = 767;
 
-    const noHeroHideStart = 1200;
+    const noHeroHideStart = 600;
 
     if (!menuOverlay || !menuContent || (!openBtn && !closeBtn)) return;
     if (window.__MENU_ANIM_INIT__) return;
