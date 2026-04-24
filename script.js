@@ -657,6 +657,12 @@ $(document).ready(function () {
     function updateScrolledState() {
       const currentY = getCurrentScrollY();
       const nextScrolledFromTop = currentY > 0;
+      if (hasHero && !nextScrolledFromTop) {
+        // tornando in cima, ripristina sempre lo stato iniziale della header
+        isPastHero = false;
+        pastHeroStartScrollY = null;
+        showHeaderOnScroll();
+      }
       if (nextScrolledFromTop === isScrolledFromTop) return;
       isScrolledFromTop = nextScrolledFromTop;
       applyClosedHeaderState();
@@ -814,6 +820,196 @@ $(document).ready(function () {
     document.addEventListener("DOMContentLoaded", initMenu);
   } else {
     initMenu();
+  }
+})();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// Smooth Scroll con ScrollSmoother - Setup su .content-container (solo Desktop)
+(() => {
+  function initSmoothScroll() {
+    if (window.innerWidth <= 991) return;
+
+    if (!window.gsap || !window.ScrollTrigger || !window.ScrollSmoother) return;
+
+    gsap.registerPlugin(ScrollTrigger, ScrollSmoother);
+
+    const body = document.body;
+
+    // Se già inizializzato, esci
+    if (document.querySelector("#smooth-wrapper")) return;
+
+    // Trova il contenitore che racchiude tutto TRANNE il menu
+    const contentContainer = document.querySelector(".content-container");
+    if (!contentContainer) {
+      console.warn("Non trovo .content-container: non inizializzo ScrollSmoother");
+      return;
+    }
+
+    // Crea wrapper/content
+    const wrapper = document.createElement("div");
+    wrapper.id = "smooth-wrapper";
+
+    const content = document.createElement("div");
+    content.id = "smooth-content";
+
+    // Inserisci wrapper PRIMA del contentContainer e poi sposta contentContainer dentro smooth-content
+    body.insertBefore(wrapper, contentContainer);
+    wrapper.appendChild(content);
+    content.appendChild(contentContainer);
+
+    const smoother = ScrollSmoother.create({
+      wrapper: "#smooth-wrapper",
+      content: "#smooth-content",
+      smooth: 1.5,
+      effects: true,
+      smoothTouch: false,
+      normalizeScroll: false,
+      ignoreMobileResize: true
+    });
+
+    // Resize: se scendi sotto 992, kill (opzionale: rimettere a posto DOM richiede più codice)
+    let resizeTimer;
+    window.addEventListener("resize", () => {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(() => {
+        if (window.innerWidth <= 991 && smoother) smoother.kill();
+      }, 250);
+    });
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initSmoothScroll);
+  } else {
+    initSmoothScroll();
+  }
+})();
+
+
+
+
+
+
+
+
+
+
+
+//animazione bordo bottoni
+(() => {
+  function initBorderDrawButtons() {
+    if (!window.gsap) return;
+
+    // Custom ease (una sola volta)
+    if (window.CustomEase && !window.__GL_EASE_CREATED__) {
+      try {
+        gsap.registerPlugin(CustomEase);
+        CustomEase.create(
+          "gl.fastInOut",
+          "M0,0 C0.094,0.026 0.124,0.127 0.157,0.29 0.197,0.486 0.254,0.8 0.348,0.884 0.42,0.949 0.374,1 1,1"
+        );
+        window.__GL_EASE_CREATED__ = true;
+      } catch (_) {}
+    }
+
+    document.querySelectorAll(".border-animation").forEach((btn) => {
+      if (btn.__BORDER_DRAW_INIT__) return;
+      btn.__BORDER_DRAW_INIT__ = true;
+
+      const svgNS = "http://www.w3.org/2000/svg";
+      const svg = document.createElementNS(svgNS, "svg");
+      svg.classList.add("border-draw");
+      svg.setAttribute("aria-hidden", "true");
+
+      const path = document.createElementNS(svgNS, "path");
+      svg.appendChild(path);
+      btn.prepend(svg);
+
+      let tl = null;
+
+      function buildRoundedRectPath(x, y, w, h, r) {
+        const sx = x;
+        const sy = y + h / 2; // start: centro lato sinistro
+        return [
+          `M ${sx} ${sy}`,
+          `L ${x} ${y + r}`,
+          `A ${r} ${r} 0 0 1 ${x + r} ${y}`,
+          `L ${x + w - r} ${y}`,
+          `A ${r} ${r} 0 0 1 ${x + w} ${y + r}`,
+          `L ${x + w} ${y + h - r}`,
+          `A ${r} ${r} 0 0 1 ${x + w - r} ${y + h}`,
+          `L ${x + r} ${y + h}`,
+          `A ${r} ${r} 0 0 1 ${x} ${y + h - r}`,
+          `L ${x} ${sy}`,
+          "Z"
+        ].join(" ");
+      }
+
+      function layout() {
+        const r = btn.getBoundingClientRect();
+
+        const extra = 2; // aumenta qui se vuoi più “respiro” del bordo
+        const vbW = r.width + extra * 2;
+        const vbH = r.height + extra * 2;
+
+        svg.setAttribute("viewBox", `0 0 ${vbW} ${vbH}`);
+
+        const sw = 1;
+        const x = extra + sw / 2;
+        const y = extra + sw / 2;
+        const w = Math.max(0, r.width  - sw);
+        const h = Math.max(0, r.height - sw);
+        const rad = h / 2;
+
+        path.setAttribute("d", buildRoundedRectPath(x, y, w, h, rad));
+
+        const len = path.getTotalLength();
+        path.style.strokeDasharray = `${len}`;
+        path.style.strokeDashoffset = `${len}`;
+
+        gsap.set(path, { opacity: 0 });
+
+        if (tl) tl.kill();
+        tl = gsap.timeline({
+          paused: true,
+          defaults: { ease: "gl.fastInOut" }
+        })
+        .to(path, { opacity: 1, duration: 0.08, ease: "none" }, 0)
+        .to(path, { strokeDashoffset: 0, duration: 0.9 }, 0); // durata bordo qui
+      }
+
+      layout();
+      window.addEventListener("resize", layout);
+
+      btn.addEventListener("mouseenter", () => tl && tl.play());
+      btn.addEventListener("mouseleave", () => tl && tl.reverse());
+      btn.addEventListener("focusin", () => tl && tl.play());
+      btn.addEventListener("focusout", () => tl && tl.reverse());
+    });
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initBorderDrawButtons);
+  } else {
+    initBorderDrawButtons();
   }
 })();
 
