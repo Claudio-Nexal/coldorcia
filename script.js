@@ -1,4 +1,4 @@
-console.log('v.2.1.13 Modifiche a menu');
+console.log('v.2.1.14 Modifiche a menu');
 
 
 
@@ -254,6 +254,7 @@ $(document).ready(function () {
     const defaultShopColor = shopText ? window.getComputedStyle(shopText).color : "";
 
     const compactBrandWidth = "4.8vw";
+    const mobileLogoSize = "16vw";
     let defaultCenterLogoWidth = centerLogo ? window.getComputedStyle(centerLogo).width : "";
     let defaultCenterLogoHeight = centerLogo ? window.getComputedStyle(centerLogo).height : "";
 
@@ -548,6 +549,14 @@ $(document).ready(function () {
           }
         }
 
+        if (isMobileViewport()) {
+          if (centerLogo) gsap.set(centerLogo, { width: mobileLogoSize, height: mobileLogoSize });
+          if (brandImg) gsap.set(brandImg, { width: mobileLogoSize, height: mobileLogoSize });
+        } else {
+          if (centerLogo) gsap.set(centerLogo, { clearProps: "width,height" });
+          if (brandImg) gsap.set(brandImg, { clearProps: "width,height" });
+        }
+
         hasInitializedHeaderState = true;
         return;
       }
@@ -579,6 +588,25 @@ $(document).ready(function () {
             height: compactBrandWidth,
             overwrite: "auto"
           }, 0);
+        }
+
+        if (isMobileViewport()) {
+          if (centerLogo) {
+            stateTl.to(centerLogo, {
+              width: mobileLogoSize,
+              height: mobileLogoSize,
+              overwrite: "auto"
+            }, 0);
+          }
+          if (brandImg) {
+            stateTl.to(brandImg, {
+              width: mobileLogoSize,
+              height: mobileLogoSize,
+              overwrite: "auto"
+            }, 0);
+          }
+        } else if (brandImg) {
+          stateTl.set(brandImg, { clearProps: "width,height" }, 0);
         }
 
         if (openBtn) openBtn.src = blackHamburgerSrc;
@@ -613,6 +641,25 @@ $(document).ready(function () {
               overwrite: "auto"
             }, 0);
           }
+        }
+
+        if (isMobileViewport()) {
+          if (centerLogo) {
+            stateTl.to(centerLogo, {
+              width: mobileLogoSize,
+              height: mobileLogoSize,
+              overwrite: "auto"
+            }, 0);
+          }
+          if (brandImg) {
+            stateTl.to(brandImg, {
+              width: mobileLogoSize,
+              height: mobileLogoSize,
+              overwrite: "auto"
+            }, 0);
+          }
+        } else if (brandImg) {
+          stateTl.set(brandImg, { clearProps: "width,height" }, 0);
         }
 
         if (header) {
@@ -673,6 +720,25 @@ $(document).ready(function () {
             overwrite: "auto"
           }, 0);
         }
+      }
+
+      if (isMobileViewport()) {
+        if (centerLogo) {
+          topStateTl.to(centerLogo, {
+            width: mobileLogoSize,
+            height: mobileLogoSize,
+            overwrite: "auto"
+          }, 0);
+        }
+        if (brandImg) {
+          topStateTl.to(brandImg, {
+            width: mobileLogoSize,
+            height: mobileLogoSize,
+            overwrite: "auto"
+          }, 0);
+        }
+      } else if (brandImg) {
+        topStateTl.set(brandImg, { clearProps: "width,height" }, 0);
       }
 
       if (header) {
@@ -983,6 +1049,16 @@ $(document).ready(function () {
     initSmoothScroll();
   }
 })();
+
+
+
+
+
+
+
+
+
+
 
 
 
