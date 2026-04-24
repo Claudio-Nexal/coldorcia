@@ -1,4 +1,4 @@
-console.log('v.2.1.11 Modifiche a menu');
+console.log('v.2.1.12 Modifiche a menu');
 
 
 
@@ -204,6 +204,10 @@ $(document).ready(function () {
 
 
 
+
+
+
+
 //menu
 (() => {
   function initMenu() {
@@ -275,6 +279,7 @@ $(document).ready(function () {
     let savedScroll = 0;
     let smoother = null;
     let lastScrollY = window.scrollY || window.pageYOffset || 0;
+    let previousObservedScrollY = lastScrollY;
     let headerHidden = false;
     let scrollTicking = false;
     let topStateTicking = false;
@@ -647,7 +652,7 @@ $(document).ready(function () {
       if (isOpen) return;
 
       const topStateTl = gsap.timeline({
-        defaults: { duration: stateTransitionDuration, ease: menuEase }
+        defaults: { duration: 0.35, ease: menuEase }
       });
 
       if (centerLogo && !isMobileViewport()) {
@@ -715,15 +720,18 @@ $(document).ready(function () {
     function updateScrolledState() {
       const currentY = getCurrentScrollY();
       const nextScrolledFromTop = currentY > 1;
+      const isScrollingUp = currentY < previousObservedScrollY - 0.5;
       console.log("[header] updateScrolledState", {
         currentY,
+        previousObservedScrollY,
+        isScrollingUp,
         nextScrolledFromTop,
         isScrolledFromTop,
         isPastHero
       });
-      if (hasHero && currentY <= 1) {
-        // tornando in cima, ripristina sempre lo stato iniziale della header
-        console.log("[header] TOP raggiunto: reset stato originale");
+      if (hasHero && isScrollingUp && currentY <= 20) {
+        // durante scroll verso l'alto: anticipa reset stato originale vicino al top
+        console.log("[header] TOP threshold 20px raggiunta: reset stato originale");
         isPastHero = false;
         pastHeroStartScrollY = null;
         showHeaderOnScroll();
@@ -731,15 +739,20 @@ $(document).ready(function () {
           isScrolledFromTop = nextScrolledFromTop;
         }
         applyTopOriginalState();
+        previousObservedScrollY = currentY;
         return;
       }
-      if (nextScrolledFromTop === isScrolledFromTop) return;
+      if (nextScrolledFromTop === isScrolledFromTop) {
+        previousObservedScrollY = currentY;
+        return;
+      }
       console.log("[header] Cambio stato scroll-from-top", {
         from: isScrolledFromTop,
         to: nextScrolledFromTop
       });
       isScrolledFromTop = nextScrolledFromTop;
       applyClosedHeaderState();
+      previousObservedScrollY = currentY;
     }
 
     function startTopStateObserver() {
@@ -903,6 +916,92 @@ $(document).ready(function () {
     initMenu();
   }
 })();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// Smooth Scroll con ScrollSmoother - Setup su .content-container (solo Desktop)
+(() => {
+  function initSmoothScroll() {
+    if (window.innerWidth <= 991) return;
+
+    if (!window.gsap || !window.ScrollTrigger || !window.ScrollSmoother) return;
+
+    gsap.registerPlugin(ScrollTrigger, ScrollSmoother);
+
+    const body = document.body;
+
+    // Se già inizializzato, esci
+    if (document.querySelector("#smooth-wrapper")) return;
+
+    // Trova il contenitore che racchiude tutto TRANNE il menu
+    const contentContainer = document.querySelector(".content-container");
+    if (!contentContainer) {
+      console.warn("Non trovo .content-container: non inizializzo ScrollSmoother");
+      return;
+    }
+
+    // Crea wrapper/content
+    const wrapper = document.createElement("div");
+    wrapper.id = "smooth-wrapper";
+
+    const content = document.createElement("div");
+    content.id = "smooth-content";
+
+    // Inserisci wrapper PRIMA del contentContainer e poi sposta contentContainer dentro smooth-content
+    body.insertBefore(wrapper, contentContainer);
+    wrapper.appendChild(content);
+    content.appendChild(contentContainer);
+
+    const smoother = ScrollSmoother.create({
+      wrapper: "#smooth-wrapper",
+      content: "#smooth-content",
+      smooth: 1.5,
+      effects: true,
+      smoothTouch: false,
+      normalizeScroll: false,
+      ignoreMobileResize: true
+    });
+
+    // Resize: se scendi sotto 992, kill (opzionale: rimettere a posto DOM richiede più codice)
+    let resizeTimer;
+    window.addEventListener("resize", () => {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(() => {
+        if (window.innerWidth <= 991 && smoother) smoother.kill();
+      }, 250);
+    });
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initSmoothScroll);
+  } else {
+    initSmoothScroll();
+  }
+})();
+
+
+
+
+
+
 
 
 
