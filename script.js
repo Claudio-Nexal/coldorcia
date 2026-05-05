@@ -1,4 +1,4 @@
-console.log('v.2.3.8 Modifiche a menu');
+console.log('v.2.3.9 Modifiche a menu');
 
 
 
@@ -141,6 +141,10 @@ console.log('v.2.3.8 Modifiche a menu');
       const candidates = Array.from(document.querySelectorAll("div, nav, section")).filter((el) => {
         if (!(el instanceof HTMLElement)) return false;
         if (el.closest(".menu-overlay")) return false;
+        const style = window.getComputedStyle(el);
+        if (style.display === "none" || style.visibility === "hidden") return false;
+        if (el.offsetParent === null && style.position !== "fixed") return false;
+        if (style.position === "fixed") return false;
 
         const links = Array.from(el.querySelectorAll("a")).filter((a) => a.offsetParent !== null);
         if (links.length < 3 || links.length > 12) return false;
@@ -157,16 +161,38 @@ console.log('v.2.3.8 Modifiche a menu');
     }
 
     function resolveStickyAnchors() {
+      function isUsableStickyAnchor(el) {
+        if (!(el instanceof HTMLElement)) return false;
+        if (el.closest(".menu-overlay")) return false;
+        const style = window.getComputedStyle(el);
+        if (style.display === "none" || style.visibility === "hidden") return false;
+        // Webflow often renders duplicated desktop/mobile nodes; skip hidden clones.
+        if (el.offsetParent === null && style.position !== "fixed") return false;
+        // Avoid hijacking elements already fixed by page styles/interactions.
+        if (style.position === "fixed") return false;
+        const rect = el.getBoundingClientRect();
+        return rect.width > 0 && rect.height > 0;
+      }
+
       const explicitSelectors = [
         ".ancore-annate",
         ".ancore-persone",
       ];
 
-      const explicitMatches = Array.from(
+      const explicitAllMatches = Array.from(
         document.querySelectorAll(explicitSelectors.join(","))
-      ).filter((el) => !el.closest(".menu-overlay"));
+      );
+      const explicitUsableMatches = explicitAllMatches.filter(isUsableStickyAnchor);
 
-      stickyAnchors = explicitMatches.length ? explicitMatches : findSemanticAnchorBars();
+      // If an explicit anchor exists in page, use ONLY one explicit instance.
+      // This avoids Webflow clone/fallback collisions that can duplicate pinning.
+      if (explicitAllMatches.length) {
+        stickyAnchors = explicitUsableMatches.length ? [explicitUsableMatches[0]] : [];
+        return;
+      }
+
+      const semanticMatches = findSemanticAnchorBars().filter(isUsableStickyAnchor);
+      stickyAnchors = semanticMatches.length ? [semanticMatches[0]] : [];
     }
 
     function clearAnchorPinning() {
@@ -176,6 +202,7 @@ console.log('v.2.3.8 Modifiche a menu');
           element.style.position = "";
           element.style.top = "";
           element.style.left = "";
+          element.style.right = "";
           element.style.width = "";
           element.style.zIndex = "";
           const ph = element._anchorPlaceholder;
@@ -251,6 +278,7 @@ console.log('v.2.3.8 Modifiche a menu');
           anchorEl.style.position = "";
           anchorEl.style.top = "";
           anchorEl.style.left = "";
+          anchorEl.style.right = "";
           anchorEl.style.width = "";
           anchorEl.style.zIndex = "";
 
@@ -972,6 +1000,7 @@ console.log('v.2.3.8 Modifiche a menu');
     initMenu();
   }
 })();
+
 
 
 
