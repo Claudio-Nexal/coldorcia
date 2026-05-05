@@ -1,4 +1,4 @@
-console.log('v.2.3.9 Modifiche a menu');
+console.log('v.2.3.10 Modifiche a menu');
 
 
 
@@ -51,7 +51,7 @@ console.log('v.2.3.9 Modifiche a menu');
     const defaultShopColor = shopText ? window.getComputedStyle(shopText).color : "";
 
     const compactBrandWidth = "4.8vw";
-    const defaultDesktopLogoSize = "7vw";
+    const defaultDesktopLogoSize = "7.8vw";
     const mobileLogoSize = "16vw";
     let defaultCenterLogoWidth = centerLogo ? window.getComputedStyle(centerLogo).width : "";
     let defaultCenterLogoHeight = centerLogo ? window.getComputedStyle(centerLogo).height : "";
