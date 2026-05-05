@@ -1,4 +1,4 @@
-console.log('v.2.4.1 Modifiche a bottoni');
+console.log('v.2.4.2 Modifiche a menu');
 
 
 
@@ -52,7 +52,8 @@ console.log('v.2.4.1 Modifiche a bottoni');
 
     const compactBrandWidth = "4.8vw";
     const defaultDesktopLogoSize = "7.8vw";
-    const mobileLogoSize = "16vw";
+    const mobileDefaultLogoSize = "24vw";
+    const mobileCompactLogoSize = "16vw";
     let defaultCenterLogoWidth = centerLogo ? window.getComputedStyle(centerLogo).width : "";
     let defaultCenterLogoHeight = centerLogo ? window.getComputedStyle(centerLogo).height : "";
 
@@ -565,8 +566,8 @@ console.log('v.2.4.1 Modifiche a bottoni');
         }
 
         if (isMobileViewport()) {
-          if (centerLogo) gsap.set(centerLogo, { width: mobileLogoSize, height: mobileLogoSize });
-          if (brandImg) gsap.set(brandImg, { width: mobileLogoSize, height: mobileLogoSize });
+          if (centerLogo) gsap.set(centerLogo, { width: mobileDefaultLogoSize, height: mobileDefaultLogoSize });
+          if (brandImg) gsap.set(brandImg, { width: mobileDefaultLogoSize, height: mobileDefaultLogoSize });
         } else {
           if (centerLogo) gsap.set(centerLogo, { width: defaultDesktopLogoSize, height: defaultDesktopLogoSize });
           if (brandImg) gsap.set(brandImg, { width: defaultDesktopLogoSize, height: defaultDesktopLogoSize });
@@ -608,15 +609,15 @@ console.log('v.2.4.1 Modifiche a bottoni');
         if (isMobileViewport()) {
           if (centerLogo) {
             stateTl.to(centerLogo, {
-              width: mobileLogoSize,
-              height: mobileLogoSize,
+              width: mobileCompactLogoSize,
+              height: mobileCompactLogoSize,
               overwrite: "auto"
             }, 0);
           }
           if (brandImg) {
             stateTl.to(brandImg, {
-              width: mobileLogoSize,
-              height: mobileLogoSize,
+              width: mobileCompactLogoSize,
+              height: mobileCompactLogoSize,
               overwrite: "auto"
             }, 0);
           }
@@ -653,15 +654,15 @@ console.log('v.2.4.1 Modifiche a bottoni');
         if (isMobileViewport()) {
           if (centerLogo) {
             stateTl.to(centerLogo, {
-              width: mobileLogoSize,
-              height: mobileLogoSize,
+              width: mobileDefaultLogoSize,
+              height: mobileDefaultLogoSize,
               overwrite: "auto"
             }, 0);
           }
           if (brandImg) {
             stateTl.to(brandImg, {
-              width: mobileLogoSize,
-              height: mobileLogoSize,
+              width: mobileDefaultLogoSize,
+              height: mobileDefaultLogoSize,
               overwrite: "auto"
             }, 0);
           }
@@ -724,15 +725,15 @@ console.log('v.2.4.1 Modifiche a bottoni');
       if (isMobileViewport()) {
         if (centerLogo) {
           topStateTl.to(centerLogo, {
-            width: mobileLogoSize,
-            height: mobileLogoSize,
+            width: mobileDefaultLogoSize,
+            height: mobileDefaultLogoSize,
             overwrite: "auto"
           }, 0);
         }
         if (brandImg) {
           topStateTl.to(brandImg, {
-            width: mobileLogoSize,
-            height: mobileLogoSize,
+            width: mobileDefaultLogoSize,
+            height: mobileDefaultLogoSize,
             overwrite: "auto"
           }, 0);
         }
@@ -881,8 +882,8 @@ console.log('v.2.4.1 Modifiche a bottoni');
 
       if (centerLogo) {
         gsap.to(centerLogo, {
-          width: isMobileViewport() ? mobileLogoSize : compactBrandWidth,
-          height: isMobileViewport() ? mobileLogoSize : compactBrandWidth,
+          width: isMobileViewport() ? mobileCompactLogoSize : compactBrandWidth,
+          height: isMobileViewport() ? mobileCompactLogoSize : compactBrandWidth,
           duration: stateTransitionDuration,
           ease: menuEase,
           overwrite: "auto"
@@ -891,8 +892,8 @@ console.log('v.2.4.1 Modifiche a bottoni');
 
       if (brandImg) {
         gsap.to(brandImg, {
-          width: isMobileViewport() ? mobileLogoSize : compactBrandWidth,
-          height: isMobileViewport() ? mobileLogoSize : compactBrandWidth,
+          width: isMobileViewport() ? mobileCompactLogoSize : compactBrandWidth,
+          height: isMobileViewport() ? mobileCompactLogoSize : compactBrandWidth,
           duration: stateTransitionDuration,
           ease: menuEase,
           overwrite: "auto"
@@ -1020,6 +1021,7 @@ console.log('v.2.4.1 Modifiche a bottoni');
     initMenu();
   }
 })();
+
 
 
 
