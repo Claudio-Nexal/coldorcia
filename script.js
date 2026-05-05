@@ -1,4 +1,4 @@
-console.log('v.2.3.14 Modifiche a menu');
+console.log('v.2.4.1 Modifiche a bottoni');
 
 
 
@@ -1315,126 +1315,12 @@ $(document).ready(function () {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-//animazione bordo bottoni
+// animazione bordo bottoni
 (() => {
+  function isMobile() {
+    return window.matchMedia && window.matchMedia("(max-width: 767px)").matches;
+  }
+
   function initBorderDrawButtons() {
     if (!window.gsap) return;
 
@@ -1467,7 +1353,8 @@ $(document).ready(function () {
 
       function buildRoundedRectPath(x, y, w, h, r) {
         const sx = x;
-        const sy = y + h / 2; // start: centro lato sinistro
+        const sy = y + h / 2;
+
         return [
           `M ${sx} ${sy}`,
           `L ${x} ${y + r}`,
@@ -1484,45 +1371,68 @@ $(document).ready(function () {
       }
 
       function layout() {
-        const r = btn.getBoundingClientRect();
+        const rect = btn.getBoundingClientRect();
 
-        const extra = 2; // aumenta qui se vuoi più “respiro” del bordo
-        const vbW = r.width + extra * 2;
-        const vbH = r.height + extra * 2;
+        const extra = 2;
+        const vbW = rect.width + extra * 2;
+        const vbH = rect.height + extra * 2;
 
         svg.setAttribute("viewBox", `0 0 ${vbW} ${vbH}`);
 
         const sw = 1;
         const x = extra + sw / 2;
         const y = extra + sw / 2;
-        const w = Math.max(0, r.width  - sw);
-        const h = Math.max(0, r.height - sw);
+        const w = Math.max(0, rect.width - sw);
+        const h = Math.max(0, rect.height - sw);
         const rad = h / 2;
 
         path.setAttribute("d", buildRoundedRectPath(x, y, w, h, rad));
 
         const len = path.getTotalLength();
         path.style.strokeDasharray = `${len}`;
-        path.style.strokeDashoffset = `${len}`;
 
+        if (tl) {
+          tl.kill();
+          tl = null;
+        }
+
+        // MOBILE: bordo sempre visibile, nessuna animazione
+        if (isMobile()) {
+          path.style.strokeDashoffset = "0";
+          gsap.set(path, { opacity: 1 });
+          return;
+        }
+
+        // DESKTOP: bordo animato
+        path.style.strokeDashoffset = `${len}`;
         gsap.set(path, { opacity: 0 });
 
-        if (tl) tl.kill();
         tl = gsap.timeline({
           paused: true,
           defaults: { ease: "gl.fastInOut" }
         })
         .to(path, { opacity: 1, duration: 0.08, ease: "none" }, 0)
-        .to(path, { strokeDashoffset: 0, duration: 0.9 }, 0); // durata bordo qui
+        .to(path, { strokeDashoffset: 0, duration: 0.9 }, 0);
       }
 
       layout();
       window.addEventListener("resize", layout);
 
-      btn.addEventListener("mouseenter", () => tl && tl.play());
-      btn.addEventListener("mouseleave", () => tl && tl.reverse());
-      btn.addEventListener("focusin", () => tl && tl.play());
-      btn.addEventListener("focusout", () => tl && tl.reverse());
+      btn.addEventListener("mouseenter", () => {
+        if (!isMobile() && tl) tl.play();
+      });
+
+      btn.addEventListener("mouseleave", () => {
+        if (!isMobile() && tl) tl.reverse();
+      });
+
+      btn.addEventListener("focusin", () => {
+        if (!isMobile() && tl) tl.play();
+      });
+
+      btn.addEventListener("focusout", () => {
+        if (!isMobile() && tl) tl.reverse();
+      });
     });
   }
 
@@ -1532,27 +1442,6 @@ $(document).ready(function () {
     initBorderDrawButtons();
   }
 })();
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
