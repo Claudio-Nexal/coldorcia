@@ -1,4 +1,4 @@
-console.log('v.2.3.13 Modifiche a menu');
+console.log('v.2.3.14 Modifiche a menu');
 
 
 
@@ -136,6 +136,19 @@ console.log('v.2.3.13 Modifiche a menu');
       return Math.max(0, rect.bottom);
     }
 
+    function getMobileVisualViewportOffsetTop() {
+      if (!isMobileViewport()) return 0;
+      const vv = window.visualViewport;
+      if (!vv) return 0;
+      return Math.max(0, vv.offsetTop || 0);
+    }
+
+    function getPinnedAnchorTopOffset() {
+      // On mobile browsers the visible viewport can shift when UI bars collapse/expand.
+      // Add visualViewport offset so fixed elements stay inside the visible area.
+      return Math.round(getHeaderVisibleOffset() + getMobileVisualViewportOffsetTop());
+    }
+
     function findSemanticAnchorBars() {
       const tokens = ["brunello", "vigna nastagio", "riserva", "poggio al vento", "olmaia"];
       const candidates = Array.from(document.querySelectorAll("div, nav, section")).filter((el) => {
@@ -223,7 +236,7 @@ console.log('v.2.3.13 Modifiche a menu');
 
     function applyPinnedAnchorsOffset() {
       if (!anchorPinTriggers.length) return;
-      const topOffsetPx = Math.round(getHeaderVisibleOffset());
+      const topOffsetPx = getPinnedAnchorTopOffset();
       const topOffset = `${topOffsetPx}px`;
       anchorPinTriggers.forEach(({ element }) => {
         if (!element || !element._anchorPinned) return;
@@ -264,7 +277,7 @@ console.log('v.2.3.13 Modifiche a menu');
           gsap.set(anchorEl, { clearProps: "transform,y,x" });
           document.body.appendChild(anchorEl);
 
-          const topOffsetPx = Math.round(getHeaderVisibleOffset());
+          const topOffsetPx = getPinnedAnchorTopOffset();
           const topOffset = `${topOffsetPx}px`;
           anchorEl.style.position = "fixed";
           anchorEl.style.top = topOffset;
@@ -971,6 +984,14 @@ console.log('v.2.3.13 Modifiche a menu');
       if (!hasHero) updateNoHeroHideThreshold();
     });
 
+    if (window.visualViewport) {
+      const syncPinnedAnchorsToViewport = () => {
+        applyPinnedAnchorsOffset();
+      };
+      window.visualViewport.addEventListener("resize", syncPinnedAnchorsToViewport, { passive: true });
+      window.visualViewport.addEventListener("scroll", syncPinnedAnchorsToViewport, { passive: true });
+    }
+
     if (window.ScrollTrigger && hero) {
       gsap.registerPlugin(ScrollTrigger);
 
@@ -999,6 +1020,7 @@ console.log('v.2.3.13 Modifiche a menu');
     initMenu();
   }
 })();
+
 
 
 
