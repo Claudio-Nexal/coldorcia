@@ -1,4 +1,4 @@
-console.log('v.2.3.10 Modifiche a menu');
+console.log('v.2.3.11 Modifiche a menu');
 
 
 
@@ -394,7 +394,6 @@ console.log('v.2.3.10 Modifiche a menu');
         savedScroll = smootherInstance.scrollTop();
         smootherInstance.paused(true);
         smootherInstance.scrollTop(savedScroll, false);
-        if (menuOverlay) menuOverlay.style.paddingRight = `${scrollbarCompensation}px`;
       } else {
         savedScroll = window.scrollY || window.pageYOffset || 0;
         document.body.style.paddingRight = `${scrollbarCompensation}px`;
@@ -403,7 +402,6 @@ console.log('v.2.3.10 Modifiche a menu');
         document.body.style.left = "0";
         document.body.style.right = "0";
         document.body.style.width = "100%";
-        if (menuOverlay) menuOverlay.style.paddingRight = `${scrollbarCompensation}px`;
       }
     }
 
@@ -413,7 +411,6 @@ console.log('v.2.3.10 Modifiche a menu');
       if (smootherInstance) {
         smootherInstance.paused(false);
         smootherInstance.scrollTop(savedScroll, false);
-        if (menuOverlay) menuOverlay.style.paddingRight = "";
       } else {
         document.documentElement.style.overflow = "";
         document.documentElement.style.overflowY = "";
@@ -426,7 +423,6 @@ console.log('v.2.3.10 Modifiche a menu');
         document.body.style.position = "";
         document.body.style.top = "";
         document.body.style.width = "";
-        if (menuOverlay) menuOverlay.style.paddingRight = "";
 
         void document.body.offsetHeight;
 
@@ -1000,6 +996,7 @@ console.log('v.2.3.10 Modifiche a menu');
     initMenu();
   }
 })();
+
 
 
 
