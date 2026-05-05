@@ -1,4 +1,4 @@
-console.log('v.2.3.1 Modifiche a menu');
+console.log('v.2.3.2 Modifiche a menu');
 
 
 
@@ -527,8 +527,8 @@ $(document).ready(function () {
 
           if (centerLogo && !isMobileViewport()) {
             gsap.set(centerLogo, {
-              width: compactBrandWidth,
-              height: compactBrandWidth
+              width: defaultDesktopLogoSize,
+              height: defaultDesktopLogoSize
             });
           }
 
@@ -589,8 +589,8 @@ $(document).ready(function () {
 
         if (centerLogo && !isMobileViewport()) {
           stateTl.to(centerLogo, {
-            width: compactBrandWidth,
-            height: compactBrandWidth,
+            width: defaultDesktopLogoSize,
+            height: defaultDesktopLogoSize,
             overwrite: "auto"
           }, 0);
         }
@@ -1064,6 +1064,16 @@ $(document).ready(function () {
     initSmoothScroll();
   }
 })();
+
+
+
+
+
+
+
+
+
+
 
 
 
