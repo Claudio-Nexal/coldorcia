@@ -1,4 +1,4 @@
-console.log('v.2.2.1 Modifiche a vino');
+console.log('v.2.3.1 Modifiche a menu');
 
 
 
@@ -254,6 +254,7 @@ $(document).ready(function () {
     const defaultShopColor = shopText ? window.getComputedStyle(shopText).color : "";
 
     const compactBrandWidth = "4.8vw";
+    const defaultDesktopLogoSize = "7vw";
     const mobileLogoSize = "16vw";
     let defaultCenterLogoWidth = centerLogo ? window.getComputedStyle(centerLogo).width : "";
     let defaultCenterLogoHeight = centerLogo ? window.getComputedStyle(centerLogo).height : "";
@@ -540,7 +541,11 @@ $(document).ready(function () {
         } else {
           if (header) gsap.set(header, { backgroundColor: defaultHeaderBgTarget });
           if (shopText) gsap.set(shopText, { color: defaultShopColor });
-          if (centerLogo) gsap.set(centerLogo, { clearProps: "width,height" });
+          if (centerLogo && !isMobileViewport()) {
+            gsap.set(centerLogo, { width: defaultDesktopLogoSize, height: defaultDesktopLogoSize });
+          } else if (centerLogo) {
+            gsap.set(centerLogo, { clearProps: "width,height" });
+          }
           if (openBtn) openBtn.src = defaultHamburgerSrc;
 
           if (brandImg) {
@@ -636,8 +641,8 @@ $(document).ready(function () {
             }, 0);
           } else {
             stateTl.to(centerLogo, {
-              width: "7vw",
-              height: "7vw",
+              width: defaultDesktopLogoSize,
+              height: defaultDesktopLogoSize,
               overwrite: "auto"
             }, 0);
           }
@@ -715,8 +720,8 @@ $(document).ready(function () {
           }, 0);
         } else {
           topStateTl.to(centerLogo, {
-            width: "7vw",
-            height: "7vw",
+            width: defaultDesktopLogoSize,
+            height: defaultDesktopLogoSize,
             overwrite: "auto"
           }, 0);
         }
@@ -862,6 +867,16 @@ $(document).ready(function () {
 
       gsap.set(menuOverlay, { pointerEvents: "auto", autoAlpha: 1 });
 
+      if (centerLogo) {
+        gsap.to(centerLogo, {
+          width: isMobileViewport() ? mobileLogoSize : compactBrandWidth,
+          height: isMobileViewport() ? mobileLogoSize : compactBrandWidth,
+          duration: stateTransitionDuration,
+          ease: menuEase,
+          overwrite: "auto"
+        });
+      }
+
       tl?.kill();
       tl = gsap.timeline({
         defaults: { duration: 1.1, ease: menuEase },
@@ -969,6 +984,96 @@ $(document).ready(function () {
     initMenu();
   }
 })();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// Smooth Scroll con ScrollSmoother - Setup su .content-container (solo Desktop)
+(() => {
+  function initSmoothScroll() {
+    if (window.innerWidth <= 991) return;
+
+    if (!window.gsap || !window.ScrollTrigger || !window.ScrollSmoother) return;
+
+    gsap.registerPlugin(ScrollTrigger, ScrollSmoother);
+
+    const body = document.body;
+
+    // Se già inizializzato, esci
+    if (document.querySelector("#smooth-wrapper")) return;
+
+    // Trova il contenitore che racchiude tutto TRANNE il menu
+    const contentContainer = document.querySelector(".content-container");
+    if (!contentContainer) {
+      console.warn("Non trovo .content-container: non inizializzo ScrollSmoother");
+      return;
+    }
+
+    // Crea wrapper/content
+    const wrapper = document.createElement("div");
+    wrapper.id = "smooth-wrapper";
+
+    const content = document.createElement("div");
+    content.id = "smooth-content";
+
+    // Inserisci wrapper PRIMA del contentContainer e poi sposta contentContainer dentro smooth-content
+    body.insertBefore(wrapper, contentContainer);
+    wrapper.appendChild(content);
+    content.appendChild(contentContainer);
+
+    const smoother = ScrollSmoother.create({
+      wrapper: "#smooth-wrapper",
+      content: "#smooth-content",
+      smooth: 1.5,
+      effects: true,
+      smoothTouch: false,
+      normalizeScroll: false,
+      ignoreMobileResize: true
+    });
+
+    // Resize: se scendi sotto 992, kill (opzionale: rimettere a posto DOM richiede più codice)
+    let resizeTimer;
+    window.addEventListener("resize", () => {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(() => {
+        if (window.innerWidth <= 991 && smoother) smoother.kill();
+      }, 250);
+    });
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initSmoothScroll);
+  } else {
+    initSmoothScroll();
+  }
+})();
+
+
+
+
+
+
+
+
+
+
 
 
 
