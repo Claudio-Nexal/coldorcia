@@ -1,11 +1,977 @@
-console.log('v.2.3.7 Modifiche a menu');
+console.log('v.2.3.8 Modifiche a menu');
 
 
 
 
 
 
+//menu
+(() => {
+  function initMenu() {
+    if (!window.gsap) return;
 
+    let menuEase = "gl.fastInOut";
+    if (window.CustomEase && typeof CustomEase.create === "function") {
+      CustomEase.create(
+        "gl.fastInOut",
+        "M0,0 C0.094,0.026 0.124,0.127 0.157,0.29 0.197,0.486 0.254,0.8 0.348,0.884 0.42,0.949 0.374,1 1,1"
+      );
+      menuEase = "gl.fastInOut";
+    }
+
+    const header =
+      document.querySelector(".custom-navbar") ||
+      document.querySelector(".navbar") ||
+      document.querySelector("header");
+
+    const hero = document.querySelector(".hero-section");
+    const hasHero = !!hero;
+
+    const menuOverlay = document.querySelector(".menu-overlay");
+    const menuContent = document.querySelector(".menu-content");
+    const brandImg = document.querySelector(".nav-brand img");
+    const centerLogo = document.querySelector(".image-19");
+    const shopText = document.querySelector(".shop");
+    const openBtn = document.querySelector("img.menu-open");
+    const closeBtn = document.querySelector("img.menu-close");
+
+    const redBrandSrc = "https://cdn.prod.website-files.com/6942d44283c82467823141dd/69e753685665a08e9c624425_Logo-red.svg";
+    const blackHamburgerSrc = "https://cdn.prod.website-files.com/6942d44283c82467823141dd/697b444ddf924a86a7fd4944_hamburger_black.svg";
+
+    const defaultBrandSrc = brandImg?.src || "";
+    const defaultHamburgerSrc = openBtn?.src || "";
+    const isHomePage = document.body.classList.contains("home");
+    const isNewsSinglePage = document.body.classList.contains("news-singola");
+
+    const defaultHeaderBg = header ? window.getComputedStyle(header).backgroundColor : "";
+    const activeHeaderBg = "#F8F8F3";
+    const transparentHeaderBg = "rgba(255,255,255,0)";
+    const activeHeaderBgTarget = isNewsSinglePage ? transparentHeaderBg : activeHeaderBg;
+    const defaultHeaderBgTarget = isNewsSinglePage ? transparentHeaderBg : defaultHeaderBg;
+    const defaultShopColor = shopText ? window.getComputedStyle(shopText).color : "";
+
+    const compactBrandWidth = "4.8vw";
+    const defaultDesktopLogoSize = "7vw";
+    const mobileLogoSize = "16vw";
+    let defaultCenterLogoWidth = centerLogo ? window.getComputedStyle(centerLogo).width : "";
+    let defaultCenterLogoHeight = centerLogo ? window.getComputedStyle(centerLogo).height : "";
+
+    const stateTransitionDuration = 1;
+    const mobileBreakpoint = 767;
+
+    const noHeroHideStart = 600;
+
+    if (!menuOverlay || !menuContent || (!openBtn && !closeBtn)) return;
+    if (window.__MENU_ANIM_INIT__) return;
+    window.__MENU_ANIM_INIT__ = true;
+
+    let isOpen = false;
+    let isAnimating = false;
+
+    // qui mantiene SOLO lo stato grafico "attivo"
+    let isPastHero = false;
+    let isScrolledFromTop = (window.scrollY || window.pageYOffset || 0) > 0;
+
+    let tl = null;
+    let hasInitializedHeaderState = false;
+
+    let savedScroll = 0;
+    let smoother = null;
+    let lastScrollY = window.scrollY || window.pageYOffset || 0;
+    let previousObservedScrollY = lastScrollY;
+    let headerHidden = false;
+    let scrollTicking = false;
+    let topStateTicking = false;
+    let anchorTicking = false;
+
+    const scrollDeltaThreshold = 8;
+    const hideOffsetThreshold = 120;
+
+    let pastHeroStartScrollY = !hasHero ? noHeroHideStart : null;
+    let scrollbarCompensation = 0;
+    let stickyAnchors = [];
+    let anchorPinTriggers = [];
+
+    function isFullyTransparentColor(value) {
+      if (!value) return true;
+      const normalized = value.replace(/\s+/g, "").toLowerCase();
+      return normalized === "transparent" || normalized.endsWith(",0)") || normalized.endsWith(",0.0)");
+    }
+
+    const defaultHeaderBgTweenTarget = isNewsSinglePage
+      ? transparentHeaderBg
+      : isFullyTransparentColor(defaultHeaderBgTarget)
+      ? "rgba(248,248,243,0)"
+      : defaultHeaderBgTarget;
+
+    function refreshDefaultCenterLogoSize() {
+      if (!centerLogo) return;
+      const rect = centerLogo.getBoundingClientRect();
+      if (rect.width > 0 && rect.height > 0) {
+        defaultCenterLogoWidth = `${rect.width}px`;
+        defaultCenterLogoHeight = `${rect.height}px`;
+      }
+    }
+
+    function isMobileViewport() {
+      return window.matchMedia(`(max-width: ${mobileBreakpoint}px)`).matches;
+    }
+
+    function getSmoother() {
+      if (!smoother && window.ScrollSmoother) {
+        smoother = ScrollSmoother.get();
+      }
+      return smoother;
+    }
+
+    function getCurrentScrollY() {
+      const smootherInstance = getSmoother();
+      if (smootherInstance) return smootherInstance.scrollTop();
+      return window.scrollY || window.pageYOffset || 0;
+    }
+
+    function getHeaderVisibleOffset() {
+      if (!header) return 0;
+      const rect = header.getBoundingClientRect();
+      return Math.max(0, rect.bottom);
+    }
+
+    function findSemanticAnchorBars() {
+      const tokens = ["brunello", "vigna nastagio", "riserva", "poggio al vento", "olmaia"];
+      const candidates = Array.from(document.querySelectorAll("div, nav, section")).filter((el) => {
+        if (!(el instanceof HTMLElement)) return false;
+        if (el.closest(".menu-overlay")) return false;
+
+        const links = Array.from(el.querySelectorAll("a")).filter((a) => a.offsetParent !== null);
+        if (links.length < 3 || links.length > 12) return false;
+
+        const text = links.map((a) => (a.textContent || "").trim().toLowerCase()).join(" | ");
+        const tokenHits = tokens.filter((token) => text.includes(token)).length;
+        if (tokenHits < 3) return false;
+
+        const rect = el.getBoundingClientRect();
+        return rect.height > 20 && rect.height < 180;
+      });
+
+      return candidates;
+    }
+
+    function resolveStickyAnchors() {
+      const explicitSelectors = [
+        ".ancore-annate",
+        ".ancore-persone",
+      ];
+
+      const explicitMatches = Array.from(
+        document.querySelectorAll(explicitSelectors.join(","))
+      ).filter((el) => !el.closest(".menu-overlay"));
+
+      stickyAnchors = explicitMatches.length ? explicitMatches : findSemanticAnchorBars();
+    }
+
+    function clearAnchorPinning() {
+      anchorPinTriggers.forEach(({ trigger, element }) => {
+        if (trigger && typeof trigger.kill === "function") trigger.kill();
+        if (element) {
+          element.style.position = "";
+          element.style.top = "";
+          element.style.left = "";
+          element.style.width = "";
+          element.style.zIndex = "";
+          const ph = element._anchorPlaceholder;
+          if (ph && ph.parentNode) {
+            ph.parentNode.insertBefore(element, ph);
+            ph.parentNode.removeChild(ph);
+          }
+          delete element._anchorPlaceholder;
+          delete element._anchorDocTop;
+          delete element._anchorOrigParent;
+          delete element._anchorOrigNext;
+          delete element._anchorPinned;
+        }
+      });
+      anchorPinTriggers = [];
+    }
+
+    function applyPinnedAnchorsOffset() {
+      if (!anchorPinTriggers.length) return;
+      const topOffsetPx = Math.round(getHeaderVisibleOffset());
+      const topOffset = `${topOffsetPx}px`;
+      anchorPinTriggers.forEach(({ element }) => {
+        if (!element || !element._anchorPinned) return;
+        element.style.top = topOffset;
+      });
+    }
+
+    function setupAnchorPinning() {
+      clearAnchorPinning();
+      if (!stickyAnchors.length) return;
+
+      anchorPinTriggers = stickyAnchors.map((anchorEl) => {
+        anchorEl._anchorPinned = false;
+        anchorEl._anchorDocTop = null;
+        anchorEl._anchorPlaceholder = null;
+
+        function measureDocTop() {
+          const rect = anchorEl.getBoundingClientRect();
+          return rect.top + getCurrentScrollY();
+        }
+
+        function pinAnchor() {
+          if (anchorEl._anchorPinned) return;
+          const rect = anchorEl.getBoundingClientRect();
+          anchorEl._anchorDocTop = rect.top + getCurrentScrollY();
+          anchorEl._anchorOrigParent = anchorEl.parentNode;
+          anchorEl._anchorOrigNext = anchorEl.nextSibling;
+
+          // Placeholder prende il posto nell'albero DOM
+          const ph = document.createElement("div");
+          ph.style.cssText = `height:${rect.height}px;width:${rect.width}px;visibility:hidden;pointer-events:none;flex-shrink:0;`;
+          anchorEl._anchorOrigParent.insertBefore(ph, anchorEl);
+          anchorEl._anchorPlaceholder = ph;
+
+          // Sposta l'elemento in <body> per uscire da qualsiasi parent con transform
+          // (ScrollSmoother applica transform al wrapper: position:fixed dentro un
+          // ancestor con transform si ancora a quell'ancestor, non al viewport)
+          gsap.set(anchorEl, { clearProps: "transform,y,x" });
+          document.body.appendChild(anchorEl);
+
+          const topOffsetPx = Math.round(getHeaderVisibleOffset());
+          const topOffset = `${topOffsetPx}px`;
+          anchorEl.style.position = "fixed";
+          anchorEl.style.top = topOffset;
+          anchorEl.style.left = "0";
+          anchorEl.style.width = "100%";
+          anchorEl.style.zIndex = "40";
+          anchorEl._anchorPinned = true;
+        }
+
+        function unpinAnchor() {
+          if (!anchorEl._anchorPinned) return;
+          anchorEl.style.position = "";
+          anchorEl.style.top = "";
+          anchorEl.style.left = "";
+          anchorEl.style.width = "";
+          anchorEl.style.zIndex = "";
+
+          // Rimette l'elemento al suo posto originale nel DOM
+          const ph = anchorEl._anchorPlaceholder;
+          if (ph && ph.parentNode) {
+            ph.parentNode.insertBefore(anchorEl, ph);
+            ph.parentNode.removeChild(ph);
+          }
+          anchorEl._anchorPlaceholder = null;
+          anchorEl._anchorOrigParent = null;
+          anchorEl._anchorOrigNext = null;
+          anchorEl._anchorDocTop = null;
+          anchorEl._anchorPinned = false;
+        }
+
+        function checkPin() {
+          const docTop = anchorEl._anchorPinned ? anchorEl._anchorDocTop : measureDocTop();
+          if (getCurrentScrollY() >= docTop) {
+            pinAnchor();
+          } else {
+            unpinAnchor();
+          }
+        }
+
+        gsap.ticker.add(checkPin);
+
+        return {
+          element: anchorEl,
+          trigger: {
+            kill() {
+              unpinAnchor();
+              gsap.ticker.remove(checkPin);
+            },
+            get isActive() { return !!anchorEl._anchorPinned; }
+          }
+        };
+      });
+
+      applyPinnedAnchorsOffset();
+    }
+
+    function showHeaderOnScroll() {
+      if (!header || !headerHidden) return;
+      headerHidden = false;
+      gsap.to(header, {
+        yPercent: 0,
+        duration: 1.5,
+        ease: menuEase,
+        overwrite: "auto"
+      });
+    }
+
+    function hideHeaderOnScroll() {
+      if (!header || headerHidden) return;
+      headerHidden = true;
+      gsap.to(header, {
+        yPercent: -120,
+        duration: 1.5,
+        ease: menuEase,
+        overwrite: "auto"
+      });
+    }
+
+    function isAutoHideEnabled() {
+      const currentY = getCurrentScrollY();
+
+      if (!hasHero) {
+        return currentY >= noHeroHideStart;
+      }
+
+      return isPastHero;
+    }
+
+    function handleHeaderAutoHide() {
+      if (!header || isOpen) return;
+
+      const currentY = getCurrentScrollY();
+
+      if (!isAutoHideEnabled()) {
+        showHeaderOnScroll();
+        lastScrollY = currentY;
+        return;
+      }
+
+      const delta = currentY - lastScrollY;
+
+      if (Math.abs(delta) < scrollDeltaThreshold) return;
+
+      if (delta > 0 && currentY > hideOffsetThreshold) {
+        hideHeaderOnScroll();
+      } else if (delta < 0) {
+        showHeaderOnScroll();
+      }
+
+      lastScrollY = currentY;
+    }
+
+    function onScrollForHeaderAutoHide() {
+      if (scrollTicking) return;
+      scrollTicking = true;
+      requestAnimationFrame(() => {
+        handleHeaderAutoHide();
+        scrollTicking = false;
+      });
+    }
+
+    function lockScroll() {
+      const smootherInstance = getSmoother();
+      scrollbarCompensation = Math.max(0, window.innerWidth - document.documentElement.clientWidth);
+
+      if (smootherInstance) {
+        savedScroll = smootherInstance.scrollTop();
+        smootherInstance.paused(true);
+        smootherInstance.scrollTop(savedScroll, false);
+        if (menuOverlay) menuOverlay.style.paddingRight = `${scrollbarCompensation}px`;
+      } else {
+        savedScroll = window.scrollY || window.pageYOffset || 0;
+        document.body.style.paddingRight = `${scrollbarCompensation}px`;
+        document.body.style.position = "fixed";
+        document.body.style.top = `-${savedScroll}px`;
+        document.body.style.left = "0";
+        document.body.style.right = "0";
+        document.body.style.width = "100%";
+        if (menuOverlay) menuOverlay.style.paddingRight = `${scrollbarCompensation}px`;
+      }
+    }
+
+    function unlockScroll() {
+      const smootherInstance = getSmoother();
+
+      if (smootherInstance) {
+        smootherInstance.paused(false);
+        smootherInstance.scrollTop(savedScroll, false);
+        if (menuOverlay) menuOverlay.style.paddingRight = "";
+      } else {
+        document.documentElement.style.overflow = "";
+        document.documentElement.style.overflowY = "";
+        document.documentElement.style.overflowX = "";
+        document.body.style.overflow = "";
+        document.body.style.overflowY = "";
+        document.body.style.overflowX = "";
+        document.body.style.height = "";
+        document.body.style.paddingRight = "";
+        document.body.style.position = "";
+        document.body.style.top = "";
+        document.body.style.width = "";
+        if (menuOverlay) menuOverlay.style.paddingRight = "";
+
+        void document.body.offsetHeight;
+
+        requestAnimationFrame(() => {
+          window.scrollTo(0, savedScroll);
+        });
+      }
+
+      lastScrollY = getCurrentScrollY();
+    }
+
+    window.addEventListener("pagehide", () => {
+      try { unlockScroll(); } catch (_) {}
+    });
+
+    gsap.set(menuOverlay, {
+      pointerEvents: "none",
+      autoAlpha: 0,
+      clipPath: "polygon(0% 0%, 100% 0%, 100% 0%, 0% 0%)"
+    });
+
+    gsap.set(menuContent, {
+      y: -30,
+      opacity: 0,
+      transformOrigin: "50% 0%",
+      willChange: "transform,opacity"
+    });
+
+    gsap.set([".menu-link .w-dropdown", ".menu-link a"], {
+      clearProps: "transform,opacity"
+    });
+
+    if (header) header.style.transition = "";
+    if (shopText) shopText.style.transition = "";
+    if (brandImg) brandImg.style.transition = "";
+    if (centerLogo) centerLogo.style.transition = "";
+
+    function showOpenIcon() {
+      if (openBtn) {
+        gsap.set(openBtn, {
+          opacity: 1,
+          x: 0,
+          y: 0,
+          rotation: 0,
+          pointerEvents: "auto"
+        });
+      }
+      if (closeBtn) {
+        gsap.set(closeBtn, {
+          opacity: 0,
+          x: -5,
+          y: 10,
+          rotation: 5,
+          pointerEvents: "none"
+        });
+      }
+    }
+
+    function showCloseIcon() {
+      if (openBtn) {
+        gsap.set(openBtn, {
+          opacity: 0,
+          x: -5,
+          y: -10,
+          rotation: -5,
+          pointerEvents: "none"
+        });
+      }
+      if (closeBtn) {
+        gsap.set(closeBtn, {
+          opacity: 1,
+          x: 0,
+          y: 0,
+          rotation: 0,
+          pointerEvents: "auto"
+        });
+      }
+    }
+
+    function applyClosedHeaderState() {
+      if (isOpen) return;
+
+      const shouldUseActiveStyle = isPastHero || isScrolledFromTop;
+
+      if (!hasInitializedHeaderState) {
+        if (shouldUseActiveStyle) {
+          if (header) gsap.set(header, { backgroundColor: activeHeaderBgTarget });
+          if (shopText) gsap.set(shopText, { color: "#000000" });
+
+          if (centerLogo && !isMobileViewport()) {
+            gsap.set(centerLogo, {
+              width: compactBrandWidth,
+              height: compactBrandWidth
+            });
+          }
+
+          if (brandImg && !isMobileViewport()) {
+            gsap.set(brandImg, {
+              width: compactBrandWidth,
+              height: compactBrandWidth
+            });
+          }
+
+          if (openBtn) openBtn.src = blackHamburgerSrc;
+
+          if (brandImg) {
+            brandImg.src = redBrandSrc;
+            gsap.set(brandImg, { opacity: 1 });
+          }
+        } else {
+          if (header) gsap.set(header, { backgroundColor: defaultHeaderBgTarget });
+          if (shopText) gsap.set(shopText, { color: defaultShopColor });
+          if (centerLogo && !isMobileViewport()) {
+            gsap.set(centerLogo, { width: defaultDesktopLogoSize, height: defaultDesktopLogoSize });
+          } else if (centerLogo) {
+            gsap.set(centerLogo, { clearProps: "width,height" });
+          }
+          if (openBtn) openBtn.src = defaultHamburgerSrc;
+
+          if (brandImg) {
+            if (!isHomePage && defaultBrandSrc) brandImg.src = defaultBrandSrc;
+            gsap.set(brandImg, { opacity: isHomePage ? 0 : 1 });
+          }
+        }
+
+        if (isMobileViewport()) {
+          if (centerLogo) gsap.set(centerLogo, { width: mobileLogoSize, height: mobileLogoSize });
+          if (brandImg) gsap.set(brandImg, { width: mobileLogoSize, height: mobileLogoSize });
+        } else {
+          if (centerLogo) gsap.set(centerLogo, { width: defaultDesktopLogoSize, height: defaultDesktopLogoSize });
+          if (brandImg) gsap.set(brandImg, { width: defaultDesktopLogoSize, height: defaultDesktopLogoSize });
+        }
+
+        hasInitializedHeaderState = true;
+        return;
+      }
+
+      if (shouldUseActiveStyle) {
+        refreshDefaultCenterLogoSize();
+
+        const stateTl = gsap.timeline({
+          defaults: { duration: stateTransitionDuration, ease: menuEase }
+        });
+
+        if (header) {
+          stateTl.to(header, {
+            backgroundColor: activeHeaderBgTarget,
+            overwrite: "auto"
+          }, 0);
+        }
+
+        if (shopText) {
+          stateTl.to(shopText, {
+            color: "#000000",
+            overwrite: "auto"
+          }, 0);
+        }
+
+        if (centerLogo && !isMobileViewport()) {
+          stateTl.to(centerLogo, {
+            width: compactBrandWidth,
+            height: compactBrandWidth,
+            overwrite: "auto"
+          }, 0);
+        }
+
+        if (isMobileViewport()) {
+          if (centerLogo) {
+            stateTl.to(centerLogo, {
+              width: mobileLogoSize,
+              height: mobileLogoSize,
+              overwrite: "auto"
+            }, 0);
+          }
+          if (brandImg) {
+            stateTl.to(brandImg, {
+              width: mobileLogoSize,
+              height: mobileLogoSize,
+              overwrite: "auto"
+            }, 0);
+          }
+        } else if (brandImg) {
+          stateTl.to(brandImg, {
+            width: compactBrandWidth,
+            height: compactBrandWidth,
+            overwrite: "auto"
+          }, 0);
+        }
+
+        if (openBtn) openBtn.src = blackHamburgerSrc;
+
+        if (brandImg) {
+          brandImg.src = redBrandSrc;
+          stateTl.to(brandImg, {
+            opacity: 1,
+            overwrite: "auto"
+          }, 0);
+        }
+      } else {
+        const stateTl = gsap.timeline({
+          defaults: { duration: stateTransitionDuration, ease: menuEase }
+        });
+
+        if (centerLogo && !isMobileViewport()) {
+          stateTl.to(centerLogo, {
+            width: defaultDesktopLogoSize,
+            height: defaultDesktopLogoSize,
+            overwrite: "auto"
+          }, 0);
+        }
+
+        if (isMobileViewport()) {
+          if (centerLogo) {
+            stateTl.to(centerLogo, {
+              width: mobileLogoSize,
+              height: mobileLogoSize,
+              overwrite: "auto"
+            }, 0);
+          }
+          if (brandImg) {
+            stateTl.to(brandImg, {
+              width: mobileLogoSize,
+              height: mobileLogoSize,
+              overwrite: "auto"
+            }, 0);
+          }
+        } else if (brandImg) {
+          stateTl.to(brandImg, {
+            width: defaultDesktopLogoSize,
+            height: defaultDesktopLogoSize,
+            overwrite: "auto"
+          }, 0);
+        }
+
+        if (header) {
+          stateTl.to(header, {
+            backgroundColor: defaultHeaderBgTweenTarget,
+            overwrite: "auto"
+          }, 0);
+        }
+
+        if (shopText) {
+          stateTl.to(shopText, {
+            color: defaultShopColor,
+            overwrite: "auto"
+          }, 0);
+        }
+
+        if (openBtn) openBtn.src = defaultHamburgerSrc;
+
+        if (brandImg) {
+          if (isHomePage) {
+            stateTl.to(brandImg, {
+              opacity: 0,
+              overwrite: "auto"
+            }, 0);
+          } else {
+            if (defaultBrandSrc) brandImg.src = defaultBrandSrc;
+            stateTl.to(brandImg, {
+              opacity: 1,
+              overwrite: "auto"
+            }, 0);
+          }
+        }
+      }
+    }
+
+    function applyTopOriginalState() {
+      if (isOpen) return;
+
+      const topStateTl = gsap.timeline({
+        defaults: { duration: 0.35, ease: menuEase }
+      });
+
+      if (centerLogo && !isMobileViewport()) {
+        topStateTl.to(centerLogo, {
+          width: defaultDesktopLogoSize,
+          height: defaultDesktopLogoSize,
+          overwrite: "auto"
+        }, 0);
+      }
+
+      if (isMobileViewport()) {
+        if (centerLogo) {
+          topStateTl.to(centerLogo, {
+            width: mobileLogoSize,
+            height: mobileLogoSize,
+            overwrite: "auto"
+          }, 0);
+        }
+        if (brandImg) {
+          topStateTl.to(brandImg, {
+            width: mobileLogoSize,
+            height: mobileLogoSize,
+            overwrite: "auto"
+          }, 0);
+        }
+      } else if (brandImg) {
+        topStateTl.to(brandImg, {
+          width: defaultDesktopLogoSize,
+          height: defaultDesktopLogoSize,
+          overwrite: "auto"
+        }, 0);
+      }
+
+      if (header) {
+        topStateTl.to(header, {
+          backgroundColor: transparentHeaderBg,
+          overwrite: "auto"
+        }, 0);
+      }
+
+      if (shopText) {
+        topStateTl.to(shopText, {
+          color: defaultShopColor,
+          overwrite: "auto"
+        }, 0);
+      }
+
+      if (openBtn) openBtn.src = defaultHamburgerSrc;
+
+      if (brandImg) {
+        if (!isHomePage && defaultBrandSrc) brandImg.src = defaultBrandSrc;
+        topStateTl.to(brandImg, {
+          opacity: isHomePage ? 0 : 1,
+          overwrite: "auto"
+        }, 0);
+      }
+    }
+
+    function setPastHeroState(value) {
+      const wasPastHero = isPastHero;
+      isPastHero = !!value;
+
+      if (!wasPastHero && isPastHero) {
+        pastHeroStartScrollY = getCurrentScrollY();
+        hideHeaderOnScroll();
+      }
+
+      if (wasPastHero && !isPastHero) {
+        pastHeroStartScrollY = null;
+        showHeaderOnScroll();
+      }
+
+      applyClosedHeaderState();
+    }
+
+    function updateScrolledState() {
+      const currentY = getCurrentScrollY();
+      const nextScrolledFromTop = currentY > 1;
+      const isScrollingUp = currentY < previousObservedScrollY - 0.5;
+      if (hasHero && isScrollingUp && currentY <= 20) {
+        // durante scroll verso l'alto: anticipa reset stato originale vicino al top
+        isPastHero = false;
+        pastHeroStartScrollY = null;
+        showHeaderOnScroll();
+        if (isScrolledFromTop !== nextScrolledFromTop) {
+          isScrolledFromTop = nextScrolledFromTop;
+        }
+        applyTopOriginalState();
+        previousObservedScrollY = currentY;
+        return;
+      }
+      if (nextScrolledFromTop === isScrolledFromTop) {
+        previousObservedScrollY = currentY;
+        return;
+      }
+      isScrolledFromTop = nextScrolledFromTop;
+      applyClosedHeaderState();
+      previousObservedScrollY = currentY;
+    }
+
+    function startTopStateObserver() {
+      if (!window.gsap || topStateTicking) return;
+      topStateTicking = true;
+      gsap.ticker.add(updateScrolledState);
+    }
+
+    function startAnchorObserver() {
+      if (!window.gsap || anchorTicking || !stickyAnchors.length) return;
+      anchorTicking = true;
+      gsap.ticker.add(applyPinnedAnchorsOffset);
+    }
+
+    function updateHeroStateFallback() {
+      if (!hero) return;
+      const headerHeight = header ? header.offsetHeight : 0;
+      const past = hero.getBoundingClientRect().bottom <= headerHeight;
+      setPastHeroState(past);
+    }
+
+    function updateNoHeroHideThreshold() {
+      if (hasHero) return;
+
+      const currentY = getCurrentScrollY();
+
+      if (currentY >= noHeroHideStart && pastHeroStartScrollY === noHeroHideStart) {
+        // prima attivazione reale della logica auto-hide
+        pastHeroStartScrollY = currentY;
+      }
+
+      if (currentY < noHeroHideStart) {
+        showHeaderOnScroll();
+      }
+    }
+
+    showOpenIcon();
+    refreshDefaultCenterLogoSize();
+    window.addEventListener("load", refreshDefaultCenterLogoSize);
+    resolveStickyAnchors();
+    setupAnchorPinning();
+    applyClosedHeaderState();
+    startTopStateObserver();
+    startAnchorObserver();
+    window.addEventListener("load", () => {
+      resolveStickyAnchors();
+      setupAnchorPinning();
+      startAnchorObserver();
+    });
+
+    openBtn?.addEventListener("click", (e) => {
+      e.preventDefault();
+      openMenu();
+    });
+
+    closeBtn?.addEventListener("click", (e) => {
+      e.preventDefault();
+      closeMenu();
+    });
+
+    function openMenu() {
+      if (isAnimating || isOpen) return;
+      isAnimating = true;
+
+      lockScroll();
+      showHeaderOnScroll();
+      showCloseIcon();
+
+      gsap.set(menuOverlay, { pointerEvents: "auto", autoAlpha: 1 });
+
+      if (centerLogo) {
+        gsap.to(centerLogo, {
+          width: isMobileViewport() ? mobileLogoSize : compactBrandWidth,
+          height: isMobileViewport() ? mobileLogoSize : compactBrandWidth,
+          duration: stateTransitionDuration,
+          ease: menuEase,
+          overwrite: "auto"
+        });
+      }
+
+      if (brandImg) {
+        gsap.to(brandImg, {
+          width: isMobileViewport() ? mobileLogoSize : compactBrandWidth,
+          height: isMobileViewport() ? mobileLogoSize : compactBrandWidth,
+          duration: stateTransitionDuration,
+          ease: menuEase,
+          overwrite: "auto"
+        });
+      }
+
+      tl?.kill();
+      tl = gsap.timeline({
+        defaults: { duration: 1.1, ease: menuEase },
+        onComplete: () => {
+          isOpen = true;
+          isAnimating = false;
+          document.body.classList.add("menu-is-open");
+        }
+      });
+
+      tl.to(menuOverlay, {
+        clipPath: "polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)"
+      }, 0);
+
+      tl.to(menuContent, {
+        y: 0,
+        opacity: 1,
+        overwrite: "auto"
+      }, 0.02);
+    }
+
+    function closeMenu() {
+      if (isAnimating || !isOpen) return;
+      isAnimating = true;
+
+      showOpenIcon();
+      document.body.classList.remove("menu-is-open");
+
+      tl?.kill();
+      tl = gsap.timeline({
+        defaults: { duration: 1.1, ease: menuEase },
+        onComplete: () => {
+          isOpen = false;
+          isAnimating = false;
+
+          gsap.set(menuOverlay, {
+            pointerEvents: "none",
+            autoAlpha: 0,
+            clipPath: "polygon(0% 0%, 100% 0%, 100% 0%, 0% 0%)"
+          });
+
+          gsap.set(menuContent, {
+            y: -30,
+            opacity: 0
+          });
+
+          unlockScroll();
+          isScrolledFromTop = getCurrentScrollY() > 1;
+          if (isScrolledFromTop === false) {
+            isPastHero = false;
+          }
+          applyClosedHeaderState();
+        }
+      });
+
+      tl.to(menuContent, {
+        y: -30,
+        opacity: 0,
+        overwrite: "auto"
+      }, 0);
+
+      tl.to(menuOverlay, {
+        clipPath: "polygon(0% 0%, 100% 0%, 100% 0%, 0% 0%)"
+      }, 0);
+    }
+
+    window.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && isOpen) closeMenu();
+    });
+
+    window.addEventListener("scroll", () => {
+      updateScrolledState();
+      if (!hasHero) updateNoHeroHideThreshold();
+      onScrollForHeaderAutoHide();
+    }, { passive: true });
+
+    window.addEventListener("resize", () => {
+      resolveStickyAnchors();
+      setupAnchorPinning();
+      updateScrolledState();
+      showHeaderOnScroll();
+      lastScrollY = getCurrentScrollY();
+      if (!hasHero) updateNoHeroHideThreshold();
+    });
+
+    if (window.ScrollTrigger && hero) {
+      gsap.registerPlugin(ScrollTrigger);
+
+      ScrollTrigger.create({
+        trigger: hero,
+        start: "bottom top",
+        onEnter: () => setPastHeroState(true),
+        onLeaveBack: () => setPastHeroState(false)
+      });
+
+      ScrollTrigger.refresh();
+    } else if (hero) {
+      updateHeroStateFallback();
+      window.addEventListener("scroll", updateHeroStateFallback, { passive: true });
+      window.addEventListener("resize", updateHeroStateFallback);
+    } else {
+      // niente hero: stato attivo subito
+      applyClosedHeaderState();
+      updateNoHeroHideThreshold();
+    }
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initMenu);
+  } else {
+    initMenu();
+  }
+})();
 
 
 
