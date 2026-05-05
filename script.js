@@ -352,65 +352,17 @@ $(document).ready(function () {
 
 
 
-// Smooth Scroll con ScrollSmoother - Setup su .content-container (solo Desktop)
-(() => {
-  function initSmoothScroll() {
-    if (window.innerWidth <= 991) return;
 
-    if (!window.gsap || !window.ScrollTrigger || !window.ScrollSmoother) return;
 
-    gsap.registerPlugin(ScrollTrigger, ScrollSmoother);
 
-    const body = document.body;
 
-    // Se già inizializzato, esci
-    if (document.querySelector("#smooth-wrapper")) return;
 
-    // Trova il contenitore che racchiude tutto TRANNE il menu
-    const contentContainer = document.querySelector(".content-container");
-    if (!contentContainer) {
-      console.warn("Non trovo .content-container: non inizializzo ScrollSmoother");
-      return;
-    }
 
-    // Crea wrapper/content
-    const wrapper = document.createElement("div");
-    wrapper.id = "smooth-wrapper";
 
-    const content = document.createElement("div");
-    content.id = "smooth-content";
 
-    // Inserisci wrapper PRIMA del contentContainer e poi sposta contentContainer dentro smooth-content
-    body.insertBefore(wrapper, contentContainer);
-    wrapper.appendChild(content);
-    content.appendChild(contentContainer);
 
-    const smoother = ScrollSmoother.create({
-      wrapper: "#smooth-wrapper",
-      content: "#smooth-content",
-      smooth: 1.5,
-      effects: true,
-      smoothTouch: false,
-      normalizeScroll: false,
-      ignoreMobileResize: true
-    });
 
-    // Resize: se scendi sotto 992, kill (opzionale: rimettere a posto DOM richiede più codice)
-    let resizeTimer;
-    window.addEventListener("resize", () => {
-      clearTimeout(resizeTimer);
-      resizeTimer = setTimeout(() => {
-        if (window.innerWidth <= 991 && smoother) smoother.kill();
-      }, 250);
-    });
-  }
 
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", initSmoothScroll);
-  } else {
-    initSmoothScroll();
-  }
-})();
 
 
 
@@ -442,65 +394,17 @@ $(document).ready(function () {
 
 
 
-// Smooth Scroll con ScrollSmoother - Setup su .content-container (solo Desktop)
-(() => {
-  function initSmoothScroll() {
-    if (window.innerWidth <= 991) return;
 
-    if (!window.gsap || !window.ScrollTrigger || !window.ScrollSmoother) return;
 
-    gsap.registerPlugin(ScrollTrigger, ScrollSmoother);
 
-    const body = document.body;
 
-    // Se già inizializzato, esci
-    if (document.querySelector("#smooth-wrapper")) return;
 
-    // Trova il contenitore che racchiude tutto TRANNE il menu
-    const contentContainer = document.querySelector(".content-container");
-    if (!contentContainer) {
-      console.warn("Non trovo .content-container: non inizializzo ScrollSmoother");
-      return;
-    }
 
-    // Crea wrapper/content
-    const wrapper = document.createElement("div");
-    wrapper.id = "smooth-wrapper";
 
-    const content = document.createElement("div");
-    content.id = "smooth-content";
 
-    // Inserisci wrapper PRIMA del contentContainer e poi sposta contentContainer dentro smooth-content
-    body.insertBefore(wrapper, contentContainer);
-    wrapper.appendChild(content);
-    content.appendChild(contentContainer);
 
-    const smoother = ScrollSmoother.create({
-      wrapper: "#smooth-wrapper",
-      content: "#smooth-content",
-      smooth: 1.5,
-      effects: true,
-      smoothTouch: false,
-      normalizeScroll: false,
-      ignoreMobileResize: true
-    });
 
-    // Resize: se scendi sotto 992, kill (opzionale: rimettere a posto DOM richiede più codice)
-    let resizeTimer;
-    window.addEventListener("resize", () => {
-      clearTimeout(resizeTimer);
-      resizeTimer = setTimeout(() => {
-        if (window.innerWidth <= 991 && smoother) smoother.kill();
-      }, 250);
-    });
-  }
 
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", initSmoothScroll);
-  } else {
-    initSmoothScroll();
-  }
-})();
 
 
 
@@ -517,90 +421,6 @@ $(document).ready(function () {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// Smooth Scroll con ScrollSmoother - Setup su .content-container (solo Desktop)
-(() => {
-  function initSmoothScroll() {
-    if (window.innerWidth <= 991) return;
-
-    if (!window.gsap || !window.ScrollTrigger || !window.ScrollSmoother) return;
-
-    gsap.registerPlugin(ScrollTrigger, ScrollSmoother);
-
-    const body = document.body;
-
-    // Se già inizializzato, esci
-    if (document.querySelector("#smooth-wrapper")) return;
-
-    // Trova il contenitore che racchiude tutto TRANNE il menu
-    const contentContainer = document.querySelector(".content-container");
-    if (!contentContainer) {
-      console.warn("Non trovo .content-container: non inizializzo ScrollSmoother");
-      return;
-    }
-
-    // Crea wrapper/content
-    const wrapper = document.createElement("div");
-    wrapper.id = "smooth-wrapper";
-
-    const content = document.createElement("div");
-    content.id = "smooth-content";
-
-    // Inserisci wrapper PRIMA del contentContainer e poi sposta contentContainer dentro smooth-content
-    body.insertBefore(wrapper, contentContainer);
-    wrapper.appendChild(content);
-    content.appendChild(contentContainer);
-
-    const smoother = ScrollSmoother.create({
-      wrapper: "#smooth-wrapper",
-      content: "#smooth-content",
-      smooth: 1.5,
-      effects: true,
-      smoothTouch: false,
-      normalizeScroll: false,
-      ignoreMobileResize: true
-    });
-
-    // Resize: se scendi sotto 992, kill (opzionale: rimettere a posto DOM richiede più codice)
-    let resizeTimer;
-    window.addEventListener("resize", () => {
-      clearTimeout(resizeTimer);
-      resizeTimer = setTimeout(() => {
-        if (window.innerWidth <= 991 && smoother) smoother.kill();
-      }, 250);
-    });
-  }
-
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", initSmoothScroll);
-  } else {
-    initSmoothScroll();
-  }
-})();
 
 
 
@@ -749,65 +569,6 @@ $(document).ready(function () {
 
 
 
-// Smooth Scroll con ScrollSmoother - Setup su .content-container (solo Desktop)
-(() => {
-  function initSmoothScroll() {
-    if (window.innerWidth <= 991) return;
-
-    if (!window.gsap || !window.ScrollTrigger || !window.ScrollSmoother) return;
-
-    gsap.registerPlugin(ScrollTrigger, ScrollSmoother);
-
-    const body = document.body;
-
-    // Se già inizializzato, esci
-    if (document.querySelector("#smooth-wrapper")) return;
-
-    // Trova il contenitore che racchiude tutto TRANNE il menu
-    const contentContainer = document.querySelector(".content-container");
-    if (!contentContainer) {
-      console.warn("Non trovo .content-container: non inizializzo ScrollSmoother");
-      return;
-    }
-
-    // Crea wrapper/content
-    const wrapper = document.createElement("div");
-    wrapper.id = "smooth-wrapper";
-
-    const content = document.createElement("div");
-    content.id = "smooth-content";
-
-    // Inserisci wrapper PRIMA del contentContainer e poi sposta contentContainer dentro smooth-content
-    body.insertBefore(wrapper, contentContainer);
-    wrapper.appendChild(content);
-    content.appendChild(contentContainer);
-
-    const smoother = ScrollSmoother.create({
-      wrapper: "#smooth-wrapper",
-      content: "#smooth-content",
-      smooth: 1.5,
-      effects: true,
-      smoothTouch: false,
-      normalizeScroll: false,
-      ignoreMobileResize: true
-    });
-
-    // Resize: se scendi sotto 992, kill (opzionale: rimettere a posto DOM richiede più codice)
-    let resizeTimer;
-    window.addEventListener("resize", () => {
-      clearTimeout(resizeTimer);
-      resizeTimer = setTimeout(() => {
-        if (window.innerWidth <= 991 && smoother) smoother.kill();
-      }, 250);
-    });
-  }
-
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", initSmoothScroll);
-  } else {
-    initSmoothScroll();
-  }
-})();
 
 
 
