@@ -1,4 +1,4 @@
-console.log('v.2.4.3 Modifiche a menu');
+console.log('v.2.4.4 Modifiche a menu');
 
 
 
@@ -11,6 +11,7 @@ console.log('v.2.4.3 Modifiche a menu');
     if (!window.gsap) return;
 
     let menuEase = "gl.fastInOut";
+
     if (window.CustomEase && typeof CustomEase.create === "function") {
       CustomEase.create(
         "gl.fastInOut",
@@ -41,12 +42,14 @@ console.log('v.2.4.3 Modifiche a menu');
 
     const defaultBrandSrc = brandImg?.src || "";
     const defaultHamburgerSrc = openBtn?.src || "";
+
     const isHomePage = document.body.classList.contains("home");
     const isNewsSinglePage = document.body.classList.contains("news-singola");
 
     const defaultHeaderBg = header ? window.getComputedStyle(header).backgroundColor : "";
     const activeHeaderBg = "#F8F8F3";
     const transparentHeaderBg = "rgba(255,255,255,0)";
+
     const activeHeaderBgTarget = isNewsSinglePage ? transparentHeaderBg : activeHeaderBg;
     const defaultHeaderBgTarget = isNewsSinglePage ? transparentHeaderBg : defaultHeaderBg;
 
@@ -58,12 +61,11 @@ console.log('v.2.4.3 Modifiche a menu');
     const mobileDefaultLogoSize = "24vw";
     const mobileCompactLogoSize = "16vw";
 
-    let defaultCenterLogoWidth = centerLogo ? window.getComputedStyle(centerLogo).width : "";
-    let defaultCenterLogoHeight = centerLogo ? window.getComputedStyle(centerLogo).height : "";
-
     const stateTransitionDuration = 1;
     const mobileBreakpoint = 767;
+
     const noHeroHideStart = 600;
+    const homeHideDelayAfterHero = 200;
 
     if (!menuOverlay || !menuContent || (!openBtn && !closeBtn)) return;
     if (window.__MENU_ANIM_INIT__) return;
@@ -74,6 +76,9 @@ console.log('v.2.4.3 Modifiche a menu');
 
     let isPastHero = false;
     let isScrolledFromTop = (window.scrollY || window.pageYOffset || 0) > 0;
+
+    let heroBottomScrollY = null;
+    let pastHeroStartScrollY = !hasHero ? noHeroHideStart : null;
 
     let tl = null;
     let hasInitializedHeaderState = false;
@@ -90,7 +95,6 @@ console.log('v.2.4.3 Modifiche a menu');
     const scrollDeltaThreshold = 8;
     const hideOffsetThreshold = 120;
 
-    let pastHeroStartScrollY = !hasHero ? noHeroHideStart : null;
     let scrollbarCompensation = 0;
     let stickyAnchors = [];
     let anchorPinTriggers = [];
@@ -106,15 +110,6 @@ console.log('v.2.4.3 Modifiche a menu');
       : isFullyTransparentColor(defaultHeaderBgTarget)
         ? "rgba(248,248,243,0)"
         : defaultHeaderBgTarget;
-
-    function refreshDefaultCenterLogoSize() {
-      if (!centerLogo) return;
-      const rect = centerLogo.getBoundingClientRect();
-      if (rect.width > 0 && rect.height > 0) {
-        defaultCenterLogoWidth = `${rect.width}px`;
-        defaultCenterLogoHeight = `${rect.height}px`;
-      }
-    }
 
     function isMobileViewport() {
       return window.matchMedia(`(max-width: ${mobileBreakpoint}px)`).matches;
@@ -150,10 +145,30 @@ console.log('v.2.4.3 Modifiche a menu');
       return Math.round(getHeaderVisibleOffset() + getMobileVisualViewportOffsetTop());
     }
 
+    function refreshHeroBottomScrollY() {
+      if (!hero) {
+        heroBottomScrollY = null;
+        return;
+      }
+
+      heroBottomScrollY = hero.getBoundingClientRect().bottom + getCurrentScrollY();
+    }
+
+    function refreshDefaultCenterLogoSize() {
+      if (!centerLogo) return;
+
+      const rect = centerLogo.getBoundingClientRect();
+
+      if (rect.width > 0 && rect.height > 0) {
+        centerLogo.dataset.defaultWidth = `${rect.width}px`;
+        centerLogo.dataset.defaultHeight = `${rect.height}px`;
+      }
+    }
+
     function findSemanticAnchorBars() {
       const tokens = ["brunello", "vigna nastagio", "riserva", "poggio al vento", "olmaia"];
 
-      const candidates = Array.from(document.querySelectorAll("div, nav, section")).filter((el) => {
+      return Array.from(document.querySelectorAll("div, nav, section")).filter((el) => {
         if (!(el instanceof HTMLElement)) return false;
         if (el.closest(".menu-overlay")) return false;
 
@@ -167,13 +182,12 @@ console.log('v.2.4.3 Modifiche a menu');
 
         const text = links.map((a) => (a.textContent || "").trim().toLowerCase()).join(" | ");
         const tokenHits = tokens.filter((token) => text.includes(token)).length;
+
         if (tokenHits < 3) return false;
 
         const rect = el.getBoundingClientRect();
         return rect.height > 20 && rect.height < 180;
       });
-
-      return candidates;
     }
 
     function resolveStickyAnchors() {
@@ -190,10 +204,7 @@ console.log('v.2.4.3 Modifiche a menu');
         return rect.width > 0 && rect.height > 0;
       }
 
-      const explicitSelectors = [
-        ".ancore-annate",
-        ".ancore-persone"
-      ];
+      const explicitSelectors = [".ancore-annate", ".ancore-persone"];
 
       const explicitAllMatches = Array.from(
         document.querySelectorAll(explicitSelectors.join(","))
@@ -216,6 +227,7 @@ console.log('v.2.4.3 Modifiche a menu');
 
         if (element) {
           element.classList.remove("is-anchor-fixed");
+
           element.style.position = "";
           element.style.top = "";
           element.style.left = "";
@@ -224,6 +236,7 @@ console.log('v.2.4.3 Modifiche a menu');
           element.style.zIndex = "";
 
           const ph = element._anchorPlaceholder;
+
           if (ph && ph.parentNode) {
             ph.parentNode.insertBefore(element, ph);
             ph.parentNode.removeChild(ph);
@@ -270,6 +283,7 @@ console.log('v.2.4.3 Modifiche a menu');
           if (anchorEl._anchorPinned) return;
 
           const rect = anchorEl.getBoundingClientRect();
+
           anchorEl._anchorDocTop = rect.top + getCurrentScrollY();
           anchorEl._anchorOrigParent = anchorEl.parentNode;
           anchorEl._anchorOrigNext = anchorEl.nextSibling;
@@ -281,6 +295,7 @@ console.log('v.2.4.3 Modifiche a menu');
           anchorEl._anchorPlaceholder = ph;
 
           gsap.set(anchorEl, { clearProps: "transform,y,x" });
+
           document.body.appendChild(anchorEl);
 
           const topOffsetPx = getPinnedAnchorTopOffset();
@@ -290,6 +305,7 @@ console.log('v.2.4.3 Modifiche a menu');
           anchorEl.style.left = "0";
           anchorEl.style.width = "100%";
           anchorEl.style.zIndex = "40";
+
           anchorEl.classList.add("is-anchor-fixed");
           anchorEl._anchorPinned = true;
         }
@@ -298,6 +314,7 @@ console.log('v.2.4.3 Modifiche a menu');
           if (!anchorEl._anchorPinned) return;
 
           anchorEl.classList.remove("is-anchor-fixed");
+
           anchorEl.style.position = "";
           anchorEl.style.top = "";
           anchorEl.style.left = "";
@@ -374,11 +391,24 @@ console.log('v.2.4.3 Modifiche a menu');
       });
     }
 
+    function getShouldUseActiveStyle() {
+      if (isHomePage && hasHero) {
+        return isPastHero;
+      }
+
+      return isPastHero || isScrolledFromTop;
+    }
+
     function isAutoHideEnabled() {
       const currentY = getCurrentScrollY();
 
       if (!hasHero) {
         return currentY >= noHeroHideStart;
+      }
+
+      if (isHomePage) {
+        if (heroBottomScrollY === null) refreshHeroBottomScrollY();
+        return heroBottomScrollY !== null && currentY >= heroBottomScrollY + homeHideDelayAfterHero;
       }
 
       return isPastHero;
@@ -421,7 +451,11 @@ console.log('v.2.4.3 Modifiche a menu');
 
     function lockScroll() {
       const smootherInstance = getSmoother();
-      scrollbarCompensation = Math.max(0, window.innerWidth - document.documentElement.clientWidth);
+
+      scrollbarCompensation = Math.max(
+        0,
+        window.innerWidth - document.documentElement.clientWidth
+      );
 
       if (smootherInstance) {
         savedScroll = smootherInstance.scrollTop();
@@ -542,14 +576,6 @@ console.log('v.2.4.3 Modifiche a menu');
       }
     }
 
-    function getShouldUseActiveStyle() {
-      if (isHomePage && hasHero) {
-        return isPastHero;
-      }
-
-      return isPastHero || isScrolledFromTop;
-    }
-
     function applyClosedHeaderState() {
       if (isOpen) return;
 
@@ -560,20 +586,6 @@ console.log('v.2.4.3 Modifiche a menu');
           if (header) gsap.set(header, { backgroundColor: activeHeaderBgTarget });
           if (shopText) gsap.set(shopText, { color: "#000000" });
           if (clubText) gsap.set(clubText, { color: "#000000" });
-
-          if (centerLogo && !isMobileViewport()) {
-            gsap.set(centerLogo, {
-              width: compactBrandWidth,
-              height: compactBrandWidth
-            });
-          }
-
-          if (brandImg && !isMobileViewport()) {
-            gsap.set(brandImg, {
-              width: compactBrandWidth,
-              height: compactBrandWidth
-            });
-          }
 
           if (openBtn) openBtn.src = blackHamburgerSrc;
 
@@ -586,15 +598,6 @@ console.log('v.2.4.3 Modifiche a menu');
           if (shopText) gsap.set(shopText, { color: defaultShopColor });
           if (clubText) gsap.set(clubText, { color: defaultClubColor });
 
-          if (centerLogo && !isMobileViewport()) {
-            gsap.set(centerLogo, {
-              width: defaultDesktopLogoSize,
-              height: defaultDesktopLogoSize
-            });
-          } else if (centerLogo) {
-            gsap.set(centerLogo, { clearProps: "width,height" });
-          }
-
           if (openBtn) openBtn.src = defaultHamburgerSrc;
 
           if (brandImg) {
@@ -606,15 +609,15 @@ console.log('v.2.4.3 Modifiche a menu');
         if (isMobileViewport()) {
           if (centerLogo) {
             gsap.set(centerLogo, {
-              width: mobileDefaultLogoSize,
-              height: mobileDefaultLogoSize
+              width: shouldUseActiveStyle ? mobileCompactLogoSize : mobileDefaultLogoSize,
+              height: shouldUseActiveStyle ? mobileCompactLogoSize : mobileDefaultLogoSize
             });
           }
 
           if (brandImg) {
             gsap.set(brandImg, {
-              width: mobileDefaultLogoSize,
-              height: mobileDefaultLogoSize
+              width: shouldUseActiveStyle ? mobileCompactLogoSize : mobileDefaultLogoSize,
+              height: shouldUseActiveStyle ? mobileCompactLogoSize : mobileDefaultLogoSize
             });
           }
         } else {
@@ -645,8 +648,6 @@ console.log('v.2.4.3 Modifiche a menu');
       });
 
       if (shouldUseActiveStyle) {
-        refreshDefaultCenterLogoSize();
-
         if (header) {
           stateTl.to(header, {
             backgroundColor: activeHeaderBgTarget,
@@ -668,14 +669,6 @@ console.log('v.2.4.3 Modifiche a menu');
           }, 0);
         }
 
-        if (centerLogo && !isMobileViewport()) {
-          stateTl.to(centerLogo, {
-            width: compactBrandWidth,
-            height: compactBrandWidth,
-            overwrite: "auto"
-          }, 0);
-        }
-
         if (isMobileViewport()) {
           if (centerLogo) {
             stateTl.to(centerLogo, {
@@ -692,12 +685,22 @@ console.log('v.2.4.3 Modifiche a menu');
               overwrite: "auto"
             }, 0);
           }
-        } else if (brandImg) {
-          stateTl.to(brandImg, {
-            width: compactBrandWidth,
-            height: compactBrandWidth,
-            overwrite: "auto"
-          }, 0);
+        } else {
+          if (centerLogo) {
+            stateTl.to(centerLogo, {
+              width: compactBrandWidth,
+              height: compactBrandWidth,
+              overwrite: "auto"
+            }, 0);
+          }
+
+          if (brandImg) {
+            stateTl.to(brandImg, {
+              width: compactBrandWidth,
+              height: compactBrandWidth,
+              overwrite: "auto"
+            }, 0);
+          }
         }
 
         if (openBtn) openBtn.src = blackHamburgerSrc;
@@ -711,14 +714,6 @@ console.log('v.2.4.3 Modifiche a menu');
           }, 0);
         }
       } else {
-        if (centerLogo && !isMobileViewport()) {
-          stateTl.to(centerLogo, {
-            width: defaultDesktopLogoSize,
-            height: defaultDesktopLogoSize,
-            overwrite: "auto"
-          }, 0);
-        }
-
         if (isMobileViewport()) {
           if (centerLogo) {
             stateTl.to(centerLogo, {
@@ -735,12 +730,22 @@ console.log('v.2.4.3 Modifiche a menu');
               overwrite: "auto"
             }, 0);
           }
-        } else if (brandImg) {
-          stateTl.to(brandImg, {
-            width: defaultDesktopLogoSize,
-            height: defaultDesktopLogoSize,
-            overwrite: "auto"
-          }, 0);
+        } else {
+          if (centerLogo) {
+            stateTl.to(centerLogo, {
+              width: defaultDesktopLogoSize,
+              height: defaultDesktopLogoSize,
+              overwrite: "auto"
+            }, 0);
+          }
+
+          if (brandImg) {
+            stateTl.to(brandImg, {
+              width: defaultDesktopLogoSize,
+              height: defaultDesktopLogoSize,
+              overwrite: "auto"
+            }, 0);
+          }
         }
 
         if (header) {
@@ -794,14 +799,6 @@ console.log('v.2.4.3 Modifiche a menu');
         }
       });
 
-      if (centerLogo && !isMobileViewport()) {
-        topStateTl.to(centerLogo, {
-          width: defaultDesktopLogoSize,
-          height: defaultDesktopLogoSize,
-          overwrite: "auto"
-        }, 0);
-      }
-
       if (isMobileViewport()) {
         if (centerLogo) {
           topStateTl.to(centerLogo, {
@@ -818,12 +815,22 @@ console.log('v.2.4.3 Modifiche a menu');
             overwrite: "auto"
           }, 0);
         }
-      } else if (brandImg) {
-        topStateTl.to(brandImg, {
-          width: defaultDesktopLogoSize,
-          height: defaultDesktopLogoSize,
-          overwrite: "auto"
-        }, 0);
+      } else {
+        if (centerLogo) {
+          topStateTl.to(centerLogo, {
+            width: defaultDesktopLogoSize,
+            height: defaultDesktopLogoSize,
+            overwrite: "auto"
+          }, 0);
+        }
+
+        if (brandImg) {
+          topStateTl.to(brandImg, {
+            width: defaultDesktopLogoSize,
+            height: defaultDesktopLogoSize,
+            overwrite: "auto"
+          }, 0);
+        }
       }
 
       if (header) {
@@ -861,15 +868,23 @@ console.log('v.2.4.3 Modifiche a menu');
 
     function setPastHeroState(value) {
       const wasPastHero = isPastHero;
+
       isPastHero = !!value;
 
       if (!wasPastHero && isPastHero) {
         pastHeroStartScrollY = getCurrentScrollY();
-        hideHeaderOnScroll();
+        refreshHeroBottomScrollY();
+
+        if (isHomePage) {
+          showHeaderOnScroll();
+        } else {
+          hideHeaderOnScroll();
+        }
       }
 
       if (wasPastHero && !isPastHero) {
         pastHeroStartScrollY = null;
+        heroBottomScrollY = null;
         showHeaderOnScroll();
       }
 
@@ -884,6 +899,8 @@ console.log('v.2.4.3 Modifiche a menu');
       if (hasHero && isScrollingUp && currentY <= 20) {
         isPastHero = false;
         pastHeroStartScrollY = null;
+        heroBottomScrollY = null;
+
         showHeaderOnScroll();
 
         if (isScrolledFromTop !== nextScrolledFromTop) {
@@ -891,6 +908,7 @@ console.log('v.2.4.3 Modifiche a menu');
         }
 
         applyTopOriginalState();
+
         previousObservedScrollY = currentY;
         return;
       }
@@ -902,6 +920,7 @@ console.log('v.2.4.3 Modifiche a menu');
 
       isScrolledFromTop = nextScrolledFromTop;
       applyClosedHeaderState();
+
       previousObservedScrollY = currentY;
     }
 
@@ -944,8 +963,12 @@ console.log('v.2.4.3 Modifiche a menu');
 
     showOpenIcon();
     refreshDefaultCenterLogoSize();
+    refreshHeroBottomScrollY();
 
-    window.addEventListener("load", refreshDefaultCenterLogoSize);
+    window.addEventListener("load", () => {
+      refreshDefaultCenterLogoSize();
+      refreshHeroBottomScrollY();
+    });
 
     resolveStickyAnchors();
     setupAnchorPinning();
@@ -1096,6 +1119,7 @@ console.log('v.2.4.3 Modifiche a menu');
 
           if (isScrolledFromTop === false) {
             isPastHero = false;
+            heroBottomScrollY = null;
           }
 
           applyClosedHeaderState();
@@ -1128,10 +1152,12 @@ console.log('v.2.4.3 Modifiche a menu');
     }, { passive: true });
 
     window.addEventListener("resize", () => {
+      refreshHeroBottomScrollY();
       resolveStickyAnchors();
       setupAnchorPinning();
       updateScrolledState();
       showHeaderOnScroll();
+
       lastScrollY = getCurrentScrollY();
 
       if (!hasHero) {
