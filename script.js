@@ -5,7 +5,7 @@ console.log('v.2.4.2 Modifiche a menu');
 
 
 
-//menu
+// menu
 (() => {
   function initMenu() {
     if (!window.gsap) return;
@@ -32,6 +32,7 @@ console.log('v.2.4.2 Modifiche a menu');
     const brandImg = document.querySelector(".nav-brand img");
     const centerLogo = document.querySelector(".image-19");
     const shopText = document.querySelector(".shop");
+    const clubText = document.querySelector(".club");
     const openBtn = document.querySelector("img.menu-open");
     const closeBtn = document.querySelector("img.menu-close");
 
@@ -48,18 +49,20 @@ console.log('v.2.4.2 Modifiche a menu');
     const transparentHeaderBg = "rgba(255,255,255,0)";
     const activeHeaderBgTarget = isNewsSinglePage ? transparentHeaderBg : activeHeaderBg;
     const defaultHeaderBgTarget = isNewsSinglePage ? transparentHeaderBg : defaultHeaderBg;
+
     const defaultShopColor = shopText ? window.getComputedStyle(shopText).color : "";
+    const defaultClubColor = clubText ? window.getComputedStyle(clubText).color : "";
 
     const compactBrandWidth = "4.8vw";
     const defaultDesktopLogoSize = "7.8vw";
     const mobileDefaultLogoSize = "24vw";
     const mobileCompactLogoSize = "16vw";
+
     let defaultCenterLogoWidth = centerLogo ? window.getComputedStyle(centerLogo).width : "";
     let defaultCenterLogoHeight = centerLogo ? window.getComputedStyle(centerLogo).height : "";
 
     const stateTransitionDuration = 1;
     const mobileBreakpoint = 767;
-
     const noHeroHideStart = 600;
 
     if (!menuOverlay || !menuContent || (!openBtn && !closeBtn)) return;
@@ -69,7 +72,6 @@ console.log('v.2.4.2 Modifiche a menu');
     let isOpen = false;
     let isAnimating = false;
 
-    // qui mantiene SOLO lo stato grafico "attivo"
     let isPastHero = false;
     let isScrolledFromTop = (window.scrollY || window.pageYOffset || 0) > 0;
 
@@ -102,8 +104,8 @@ console.log('v.2.4.2 Modifiche a menu');
     const defaultHeaderBgTweenTarget = isNewsSinglePage
       ? transparentHeaderBg
       : isFullyTransparentColor(defaultHeaderBgTarget)
-      ? "rgba(248,248,243,0)"
-      : defaultHeaderBgTarget;
+        ? "rgba(248,248,243,0)"
+        : defaultHeaderBgTarget;
 
     function refreshDefaultCenterLogoSize() {
       if (!centerLogo) return;
@@ -145,16 +147,16 @@ console.log('v.2.4.2 Modifiche a menu');
     }
 
     function getPinnedAnchorTopOffset() {
-      // On mobile browsers the visible viewport can shift when UI bars collapse/expand.
-      // Add visualViewport offset so fixed elements stay inside the visible area.
       return Math.round(getHeaderVisibleOffset() + getMobileVisualViewportOffsetTop());
     }
 
     function findSemanticAnchorBars() {
       const tokens = ["brunello", "vigna nastagio", "riserva", "poggio al vento", "olmaia"];
+
       const candidates = Array.from(document.querySelectorAll("div, nav, section")).filter((el) => {
         if (!(el instanceof HTMLElement)) return false;
         if (el.closest(".menu-overlay")) return false;
+
         const style = window.getComputedStyle(el);
         if (style.display === "none" || style.visibility === "hidden") return false;
         if (el.offsetParent === null && style.position !== "fixed") return false;
@@ -178,28 +180,27 @@ console.log('v.2.4.2 Modifiche a menu');
       function isUsableStickyAnchor(el) {
         if (!(el instanceof HTMLElement)) return false;
         if (el.closest(".menu-overlay")) return false;
+
         const style = window.getComputedStyle(el);
         if (style.display === "none" || style.visibility === "hidden") return false;
-        // Webflow often renders duplicated desktop/mobile nodes; skip hidden clones.
         if (el.offsetParent === null && style.position !== "fixed") return false;
-        // Avoid hijacking elements already fixed by page styles/interactions.
         if (style.position === "fixed") return false;
+
         const rect = el.getBoundingClientRect();
         return rect.width > 0 && rect.height > 0;
       }
 
       const explicitSelectors = [
         ".ancore-annate",
-        ".ancore-persone",
+        ".ancore-persone"
       ];
 
       const explicitAllMatches = Array.from(
         document.querySelectorAll(explicitSelectors.join(","))
       );
+
       const explicitUsableMatches = explicitAllMatches.filter(isUsableStickyAnchor);
 
-      // If an explicit anchor exists in page, use ONLY one explicit instance.
-      // This avoids Webflow clone/fallback collisions that can duplicate pinning.
       if (explicitAllMatches.length) {
         stickyAnchors = explicitUsableMatches.length ? [explicitUsableMatches[0]] : [];
         return;
@@ -212,6 +213,7 @@ console.log('v.2.4.2 Modifiche a menu');
     function clearAnchorPinning() {
       anchorPinTriggers.forEach(({ trigger, element }) => {
         if (trigger && typeof trigger.kill === "function") trigger.kill();
+
         if (element) {
           element.classList.remove("is-anchor-fixed");
           element.style.position = "";
@@ -220,11 +222,13 @@ console.log('v.2.4.2 Modifiche a menu');
           element.style.right = "";
           element.style.width = "";
           element.style.zIndex = "";
+
           const ph = element._anchorPlaceholder;
           if (ph && ph.parentNode) {
             ph.parentNode.insertBefore(element, ph);
             ph.parentNode.removeChild(ph);
           }
+
           delete element._anchorPlaceholder;
           delete element._anchorDocTop;
           delete element._anchorOrigParent;
@@ -232,13 +236,16 @@ console.log('v.2.4.2 Modifiche a menu');
           delete element._anchorPinned;
         }
       });
+
       anchorPinTriggers = [];
     }
 
     function applyPinnedAnchorsOffset() {
       if (!anchorPinTriggers.length) return;
+
       const topOffsetPx = getPinnedAnchorTopOffset();
       const topOffset = `${topOffsetPx}px`;
+
       anchorPinTriggers.forEach(({ element }) => {
         if (!element || !element._anchorPinned) return;
         element.style.top = topOffset;
@@ -261,27 +268,25 @@ console.log('v.2.4.2 Modifiche a menu');
 
         function pinAnchor() {
           if (anchorEl._anchorPinned) return;
+
           const rect = anchorEl.getBoundingClientRect();
           anchorEl._anchorDocTop = rect.top + getCurrentScrollY();
           anchorEl._anchorOrigParent = anchorEl.parentNode;
           anchorEl._anchorOrigNext = anchorEl.nextSibling;
 
-          // Placeholder prende il posto nell'albero DOM
           const ph = document.createElement("div");
           ph.style.cssText = `height:${rect.height}px;width:${rect.width}px;visibility:hidden;pointer-events:none;flex-shrink:0;`;
+
           anchorEl._anchorOrigParent.insertBefore(ph, anchorEl);
           anchorEl._anchorPlaceholder = ph;
 
-          // Sposta l'elemento in <body> per uscire da qualsiasi parent con transform
-          // (ScrollSmoother applica transform al wrapper: position:fixed dentro un
-          // ancestor con transform si ancora a quell'ancestor, non al viewport)
           gsap.set(anchorEl, { clearProps: "transform,y,x" });
           document.body.appendChild(anchorEl);
 
           const topOffsetPx = getPinnedAnchorTopOffset();
-          const topOffset = `${topOffsetPx}px`;
+
           anchorEl.style.position = "fixed";
-          anchorEl.style.top = topOffset;
+          anchorEl.style.top = `${topOffsetPx}px`;
           anchorEl.style.left = "0";
           anchorEl.style.width = "100%";
           anchorEl.style.zIndex = "40";
@@ -291,6 +296,7 @@ console.log('v.2.4.2 Modifiche a menu');
 
         function unpinAnchor() {
           if (!anchorEl._anchorPinned) return;
+
           anchorEl.classList.remove("is-anchor-fixed");
           anchorEl.style.position = "";
           anchorEl.style.top = "";
@@ -299,12 +305,13 @@ console.log('v.2.4.2 Modifiche a menu');
           anchorEl.style.width = "";
           anchorEl.style.zIndex = "";
 
-          // Rimette l'elemento al suo posto originale nel DOM
           const ph = anchorEl._anchorPlaceholder;
+
           if (ph && ph.parentNode) {
             ph.parentNode.insertBefore(anchorEl, ph);
             ph.parentNode.removeChild(ph);
           }
+
           anchorEl._anchorPlaceholder = null;
           anchorEl._anchorOrigParent = null;
           anchorEl._anchorOrigNext = null;
@@ -314,6 +321,7 @@ console.log('v.2.4.2 Modifiche a menu');
 
         function checkPin() {
           const docTop = anchorEl._anchorPinned ? anchorEl._anchorDocTop : measureDocTop();
+
           if (getCurrentScrollY() >= docTop) {
             pinAnchor();
           } else {
@@ -330,7 +338,9 @@ console.log('v.2.4.2 Modifiche a menu');
               unpinAnchor();
               gsap.ticker.remove(checkPin);
             },
-            get isActive() { return !!anchorEl._anchorPinned; }
+            get isActive() {
+              return !!anchorEl._anchorPinned;
+            }
           }
         };
       });
@@ -340,7 +350,9 @@ console.log('v.2.4.2 Modifiche a menu');
 
     function showHeaderOnScroll() {
       if (!header || !headerHidden) return;
+
       headerHidden = false;
+
       gsap.to(header, {
         yPercent: 0,
         duration: 1.5,
@@ -351,7 +363,9 @@ console.log('v.2.4.2 Modifiche a menu');
 
     function hideHeaderOnScroll() {
       if (!header || headerHidden) return;
+
       headerHidden = true;
+
       gsap.to(header, {
         yPercent: -120,
         duration: 1.5,
@@ -396,7 +410,9 @@ console.log('v.2.4.2 Modifiche a menu');
 
     function onScrollForHeaderAutoHide() {
       if (scrollTicking) return;
+
       scrollTicking = true;
+
       requestAnimationFrame(() => {
         handleHeaderAutoHide();
         scrollTicking = false;
@@ -413,6 +429,7 @@ console.log('v.2.4.2 Modifiche a menu');
         smootherInstance.scrollTop(savedScroll, false);
       } else {
         savedScroll = window.scrollY || window.pageYOffset || 0;
+
         document.body.style.paddingRight = `${scrollbarCompensation}px`;
         document.body.style.position = "fixed";
         document.body.style.top = `-${savedScroll}px`;
@@ -432,6 +449,7 @@ console.log('v.2.4.2 Modifiche a menu');
         document.documentElement.style.overflow = "";
         document.documentElement.style.overflowY = "";
         document.documentElement.style.overflowX = "";
+
         document.body.style.overflow = "";
         document.body.style.overflowY = "";
         document.body.style.overflowX = "";
@@ -452,7 +470,9 @@ console.log('v.2.4.2 Modifiche a menu');
     }
 
     window.addEventListener("pagehide", () => {
-      try { unlockScroll(); } catch (_) {}
+      try {
+        unlockScroll();
+      } catch (_) {}
     });
 
     gsap.set(menuOverlay, {
@@ -474,6 +494,7 @@ console.log('v.2.4.2 Modifiche a menu');
 
     if (header) header.style.transition = "";
     if (shopText) shopText.style.transition = "";
+    if (clubText) clubText.style.transition = "";
     if (brandImg) brandImg.style.transition = "";
     if (centerLogo) centerLogo.style.transition = "";
 
@@ -487,6 +508,7 @@ console.log('v.2.4.2 Modifiche a menu');
           pointerEvents: "auto"
         });
       }
+
       if (closeBtn) {
         gsap.set(closeBtn, {
           opacity: 0,
@@ -508,6 +530,7 @@ console.log('v.2.4.2 Modifiche a menu');
           pointerEvents: "none"
         });
       }
+
       if (closeBtn) {
         gsap.set(closeBtn, {
           opacity: 1,
@@ -519,15 +542,24 @@ console.log('v.2.4.2 Modifiche a menu');
       }
     }
 
+    function getShouldUseActiveStyle() {
+      if (isHomePage && hasHero) {
+        return isPastHero;
+      }
+
+      return isPastHero || isScrolledFromTop;
+    }
+
     function applyClosedHeaderState() {
       if (isOpen) return;
 
-      const shouldUseActiveStyle = isPastHero || isScrolledFromTop;
+      const shouldUseActiveStyle = getShouldUseActiveStyle();
 
       if (!hasInitializedHeaderState) {
         if (shouldUseActiveStyle) {
           if (header) gsap.set(header, { backgroundColor: activeHeaderBgTarget });
           if (shopText) gsap.set(shopText, { color: "#000000" });
+          if (clubText) gsap.set(clubText, { color: "#000000" });
 
           if (centerLogo && !isMobileViewport()) {
             gsap.set(centerLogo, {
@@ -552,11 +584,17 @@ console.log('v.2.4.2 Modifiche a menu');
         } else {
           if (header) gsap.set(header, { backgroundColor: defaultHeaderBgTarget });
           if (shopText) gsap.set(shopText, { color: defaultShopColor });
+          if (clubText) gsap.set(clubText, { color: defaultClubColor });
+
           if (centerLogo && !isMobileViewport()) {
-            gsap.set(centerLogo, { width: defaultDesktopLogoSize, height: defaultDesktopLogoSize });
+            gsap.set(centerLogo, {
+              width: defaultDesktopLogoSize,
+              height: defaultDesktopLogoSize
+            });
           } else if (centerLogo) {
             gsap.set(centerLogo, { clearProps: "width,height" });
           }
+
           if (openBtn) openBtn.src = defaultHamburgerSrc;
 
           if (brandImg) {
@@ -566,23 +604,48 @@ console.log('v.2.4.2 Modifiche a menu');
         }
 
         if (isMobileViewport()) {
-          if (centerLogo) gsap.set(centerLogo, { width: mobileDefaultLogoSize, height: mobileDefaultLogoSize });
-          if (brandImg) gsap.set(brandImg, { width: mobileDefaultLogoSize, height: mobileDefaultLogoSize });
+          if (centerLogo) {
+            gsap.set(centerLogo, {
+              width: mobileDefaultLogoSize,
+              height: mobileDefaultLogoSize
+            });
+          }
+
+          if (brandImg) {
+            gsap.set(brandImg, {
+              width: mobileDefaultLogoSize,
+              height: mobileDefaultLogoSize
+            });
+          }
         } else {
-          if (centerLogo) gsap.set(centerLogo, { width: defaultDesktopLogoSize, height: defaultDesktopLogoSize });
-          if (brandImg) gsap.set(brandImg, { width: defaultDesktopLogoSize, height: defaultDesktopLogoSize });
+          if (centerLogo) {
+            gsap.set(centerLogo, {
+              width: shouldUseActiveStyle ? compactBrandWidth : defaultDesktopLogoSize,
+              height: shouldUseActiveStyle ? compactBrandWidth : defaultDesktopLogoSize
+            });
+          }
+
+          if (brandImg) {
+            gsap.set(brandImg, {
+              width: shouldUseActiveStyle ? compactBrandWidth : defaultDesktopLogoSize,
+              height: shouldUseActiveStyle ? compactBrandWidth : defaultDesktopLogoSize
+            });
+          }
         }
 
         hasInitializedHeaderState = true;
         return;
       }
 
+      const stateTl = gsap.timeline({
+        defaults: {
+          duration: stateTransitionDuration,
+          ease: menuEase
+        }
+      });
+
       if (shouldUseActiveStyle) {
         refreshDefaultCenterLogoSize();
-
-        const stateTl = gsap.timeline({
-          defaults: { duration: stateTransitionDuration, ease: menuEase }
-        });
 
         if (header) {
           stateTl.to(header, {
@@ -593,6 +656,13 @@ console.log('v.2.4.2 Modifiche a menu');
 
         if (shopText) {
           stateTl.to(shopText, {
+            color: "#000000",
+            overwrite: "auto"
+          }, 0);
+        }
+
+        if (clubText) {
+          stateTl.to(clubText, {
             color: "#000000",
             overwrite: "auto"
           }, 0);
@@ -614,6 +684,7 @@ console.log('v.2.4.2 Modifiche a menu');
               overwrite: "auto"
             }, 0);
           }
+
           if (brandImg) {
             stateTl.to(brandImg, {
               width: mobileCompactLogoSize,
@@ -633,16 +704,13 @@ console.log('v.2.4.2 Modifiche a menu');
 
         if (brandImg) {
           brandImg.src = redBrandSrc;
+
           stateTl.to(brandImg, {
             opacity: 1,
             overwrite: "auto"
           }, 0);
         }
       } else {
-        const stateTl = gsap.timeline({
-          defaults: { duration: stateTransitionDuration, ease: menuEase }
-        });
-
         if (centerLogo && !isMobileViewport()) {
           stateTl.to(centerLogo, {
             width: defaultDesktopLogoSize,
@@ -659,6 +727,7 @@ console.log('v.2.4.2 Modifiche a menu');
               overwrite: "auto"
             }, 0);
           }
+
           if (brandImg) {
             stateTl.to(brandImg, {
               width: mobileDefaultLogoSize,
@@ -688,6 +757,13 @@ console.log('v.2.4.2 Modifiche a menu');
           }, 0);
         }
 
+        if (clubText) {
+          stateTl.to(clubText, {
+            color: defaultClubColor,
+            overwrite: "auto"
+          }, 0);
+        }
+
         if (openBtn) openBtn.src = defaultHamburgerSrc;
 
         if (brandImg) {
@@ -698,6 +774,7 @@ console.log('v.2.4.2 Modifiche a menu');
             }, 0);
           } else {
             if (defaultBrandSrc) brandImg.src = defaultBrandSrc;
+
             stateTl.to(brandImg, {
               opacity: 1,
               overwrite: "auto"
@@ -711,7 +788,10 @@ console.log('v.2.4.2 Modifiche a menu');
       if (isOpen) return;
 
       const topStateTl = gsap.timeline({
-        defaults: { duration: 0.35, ease: menuEase }
+        defaults: {
+          duration: 0.35,
+          ease: menuEase
+        }
       });
 
       if (centerLogo && !isMobileViewport()) {
@@ -730,6 +810,7 @@ console.log('v.2.4.2 Modifiche a menu');
             overwrite: "auto"
           }, 0);
         }
+
         if (brandImg) {
           topStateTl.to(brandImg, {
             width: mobileDefaultLogoSize,
@@ -759,10 +840,18 @@ console.log('v.2.4.2 Modifiche a menu');
         }, 0);
       }
 
+      if (clubText) {
+        topStateTl.to(clubText, {
+          color: defaultClubColor,
+          overwrite: "auto"
+        }, 0);
+      }
+
       if (openBtn) openBtn.src = defaultHamburgerSrc;
 
       if (brandImg) {
         if (!isHomePage && defaultBrandSrc) brandImg.src = defaultBrandSrc;
+
         topStateTl.to(brandImg, {
           opacity: isHomePage ? 0 : 1,
           overwrite: "auto"
@@ -791,22 +880,26 @@ console.log('v.2.4.2 Modifiche a menu');
       const currentY = getCurrentScrollY();
       const nextScrolledFromTop = currentY > 1;
       const isScrollingUp = currentY < previousObservedScrollY - 0.5;
+
       if (hasHero && isScrollingUp && currentY <= 20) {
-        // durante scroll verso l'alto: anticipa reset stato originale vicino al top
         isPastHero = false;
         pastHeroStartScrollY = null;
         showHeaderOnScroll();
+
         if (isScrolledFromTop !== nextScrolledFromTop) {
           isScrolledFromTop = nextScrolledFromTop;
         }
+
         applyTopOriginalState();
         previousObservedScrollY = currentY;
         return;
       }
+
       if (nextScrolledFromTop === isScrolledFromTop) {
         previousObservedScrollY = currentY;
         return;
       }
+
       isScrolledFromTop = nextScrolledFromTop;
       applyClosedHeaderState();
       previousObservedScrollY = currentY;
@@ -814,20 +907,24 @@ console.log('v.2.4.2 Modifiche a menu');
 
     function startTopStateObserver() {
       if (!window.gsap || topStateTicking) return;
+
       topStateTicking = true;
       gsap.ticker.add(updateScrolledState);
     }
 
     function startAnchorObserver() {
       if (!window.gsap || anchorTicking || !stickyAnchors.length) return;
+
       anchorTicking = true;
       gsap.ticker.add(applyPinnedAnchorsOffset);
     }
 
     function updateHeroStateFallback() {
       if (!hero) return;
+
       const headerHeight = header ? header.offsetHeight : 0;
       const past = hero.getBoundingClientRect().bottom <= headerHeight;
+
       setPastHeroState(past);
     }
 
@@ -837,7 +934,6 @@ console.log('v.2.4.2 Modifiche a menu');
       const currentY = getCurrentScrollY();
 
       if (currentY >= noHeroHideStart && pastHeroStartScrollY === noHeroHideStart) {
-        // prima attivazione reale della logica auto-hide
         pastHeroStartScrollY = currentY;
       }
 
@@ -848,12 +944,15 @@ console.log('v.2.4.2 Modifiche a menu');
 
     showOpenIcon();
     refreshDefaultCenterLogoSize();
+
     window.addEventListener("load", refreshDefaultCenterLogoSize);
+
     resolveStickyAnchors();
     setupAnchorPinning();
     applyClosedHeaderState();
     startTopStateObserver();
     startAnchorObserver();
+
     window.addEventListener("load", () => {
       resolveStickyAnchors();
       setupAnchorPinning();
@@ -872,13 +971,17 @@ console.log('v.2.4.2 Modifiche a menu');
 
     function openMenu() {
       if (isAnimating || isOpen) return;
+
       isAnimating = true;
 
       lockScroll();
       showHeaderOnScroll();
       showCloseIcon();
 
-      gsap.set(menuOverlay, { pointerEvents: "auto", autoAlpha: 1 });
+      gsap.set(menuOverlay, {
+        pointerEvents: "auto",
+        autoAlpha: 1
+      });
 
       if (centerLogo) {
         gsap.to(centerLogo, {
@@ -891,7 +994,10 @@ console.log('v.2.4.2 Modifiche a menu');
       }
 
       if (brandImg) {
+        brandImg.src = redBrandSrc;
+
         gsap.to(brandImg, {
+          opacity: 1,
           width: isMobileViewport() ? mobileCompactLogoSize : compactBrandWidth,
           height: isMobileViewport() ? mobileCompactLogoSize : compactBrandWidth,
           duration: stateTransitionDuration,
@@ -900,9 +1006,42 @@ console.log('v.2.4.2 Modifiche a menu');
         });
       }
 
+      if (header) {
+        gsap.to(header, {
+          backgroundColor: activeHeaderBgTarget,
+          duration: stateTransitionDuration,
+          ease: menuEase,
+          overwrite: "auto"
+        });
+      }
+
+      if (shopText) {
+        gsap.to(shopText, {
+          color: "#000000",
+          duration: stateTransitionDuration,
+          ease: menuEase,
+          overwrite: "auto"
+        });
+      }
+
+      if (clubText) {
+        gsap.to(clubText, {
+          color: "#000000",
+          duration: stateTransitionDuration,
+          ease: menuEase,
+          overwrite: "auto"
+        });
+      }
+
+      if (openBtn) openBtn.src = blackHamburgerSrc;
+
       tl?.kill();
+
       tl = gsap.timeline({
-        defaults: { duration: 1.1, ease: menuEase },
+        defaults: {
+          duration: 1.1,
+          ease: menuEase
+        },
         onComplete: () => {
           isOpen = true;
           isAnimating = false;
@@ -923,14 +1062,19 @@ console.log('v.2.4.2 Modifiche a menu');
 
     function closeMenu() {
       if (isAnimating || !isOpen) return;
+
       isAnimating = true;
 
       showOpenIcon();
       document.body.classList.remove("menu-is-open");
 
       tl?.kill();
+
       tl = gsap.timeline({
-        defaults: { duration: 1.1, ease: menuEase },
+        defaults: {
+          duration: 1.1,
+          ease: menuEase
+        },
         onComplete: () => {
           isOpen = false;
           isAnimating = false;
@@ -947,10 +1091,13 @@ console.log('v.2.4.2 Modifiche a menu');
           });
 
           unlockScroll();
+
           isScrolledFromTop = getCurrentScrollY() > 1;
+
           if (isScrolledFromTop === false) {
             isPastHero = false;
           }
+
           applyClosedHeaderState();
         }
       });
@@ -972,7 +1119,11 @@ console.log('v.2.4.2 Modifiche a menu');
 
     window.addEventListener("scroll", () => {
       updateScrolledState();
-      if (!hasHero) updateNoHeroHideThreshold();
+
+      if (!hasHero) {
+        updateNoHeroHideThreshold();
+      }
+
       onScrollForHeaderAutoHide();
     }, { passive: true });
 
@@ -982,13 +1133,17 @@ console.log('v.2.4.2 Modifiche a menu');
       updateScrolledState();
       showHeaderOnScroll();
       lastScrollY = getCurrentScrollY();
-      if (!hasHero) updateNoHeroHideThreshold();
+
+      if (!hasHero) {
+        updateNoHeroHideThreshold();
+      }
     });
 
     if (window.visualViewport) {
       const syncPinnedAnchorsToViewport = () => {
         applyPinnedAnchorsOffset();
       };
+
       window.visualViewport.addEventListener("resize", syncPinnedAnchorsToViewport, { passive: true });
       window.visualViewport.addEventListener("scroll", syncPinnedAnchorsToViewport, { passive: true });
     }
@@ -1009,7 +1164,6 @@ console.log('v.2.4.2 Modifiche a menu');
       window.addEventListener("scroll", updateHeroStateFallback, { passive: true });
       window.addEventListener("resize", updateHeroStateFallback);
     } else {
-      // niente hero: stato attivo subito
       applyClosedHeaderState();
       updateNoHeroHideThreshold();
     }
