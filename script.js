@@ -1,4 +1,4 @@
-console.log('v.2.4.4 Modifiche a menu');
+console.log('v.2.5.0 Modifiche a menu');
 
 
 
@@ -510,6 +510,7 @@ console.log('v.2.4.4 Modifiche a menu');
     });
 
     gsap.set(menuOverlay, {
+      display: "none",
       pointerEvents: "none",
       autoAlpha: 0,
       clipPath: "polygon(0% 0%, 100% 0%, 100% 0%, 0% 0%)"
@@ -1002,8 +1003,10 @@ console.log('v.2.4.4 Modifiche a menu');
       showCloseIcon();
 
       gsap.set(menuOverlay, {
+        display: "block",
         pointerEvents: "auto",
-        autoAlpha: 1
+        autoAlpha: 1,
+        clipPath: "polygon(0% 0%, 100% 0%, 100% 0%, 0% 0%)"
       });
 
       if (centerLogo) {
@@ -1103,6 +1106,7 @@ console.log('v.2.4.4 Modifiche a menu');
           isAnimating = false;
 
           gsap.set(menuOverlay, {
+            display: "none",
             pointerEvents: "none",
             autoAlpha: 0,
             clipPath: "polygon(0% 0%, 100% 0%, 100% 0%, 0% 0%)"
