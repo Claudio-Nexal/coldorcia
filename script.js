@@ -1,4 +1,4 @@
-console.log('v.2.5.0 Modifiche a menu');
+console.log('v.2.5.1 Modifiche a menu');
 
 
 
@@ -34,6 +34,7 @@ console.log('v.2.5.0 Modifiche a menu');
     const centerLogo = document.querySelector(".image-19");
     const shopText = document.querySelector(".shop");
     const clubText = document.querySelector(".club");
+    const langText = document.querySelector(".lang");
     const openBtn = document.querySelector("img.menu-open");
     const closeBtn = document.querySelector("img.menu-close");
 
@@ -55,6 +56,8 @@ console.log('v.2.5.0 Modifiche a menu');
 
     const defaultShopColor = shopText ? window.getComputedStyle(shopText).color : "";
     const defaultClubColor = clubText ? window.getComputedStyle(clubText).color : "";
+    const defaultLangColor = langText ? window.getComputedStyle(langText).color : "";
+
 
     const compactBrandWidth = "4.8vw";
     const defaultDesktopLogoSize = "7.8vw";
@@ -530,6 +533,7 @@ console.log('v.2.5.0 Modifiche a menu');
     if (header) header.style.transition = "";
     if (shopText) shopText.style.transition = "";
     if (clubText) clubText.style.transition = "";
+    if (langText) langText.style.transition = "";
     if (brandImg) brandImg.style.transition = "";
     if (centerLogo) centerLogo.style.transition = "";
 
@@ -587,6 +591,7 @@ console.log('v.2.5.0 Modifiche a menu');
           if (header) gsap.set(header, { backgroundColor: activeHeaderBgTarget });
           if (shopText) gsap.set(shopText, { color: "#000000" });
           if (clubText) gsap.set(clubText, { color: "#000000" });
+          if (langText) gsap.set(langText, { color: "#000000" });
 
           if (openBtn) openBtn.src = blackHamburgerSrc;
 
@@ -598,6 +603,7 @@ console.log('v.2.5.0 Modifiche a menu');
           if (header) gsap.set(header, { backgroundColor: defaultHeaderBgTarget });
           if (shopText) gsap.set(shopText, { color: defaultShopColor });
           if (clubText) gsap.set(clubText, { color: defaultClubColor });
+          if (langText) gsap.set(langText, { color: defaultLangColor });
 
           if (openBtn) openBtn.src = defaultHamburgerSrc;
 
@@ -665,6 +671,13 @@ console.log('v.2.5.0 Modifiche a menu');
 
         if (clubText) {
           stateTl.to(clubText, {
+            color: "#000000",
+            overwrite: "auto"
+          }, 0);
+        }
+
+        if (langText) {
+          stateTl.to(langText, {
             color: "#000000",
             overwrite: "auto"
           }, 0);
@@ -770,6 +783,13 @@ console.log('v.2.5.0 Modifiche a menu');
           }, 0);
         }
 
+      if (langText) {
+          stateTl.to(langText, {
+            color: defaultLangColor,
+            overwrite: "auto"
+          }, 0);
+        }
+
         if (openBtn) openBtn.src = defaultHamburgerSrc;
 
         if (brandImg) {
@@ -851,6 +871,13 @@ console.log('v.2.5.0 Modifiche a menu');
       if (clubText) {
         topStateTl.to(clubText, {
           color: defaultClubColor,
+          overwrite: "auto"
+        }, 0);
+      }
+
+      if (langText) {
+        topStateTl.to(langText, {
+          color: defaultLangColor,
           overwrite: "auto"
         }, 0);
       }
@@ -1052,6 +1079,15 @@ console.log('v.2.5.0 Modifiche a menu');
 
       if (clubText) {
         gsap.to(clubText, {
+          color: "#000000",
+          duration: stateTransitionDuration,
+          ease: menuEase,
+          overwrite: "auto"
+        });
+      }
+
+      if (langText) {
+        gsap.to(langText, {
           color: "#000000",
           duration: stateTransitionDuration,
           ease: menuEase,
