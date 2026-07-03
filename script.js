@@ -1,4 +1,4 @@
-console.log('v.2.5.1 Modifiche a menu');
+console.log('v.2.5.2 Modifiche a menu');
 
 
 
@@ -44,8 +44,14 @@ console.log('v.2.5.1 Modifiche a menu');
     const defaultBrandSrc = brandImg?.src || "";
     const defaultHamburgerSrc = openBtn?.src || "";
 
+    const currentPath = window.location.pathname;
+
     const isHomePage = document.body.classList.contains("home");
-    const isNewsSinglePage = document.body.classList.contains("news-singola");
+
+    const isNewsSinglePage =
+      document.body.classList.contains("news-singola") ||
+      currentPath.includes("/news/") ||
+      currentPath.includes("/news-eng/");
 
     const defaultHeaderBg = header ? window.getComputedStyle(header).backgroundColor : "";
     const activeHeaderBg = "#F8F8F3";
@@ -58,6 +64,11 @@ console.log('v.2.5.1 Modifiche a menu');
     const defaultClubColor = clubText ? window.getComputedStyle(clubText).color : "";
     const defaultLangColor = langText ? window.getComputedStyle(langText).color : "";
 
+    const initialShopColor = isNewsSinglePage ? "#000000" : defaultShopColor;
+    const initialClubColor = isNewsSinglePage ? "#000000" : defaultClubColor;
+    const initialLangColor = isNewsSinglePage ? "#000000" : defaultLangColor;
+    const initialHamburgerSrc = isNewsSinglePage ? blackHamburgerSrc : defaultHamburgerSrc;
+    const initialBrandSrc = isNewsSinglePage ? redBrandSrc : defaultBrandSrc;
 
     const compactBrandWidth = "4.8vw";
     const defaultDesktopLogoSize = "7.8vw";
@@ -601,14 +612,14 @@ console.log('v.2.5.1 Modifiche a menu');
           }
         } else {
           if (header) gsap.set(header, { backgroundColor: defaultHeaderBgTarget });
-          if (shopText) gsap.set(shopText, { color: defaultShopColor });
-          if (clubText) gsap.set(clubText, { color: defaultClubColor });
-          if (langText) gsap.set(langText, { color: defaultLangColor });
+          if (shopText) gsap.set(shopText, { color: initialShopColor });
+          if (clubText) gsap.set(clubText, { color: initialClubColor });
+          if (langText) gsap.set(langText, { color: initialLangColor });
 
-          if (openBtn) openBtn.src = defaultHamburgerSrc;
+          if (openBtn) openBtn.src = initialHamburgerSrc;
 
           if (brandImg) {
-            if (!isHomePage && defaultBrandSrc) brandImg.src = defaultBrandSrc;
+            if (!isHomePage && initialBrandSrc) brandImg.src = initialBrandSrc;
             gsap.set(brandImg, { opacity: isHomePage ? 0 : 1 });
           }
         }
@@ -771,26 +782,26 @@ console.log('v.2.5.1 Modifiche a menu');
 
         if (shopText) {
           stateTl.to(shopText, {
-            color: defaultShopColor,
+            color: initialShopColor,
             overwrite: "auto"
           }, 0);
         }
 
         if (clubText) {
           stateTl.to(clubText, {
-            color: defaultClubColor,
+            color: initialClubColor,
             overwrite: "auto"
           }, 0);
         }
 
-      if (langText) {
+        if (langText) {
           stateTl.to(langText, {
-            color: defaultLangColor,
+            color: initialLangColor,
             overwrite: "auto"
           }, 0);
         }
 
-        if (openBtn) openBtn.src = defaultHamburgerSrc;
+        if (openBtn) openBtn.src = initialHamburgerSrc;
 
         if (brandImg) {
           if (isHomePage) {
@@ -799,7 +810,7 @@ console.log('v.2.5.1 Modifiche a menu');
               overwrite: "auto"
             }, 0);
           } else {
-            if (defaultBrandSrc) brandImg.src = defaultBrandSrc;
+            if (initialBrandSrc) brandImg.src = initialBrandSrc;
 
             stateTl.to(brandImg, {
               opacity: 1,
@@ -863,29 +874,29 @@ console.log('v.2.5.1 Modifiche a menu');
 
       if (shopText) {
         topStateTl.to(shopText, {
-          color: defaultShopColor,
+          color: initialShopColor,
           overwrite: "auto"
         }, 0);
       }
 
       if (clubText) {
         topStateTl.to(clubText, {
-          color: defaultClubColor,
+          color: initialClubColor,
           overwrite: "auto"
         }, 0);
       }
 
       if (langText) {
         topStateTl.to(langText, {
-          color: defaultLangColor,
+          color: initialLangColor,
           overwrite: "auto"
         }, 0);
       }
 
-      if (openBtn) openBtn.src = defaultHamburgerSrc;
+      if (openBtn) openBtn.src = initialHamburgerSrc;
 
       if (brandImg) {
-        if (!isHomePage && defaultBrandSrc) brandImg.src = defaultBrandSrc;
+        if (!isHomePage && initialBrandSrc) brandImg.src = initialBrandSrc;
 
         topStateTl.to(brandImg, {
           opacity: isHomePage ? 0 : 1,
