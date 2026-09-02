@@ -1,4 +1,4 @@
-console.log('v.2.9.17 Parallax hero ripristinato + anti-flash reveal');
+console.log('v.2.9.18 Hero parallax — yPercent come i pannelli');
 
 // Mappatura percorsi IT / EN per abilitare animazioni su entrambe le lingue
 const ColDorciaRoutes = (() => {
@@ -2282,7 +2282,9 @@ const ColDorciaRoutes = (() => {
     layer.style.zIndex = "0";
     layer.style.pointerEvents = "none";
 
-    const img = createSectionParallaxImg(bgUrl, section);
+    const img = createParallaxImg(bgUrl);
+    const { x, y } = bgPos;
+    img.style.objectPosition = `${x} ${y}%`;
     img.style.opacity = "0";
     layer.appendChild(img);
     section.insertBefore(layer, section.firstChild);
@@ -2307,7 +2309,7 @@ const ColDorciaRoutes = (() => {
       }
     });
 
-    applySectionParallax(img, section, SECTION_BG_TRAVEL, bgPos);
+    applyImageParallax(img, section);
     bindParallaxImgReveal(img, section);
   }
 
