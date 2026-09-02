@@ -1,4 +1,4 @@
-console.log('v.2.8.4 Parallax hero Visite (e altre) — clip img senza flash');
+console.log('v.2.8.5 Text reveal /dalla-terra — solo titolo e testo hero');
 
 
 
@@ -1339,6 +1339,7 @@ console.log('v.2.8.4 Parallax hero Visite (e altre) — clip img senza flash');
     if (path === "/vini") return true;
     if (path === "/annate-storiche") return true;
     if (path === "/visite") return true;
+    if (path === "/dalla-terra") return true;
 
     return false;
   }
@@ -1365,13 +1366,14 @@ console.log('v.2.8.4 Parallax hero Visite (e altre) — clip img senza flash');
 
   function shouldRevealOnLoad(el) {
     if (!isTitle(el)) return false;
-    if (el.closest(".hero-section")) return true;
+    if (el.closest(".hero-section, .hero-vino")) return true;
     return isAboveFold(el);
   }
 
   function isAnimatable(el) {
     if (!(el instanceof HTMLElement)) return false;
     if (el.closest(EXCLUDED_ANCESTORS)) return false;
+    // hero full-bleed: solo titoli; hero-vino (es. /dalla-terra): anche il testo intro
     if (el.closest(".hero-section") && !isTitle(el)) return false;
     if (el.classList.contains("no-text-reveal")) return false;
     if (el.dataset.textRevealInit === "true") return false;
@@ -1394,13 +1396,16 @@ console.log('v.2.8.4 Parallax hero Visite (e altre) — clip img senza flash');
   function hideHeroTitlesEarly() {
     if (!isTextRevealPage() || isMobile()) return;
 
-    document
-      .querySelectorAll(`.hero-section ${TITLE_SELECTORS.split(", ").join(", .hero-section ")}`)
-      .forEach((el) => {
-        if (!(el instanceof HTMLElement)) return;
-        el.style.opacity = "0";
-        el.style.visibility = "hidden";
-      });
+    const scopes = [".hero-section", ".hero-vino"];
+    scopes.forEach((scope) => {
+      document
+        .querySelectorAll(`${scope} ${TITLE_SELECTORS.split(", ").join(`, ${scope} `)}`)
+        .forEach((el) => {
+          if (!(el instanceof HTMLElement)) return;
+          el.style.opacity = "0";
+          el.style.visibility = "hidden";
+        });
+    });
   }
 
   function prepareHeroTitle(el) {
@@ -1411,7 +1416,7 @@ console.log('v.2.8.4 Parallax hero Visite (e altre) — clip img senza flash');
   }
 
   function splitElement(el) {
-    if (el.closest(".hero-section")) prepareHeroTitle(el);
+    if (el.closest(".hero-section, .hero-vino")) prepareHeroTitle(el);
 
     const split = new SplitText(el, { type: "lines", linesClass: "titLine" });
     const lines = split.lines.map((line, index) => wrapLine(line, index));
