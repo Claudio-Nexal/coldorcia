@@ -1,4 +1,4 @@
-console.log('v.2.8.0 Fix FOUC titolo hero + flash bg parallax');
+console.log('v.2.8.1 No flash hero — bg-position parallax + CSS antifouc');
 
 
 
@@ -1666,65 +1666,35 @@ console.log('v.2.8.0 Fix FOUC titolo hero + flash bg parallax');
     if (!(section instanceof HTMLElement)) return;
     if (section.dataset.parallaxInit === "true") return;
     if (section.closest(EXCLUDED_ANCESTORS)) return;
-
-    const bgUrl = extractBgUrl(section);
-    if (!bgUrl) return;
+    if (!extractBgUrl(section)) return;
 
     section.dataset.parallaxInit = "true";
 
-    if (window.getComputedStyle(section).position === "static") {
-      section.style.position = "relative";
-    }
-    section.style.overflow = "hidden";
+    // Niente ricreazione DOM: anima solo background-position sul bg CSS esistente.
+    // Evita il flash tipico del swap background → <img>.
+    const computedPos = window.getComputedStyle(section).backgroundPosition || "50% 50%";
 
-    const layer = document.createElement("div");
-    layer.className = "parallax-bg-layer";
-    layer.setAttribute("aria-hidden", "true");
-    layer.style.position = "absolute";
-    layer.style.inset = "0";
-    layer.style.overflow = "hidden";
-    layer.style.zIndex = "0";
-    layer.style.pointerEvents = "none";
+    section.style.backgroundSize = "cover";
+    section.style.backgroundRepeat = "no-repeat";
+    section.style.backgroundPosition = computedPos;
 
-    const img = createParallaxImg(bgUrl);
-    img.style.opacity = "0";
-    layer.appendChild(img);
-    section.insertBefore(layer, section.firstChild);
-
-    const activateLayer = () => {
-      img.style.opacity = "1";
-      // Rimuove il bg CSS solo quando l'img parallax è pronta → niente flash
-      section.style.backgroundImage = "none";
-    };
-
-    if (img.complete && img.naturalWidth > 0) {
-      activateLayer();
-    } else {
-      img.addEventListener("load", activateLayer, { once: true });
-      img.addEventListener("error", activateLayer, { once: true });
-    }
-
-    Array.from(section.children).forEach((child) => {
-      if (child === layer || !(child instanceof HTMLElement)) return;
-
-      const style = window.getComputedStyle(child);
-
-      if (style.position === "absolute") {
-        if (!child.style.zIndex) child.style.zIndex = "1";
-        return;
+    gsap.fromTo(
+      section,
+      { backgroundPosition: "50% 50%" },
+      {
+        backgroundPosition: "50% 70%",
+        ease: "none",
+        immediateRender: false,
+        scrollTrigger: {
+          trigger: section,
+          start: "top top",
+          end: "bottom top",
+          scrub: true,
+          invalidateOnRefresh: true,
+          ...getScrollTriggerConfig()
+        }
       }
-
-      if (
-        child.classList.contains("w-layout-blockcontainer") ||
-        child.classList.contains("w-container") ||
-        child.classList.contains("container")
-      ) {
-        if (style.position === "static") child.style.position = "relative";
-        child.style.zIndex = "2";
-      }
-    });
-
-    applyImageParallax(img, section);
+    );
   }
 
   function initInsetImgParallax(img) {
