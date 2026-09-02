@@ -1,4 +1,4 @@
-console.log('v.2.9.0 Text reveal /news — solo titolo e testo hero');
+console.log('v.2.9.1 Text reveal /contatti — solo titolo e testo hero');
 
 
 
@@ -1338,7 +1338,9 @@ console.log('v.2.9.0 Text reveal /news — solo titolo e testo hero');
       path === "/persone" ||
       path === "/en/people" ||
       path === "/news" ||
-      path === "/en/news"
+      path === "/en/news" ||
+      path === "/contatti" ||
+      path === "/en/contact"
     );
   }
 
@@ -1389,13 +1391,19 @@ console.log('v.2.9.0 Text reveal /news — solo titolo e testo hero');
     if (wasHeroHidden(el)) return true;
     if (
       el.closest(
-        ".hero-vino, .hero-persone .div-block-282, .hero-bilancio .div-block-282"
+        ".hero-vino, .hero-persone .div-block-282, .hero-bilancio .div-block-282, section.section .div-block-282"
       )
     ) {
       return true;
     }
     if (!isTitle(el)) return false;
-    if (el.closest(".hero-section, .hero-persone, .hero-bilancio")) return true;
+    if (
+      el.closest(
+        ".hero-section, .hero-persone, .hero-bilancio, section.section .div-block-281"
+      )
+    ) {
+      return true;
+    }
     return isAboveFold(el);
   }
 
@@ -1403,10 +1411,14 @@ console.log('v.2.9.0 Text reveal /news — solo titolo e testo hero');
     if (!(el instanceof HTMLElement)) return false;
     if (el.closest(EXCLUDED_ANCESTORS)) return false;
 
-    // /persone, /news: solo titolo + paragrafo intro in hero
+    // /persone, /news, /contatti: solo titolo + paragrafo intro in hero
     if (isHeroIntroOnlyPage()) {
-      if (!el.closest(".hero-persone, .hero-bilancio")) return false;
-      if (isTitle(el)) return true;
+      if (!el.closest(".hero-persone, .hero-bilancio, section.section")) return false;
+      if (isTitle(el)) {
+        // /contatti: esclude altri titoli nella stessa section (es. mappa)
+        if (el.closest("section.section") && !el.closest(".div-block-281")) return false;
+        return true;
+      }
       return !!el.closest(".div-block-282");
     }
 
@@ -1446,7 +1458,11 @@ console.log('v.2.9.0 Text reveal /news — solo titolo e testo hero');
       ".hero-persone .div-block-282 " +
         TEXT_SELECTORS.split(", ").join(", .hero-persone .div-block-282 "),
       ".hero-bilancio .div-block-282 " +
-        TEXT_SELECTORS.split(", ").join(", .hero-bilancio .div-block-282 ")
+        TEXT_SELECTORS.split(", ").join(", .hero-bilancio .div-block-282 "),
+      "section.section .div-block-281 " +
+        TITLE_SELECTORS.split(", ").join(", section.section .div-block-281 "),
+      "section.section .div-block-282 " +
+        TEXT_SELECTORS.split(", ").join(", section.section .div-block-282 ")
     ].join(", ");
   }
 
