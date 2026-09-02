@@ -1,4 +1,4 @@
-console.log('v.2.6.0 Parallax test prima sezione Natura');
+console.log('v.2.6.1 Parallax Natura — full-size + immagini con padding');
 
 
 
@@ -1473,12 +1473,15 @@ console.log('v.2.6.0 Parallax test prima sezione Natura');
 })();
 
 
-// parallax immagini — test prima sezione "Le pratiche in vigna" (Natura)
+// parallax immagini — Natura (full-size bg + immagini con padding)
 (() => {
   const DESKTOP_MIN = 992;
-  const TARGET_SELECTOR = ".white---beige .div-block-294";
   const IMG_SCALE = 1.15;
   const IMG_TRAVEL = 8;
+  const BG_SELECTORS = ".white---beige .div-block-294, .white---beige .div-block-301";
+  const CLIP_IMG_SELECTOR = ".white-section .div-block-300 img.image-28";
+  const EXCLUDED_ANCESTORS =
+    ".menu-overlay, .custom-navbar, .custom-navbar-menu, .footer-desktop, .footer-mobile, .no-parallax";
 
   function isNaturaPage() {
     const path = (window.location.pathname || "/").replace(/\/$/, "") || "/";
@@ -1500,9 +1503,35 @@ console.log('v.2.6.0 Parallax test prima sezione Natura');
     return match ? match[2] : "";
   }
 
-  function initPraticheParallax(container) {
+  function getCenterOffset(scale) {
+    return -(((scale - 1) / 2) / scale) * 100;
+  }
+
+  function applyParallax(img, trigger, scale = IMG_SCALE, travel = IMG_TRAVEL) {
+    const centerOffset = getCenterOffset(scale);
+
+    gsap.fromTo(
+      img,
+      { yPercent: centerOffset - travel },
+      {
+        yPercent: centerOffset + travel,
+        ease: "none",
+        scrollTrigger: {
+          trigger,
+          start: "top bottom",
+          end: "bottom top",
+          scrub: true,
+          invalidateOnRefresh: true,
+          ...getScrollTriggerConfig()
+        }
+      }
+    );
+  }
+
+  function initBgParallax(container) {
     if (!(container instanceof HTMLElement)) return;
     if (container.dataset.parallaxInit === "true") return;
+    if (container.closest(EXCLUDED_ANCESTORS)) return;
 
     const bgUrl = extractBgUrl(container);
     if (!bgUrl) return;
@@ -1527,47 +1556,61 @@ console.log('v.2.6.0 Parallax test prima sezione Natura');
 
     container.appendChild(img);
 
-    const centerOffset = -(((IMG_SCALE - 1) / 2) / IMG_SCALE) * 100;
     const section = container.closest("section") || container;
-
-    gsap.fromTo(
-      img,
-      { yPercent: centerOffset - IMG_TRAVEL },
-      {
-        yPercent: centerOffset + IMG_TRAVEL,
-        ease: "none",
-        scrollTrigger: {
-          trigger: section,
-          start: "top bottom",
-          end: "bottom top",
-          scrub: true,
-          invalidateOnRefresh: true,
-          ...getScrollTriggerConfig()
-        }
-      }
-    );
+    applyParallax(img, section);
   }
 
-  function initParallaxTest() {
+  function initClipImgParallax(img) {
+    if (!(img instanceof HTMLImageElement)) return;
+    if (img.dataset.parallaxInit === "true") return;
+    if (img.closest(EXCLUDED_ANCESTORS)) return;
+
+    const container = img.parentElement;
+    if (!(container instanceof HTMLElement)) return;
+
+    img.dataset.parallaxInit = "true";
+    container.dataset.parallaxInit = "true";
+    container.style.overflow = "hidden";
+
+    gsap.set(img, {
+      display: "block",
+      width: "100%",
+      height: `${IMG_SCALE * 100}%`,
+      maxWidth: "none",
+      objectFit: "cover",
+      objectPosition: "center center",
+      willChange: "transform"
+    });
+
+    const section = container.closest("section") || container;
+    applyParallax(img, section);
+  }
+
+  function initNaturaParallax() {
     if (!window.gsap || !window.ScrollTrigger) return;
     if (!isNaturaPage()) return;
     if (window.innerWidth < DESKTOP_MIN) return;
     if (window.__PARALLAX_INIT__) return;
 
-    const container = document.querySelector(TARGET_SELECTOR);
-    if (!container) return;
+    const scope = document.querySelector(".content-container") || document.body;
+    const bgContainers = scope.querySelectorAll(BG_SELECTORS);
+    const clipImages = scope.querySelectorAll(CLIP_IMG_SELECTOR);
+
+    if (!bgContainers.length && !clipImages.length) return;
 
     window.__PARALLAX_INIT__ = true;
     gsap.registerPlugin(ScrollTrigger);
 
-    initPraticheParallax(container);
+    bgContainers.forEach(initBgParallax);
+    clipImages.forEach(initClipImgParallax);
+
     ScrollTrigger.refresh();
   }
 
-  function bootParallaxTest() {
+  function bootNaturaParallax() {
     const run = () => {
       requestAnimationFrame(() => {
-        setTimeout(initParallaxTest, 400);
+        setTimeout(initNaturaParallax, 400);
       });
     };
 
@@ -1583,9 +1626,9 @@ console.log('v.2.6.0 Parallax test prima sezione Natura');
   }
 
   if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", bootParallaxTest);
+    document.addEventListener("DOMContentLoaded", bootNaturaParallax);
   } else {
-    bootParallaxTest();
+    bootNaturaParallax();
   }
 })();
 
