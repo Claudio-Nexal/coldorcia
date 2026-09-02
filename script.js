@@ -1,4 +1,4 @@
-console.log('v.2.7.6 Zoom hover solo schede Annate Storiche');
+console.log('v.2.7.7 Zoom solo img schede Annate — stile /vini + slick');
 
 
 
@@ -2101,102 +2101,114 @@ $(document).ready(function () {
 
 
 
-// zoom leggero immagini schede Annate Storiche — classe .is-zoomed
+// zoom leggero SOLO sull'immagine delle schede Annate (stesso pattern di /vini)
 (() => {
-  const STYLE_ID = "vintage-card-hover-style";
   const HOVER_SCALE = 1.08;
-  const CARD_SELECTOR = ".vintage-card, .vintage-card-nocarousel";
-  const IMG_SELECTOR = ".vintage-img img, .vintage-card-nocarousel img";
+  const DURATION = 0.6;
 
   function isAnnatePage() {
     const path = (window.location.pathname || "/").replace(/\/$/, "") || "/";
     return path === "/annate-storiche";
   }
 
-  function injectHoverCSS() {
-    if (document.getElementById(STYLE_ID)) return;
-
-    const style = document.createElement("style");
-    style.id = STYLE_ID;
-    style.textContent = `
-      .vintage-img img,
-      .vintage-card-nocarousel img {
-        transform-origin: 50% 50%;
-        transition: transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
-        will-change: transform;
-      }
-
-      .vintage-card.is-zoomed .vintage-img img,
-      .vintage-card-nocarousel.is-zoomed img {
-        transform: scale(${HOVER_SCALE}) !important;
-      }
-    `;
-    document.head.appendChild(style);
-  }
-
-  function getCardFromEvent(target) {
-    if (!(target instanceof Element)) return null;
-    return target.closest(CARD_SELECTOR);
-  }
-
   function getCardImage(card) {
+    if (!(card instanceof HTMLElement)) return null;
+
+    // Carousel / card standard: zoom solo dell'img dentro il box clip
+    const inClip = card.querySelector(".vintage-img img");
+    if (inClip) return inClip;
+
+    // Card statiche senza carousel
     if (card.classList.contains("vintage-card-nocarousel")) {
       return card.querySelector("img");
     }
-    return card.querySelector(".vintage-img img") || card.querySelector("img");
+
+    return null;
   }
 
-  function setZoom(card, on) {
-    if (!card) return;
+  function bindCard(card) {
+    if (!(card instanceof HTMLElement)) return;
+    if (card.dataset.vintageZoomInit === "true") return;
 
     const img = getCardImage(card);
     if (!img) return;
 
-    if (window.gsap) gsap.killTweensOf(img);
+    card.dataset.vintageZoomInit = "true";
 
-    card.classList.toggle("is-zoomed", on);
+    const clip = card.querySelector(".vintage-img");
+    if (clip instanceof HTMLElement) {
+      clip.style.overflow = "hidden";
+    }
+
+    if (window.gsap) {
+      gsap.set(img, {
+        transformOrigin: "center center",
+        willChange: "transform"
+      });
+
+      card.addEventListener("mouseenter", () => {
+        gsap.to(img, {
+          scale: HOVER_SCALE,
+          duration: DURATION,
+          ease: "power3.out",
+          overwrite: true
+        });
+      });
+
+      card.addEventListener("mouseleave", () => {
+        gsap.to(img, {
+          scale: 1,
+          duration: DURATION,
+          ease: "power3.out",
+          overwrite: true
+        });
+      });
+      return;
+    }
+
+    img.style.transition = "transform 0.6s cubic-bezier(0.22, 1, 0.36, 1)";
+    img.style.transformOrigin = "center center";
+
+    card.addEventListener("mouseenter", () => {
+      img.style.transform = `scale(${HOVER_SCALE})`;
+    });
+
+    card.addEventListener("mouseleave", () => {
+      img.style.transform = "scale(1)";
+    });
   }
 
-  function initVintageCardHover() {
+  function bindAllVintageCards() {
+    document
+      .querySelectorAll(".vintage-card, .vintage-card-nocarousel")
+      .forEach(bindCard);
+  }
+
+  function initVintageZoom() {
     if (!isAnnatePage()) return;
+    if (window.__VINTAGE_ZOOM_INIT__) return;
+    window.__VINTAGE_ZOOM_INIT__ = true;
 
-    injectHoverCSS();
+    const run = () => bindAllVintageCards();
 
-    if (window.__VINTAGE_CARD_HOVER__) return;
-    window.__VINTAGE_CARD_HOVER__ = true;
+    // Dopo initVintage / Slick della pagina
+    setTimeout(run, 500);
+    setTimeout(run, 1200);
+    window.addEventListener("load", () => setTimeout(run, 300));
 
-    document.addEventListener(
-      "pointerover",
-      (e) => {
-        const card = getCardFromEvent(e.target);
-        if (!card) return;
-
-        const related = e.relatedTarget instanceof Element ? e.relatedTarget : null;
-        if (related && card.contains(related)) return;
-
-        setZoom(card, true);
-      },
-      true
-    );
-
-    document.addEventListener(
-      "pointerout",
-      (e) => {
-        const card = getCardFromEvent(e.target);
-        if (!card) return;
-
-        const related = e.relatedTarget instanceof Element ? e.relatedTarget : null;
-        if (related && card.contains(related)) return;
-
-        setZoom(card, false);
-      },
-      true
-    );
+    // Slick ricrea slide/clone: ribind quando aggiorna
+    if (window.jQuery) {
+      window.jQuery(document).on(
+        "init reInit setPosition",
+        ".vintage-slider .w-dyn-items, .vintage-dots-inner",
+        () => setTimeout(run, 50)
+      );
+    }
   }
 
   if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", initVintageCardHover);
+    document.addEventListener("DOMContentLoaded", initVintageZoom);
   } else {
-    initVintageCardHover();
+    initVintageZoom();
   }
 })();
