@@ -1,4 +1,4 @@
-console.log('v.2.5.8 Parallax immagini stile Bertani');
+console.log('v.2.5.9 Fix parallax img/bg containers');
 
 
 
@@ -1473,17 +1473,22 @@ console.log('v.2.5.8 Parallax immagini stile Bertani');
 })();
 
 
-// parallax immagini — stile Bertani (ScrollSmoother effects)
+// parallax immagini — clip container + ScrollTrigger (stile Bertani)
 (() => {
   const DESKTOP_MIN = 992;
-  const DEFAULT_SPEED = 0.85;
-  const PARALLAX_SELECTORS = [
+  const IMG_SCALE = 1.2;
+  const IMG_TRAVEL = 10;
+  const IMG_SELECTORS = [
     ".parallax-img",
-    "[data-parallax]",
+    "[data-parallax='img']",
     ".white-section .div-block-300 img",
+    ".home-visite-section .div-block-425 img"
+  ].join(", ");
+  const BG_SELECTORS = [
+    ".parallax-bg",
+    "[data-parallax='bg']",
     ".white---beige .div-block-294",
-    ".white---beige .div-block-301",
-    ".home-visite-section .image-38"
+    ".white---beige .div-block-301"
   ].join(", ");
   const EXCLUDED_ANCESTORS =
     ".menu-overlay, .custom-navbar, .custom-navbar-menu, .footer-desktop, .footer-mobile, .news-card, .wine-card, .hero-carousel, .no-parallax";
@@ -1497,63 +1502,122 @@ console.log('v.2.5.8 Parallax immagini stile Bertani');
     return false;
   }
 
-  function getParallaxSpeed(el) {
-    const raw = el.getAttribute("data-parallax-speed") || el.getAttribute("data-parallax");
-    if (raw === "auto") return "auto";
-    const speed = parseFloat(raw);
-    return Number.isFinite(speed) ? speed : DEFAULT_SPEED;
-  }
-
-  function prepareParallaxWrap(el) {
-    if (!(el instanceof HTMLElement)) return;
-
-    const isImage = el.tagName === "IMG";
-    const wrap = isImage ? el.parentElement : el;
-
-    if (!(wrap instanceof HTMLElement) || wrap.classList.contains("parallax-wrap")) return;
-
-    wrap.classList.add("parallax-wrap");
-
-    const style = window.getComputedStyle(wrap);
-    if (style.overflow === "visible") wrap.style.overflow = "hidden";
-
-    if (isImage && getParallaxSpeed(el) === "auto") {
-      el.style.width = "100%";
-      el.style.height = "115%";
-      el.style.objectFit = "cover";
-      el.style.objectPosition = "center";
+  function getScrollTriggerConfig() {
+    if (document.querySelector("#smooth-wrapper") && window.ScrollSmoother) {
+      return { scroller: "#smooth-wrapper" };
     }
+    return {};
   }
 
-  function collectParallaxElements() {
-    const scope = document.querySelector(".content-container") || document.body;
+  function hasBgImage(el) {
+    const bg = window.getComputedStyle(el).backgroundImage;
+    return !!bg && bg !== "none";
+  }
 
-    return [...scope.querySelectorAll(PARALLAX_SELECTORS)].filter((el) => {
-      if (!(el instanceof HTMLElement)) return false;
-      if (el.closest(EXCLUDED_ANCESTORS)) return false;
-      if (el.dataset.parallaxInit === "true") return false;
-      return true;
+  function getClipContainer(img) {
+    const explicit = img.closest(".parallax-wrap, [data-parallax-container]");
+    if (explicit instanceof HTMLElement) return explicit;
+
+    const parent = img.parentElement;
+    if (parent instanceof HTMLElement) return parent;
+
+    return null;
+  }
+
+  function initClipImgParallax(img) {
+    if (!(img instanceof HTMLImageElement)) return;
+    if (img.dataset.parallaxInit === "true") return;
+
+    const container = getClipContainer(img);
+    if (!container || container.closest(EXCLUDED_ANCESTORS)) return;
+
+    img.dataset.parallaxInit = "true";
+    container.classList.add("parallax-wrap");
+
+    if (window.getComputedStyle(container).overflow === "visible") {
+      container.style.overflow = "hidden";
+    }
+
+    const scale = parseFloat(img.getAttribute("data-parallax-scale")) || IMG_SCALE;
+    const travel = parseFloat(img.getAttribute("data-parallax-amount")) || IMG_TRAVEL;
+    const centerOffset = -(((scale - 1) / 2) / scale) * 100;
+
+    gsap.set(img, {
+      display: "block",
+      width: "100%",
+      height: `${scale * 100}%`,
+      maxWidth: "none",
+      objectFit: "cover",
+      objectPosition: "center center",
+      willChange: "transform"
     });
+
+    gsap.fromTo(
+      img,
+      { yPercent: centerOffset - travel },
+      {
+        yPercent: centerOffset + travel,
+        ease: "none",
+        scrollTrigger: {
+          trigger: container,
+          start: "top bottom",
+          end: "bottom top",
+          scrub: true,
+          invalidateOnRefresh: true,
+          ...getScrollTriggerConfig()
+        }
+      }
+    );
+  }
+
+  function initBgParallax(el) {
+    if (!(el instanceof HTMLElement)) return;
+    if (el.dataset.parallaxInit === "true") return;
+    if (!hasBgImage(el)) return;
+
+    el.dataset.parallaxInit = "true";
+    el.classList.add("parallax-bg");
+
+    const start = el.getAttribute("data-parallax-bg-start") || "50% 28%";
+    const end = el.getAttribute("data-parallax-bg-end") || "50% 72%";
+
+    gsap.fromTo(
+      el,
+      { backgroundPosition: start },
+      {
+        backgroundPosition: end,
+        ease: "none",
+        scrollTrigger: {
+          trigger: el,
+          start: "top bottom",
+          end: "bottom top",
+          scrub: true,
+          invalidateOnRefresh: true,
+          ...getScrollTriggerConfig()
+        }
+      }
+    );
   }
 
   function initParallaxImages() {
-    if (!window.gsap || !window.ScrollTrigger || !window.ScrollSmoother) return;
+    if (!window.gsap || !window.ScrollTrigger) return;
     if (!isParallaxPage()) return;
     if (window.innerWidth < DESKTOP_MIN) return;
+    if (window.__PARALLAX_INIT__) return;
+    window.__PARALLAX_INIT__ = true;
 
-    const smoother = ScrollSmoother.get();
-    if (!smoother) return;
+    gsap.registerPlugin(ScrollTrigger);
 
-    const elements = collectParallaxElements();
-    if (!elements.length) return;
+    const scope = document.querySelector(".content-container") || document.body;
 
-    elements.forEach((el) => {
-      el.dataset.parallaxInit = "true";
-      prepareParallaxWrap(el);
+    scope.querySelectorAll(IMG_SELECTORS).forEach((el) => {
+      if (el.closest(EXCLUDED_ANCESTORS)) return;
+      initClipImgParallax(el);
+    });
 
-      const speed = getParallaxSpeed(el);
-      el.setAttribute("data-speed", String(speed));
-      smoother.effects(el);
+    scope.querySelectorAll(BG_SELECTORS).forEach((el) => {
+      if (el.closest(EXCLUDED_ANCESTORS)) return;
+      initBgParallax(el);
     });
 
     ScrollTrigger.refresh();
@@ -1562,12 +1626,8 @@ console.log('v.2.5.8 Parallax immagini stile Bertani');
   function bootParallaxImages() {
     const run = () => {
       requestAnimationFrame(() => {
-        setTimeout(initParallaxImages, 350);
+        setTimeout(initParallaxImages, 400);
       });
-    };
-
-    const refreshAfterImages = () => {
-      ScrollTrigger.refresh();
     };
 
     if (document.fonts && document.fonts.ready) {
@@ -1576,7 +1636,7 @@ console.log('v.2.5.8 Parallax immagini stile Bertani');
       run();
     }
 
-    window.addEventListener("load", refreshAfterImages);
+    window.addEventListener("load", () => ScrollTrigger.refresh());
   }
 
   if (document.readyState === "loading") {
