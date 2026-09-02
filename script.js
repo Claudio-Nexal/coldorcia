@@ -1,6 +1,67 @@
-console.log('v.2.9.6 Menu righe — solo JS, nessuna modifica CSS');
+console.log('v.2.9.7 Percorsi EN — animazioni su tutte le pagine inglesi');
 
+// Mappatura percorsi IT / EN per abilitare animazioni su entrambe le lingue
+const ColDorciaRoutes = (() => {
+  const ROUTES = {
+    home: ["/", "/en/home"],
+    natura: ["/natura", "/en/nature"],
+    storia: ["/storia", "/en/history"],
+    vini: ["/vini", "/en/the-wine"],
+    annate: ["/annate-storiche", "/en/historic-vintages"],
+    visite: ["/visite", "/en/wine-tours"],
+    dallaTerra: ["/dalla-terra", "/en/from-our-land"],
+    persone: ["/persone", "/en/people"],
+    news: ["/news", "/en/news"],
+    contatti: ["/contatti", "/en/contacts"],
+    areaDownload: ["/area-download", "/en/download-area"],
+    whistleblowing: ["/whistleblowing", "/en/whistleblowing"],
+    bilancio: ["/bilancio-di-sostenibilita", "/en/sustainability-report"]
+  };
 
+  function path() {
+    return (window.location.pathname || "/").replace(/\/$/, "") || "/";
+  }
+
+  function is(...keys) {
+    const current = path();
+    return keys.some((key) => ROUTES[key]?.includes(current));
+  }
+
+  function isHome() {
+    return document.body.classList.contains("home") || is("home");
+  }
+
+  function isHeroIntroOnly() {
+    return is(
+      "persone",
+      "news",
+      "contatti",
+      "areaDownload",
+      "whistleblowing",
+      "bilancio"
+    );
+  }
+
+  function isTextReveal() {
+    if (isHome()) return true;
+    if (is("natura", "storia", "vini", "annate", "visite", "dallaTerra")) {
+      return true;
+    }
+    if (isHeroIntroOnly()) return true;
+    return false;
+  }
+
+  function isParallax() {
+    if (isHome()) return true;
+    return is("natura", "storia", "annate", "visite");
+  }
+
+  function isAnnate() {
+    return is("annate");
+  }
+
+  return { path, is, isHome, isHeroIntroOnly, isTextReveal, isParallax, isAnnate };
+})();
 
 
 
@@ -51,7 +112,8 @@ console.log('v.2.9.6 Menu righe — solo JS, nessuna modifica CSS');
     const isNewsSinglePage =
       document.body.classList.contains("news-singola") ||
       currentPath.includes("/news/") ||
-      currentPath.includes("/news-eng/");
+      currentPath.includes("/news-eng/") ||
+      currentPath.includes("/en/news/");
 
     const defaultHeaderBg = header ? window.getComputedStyle(header).backgroundColor : "";
     const activeHeaderBg = "#F8F8F3";
@@ -1615,33 +1677,11 @@ console.log('v.2.9.6 Menu righe — solo JS, nessuna modifica CSS');
     ".menu-overlay, .custom-navbar, .custom-navbar-menu, .hero-carousel, .hero-slide, .footer-desktop, .footer-mobile, .no-text-reveal, .news-card, .wine-card, .griglia-vini, .ancore-annate, .vintage-wrap, .vintage-card, .vintage-slider, .vintage-timeline, .timeline-section, .timeline-section-mobile, .timeline-content-wrapper, .timeline-slide, .timeline-sidebar";
 
   function isHeroIntroOnlyPage() {
-    const path = (window.location.pathname || "/").replace(/\/$/, "") || "/";
-    return (
-      path === "/persone" ||
-      path === "/en/people" ||
-      path === "/news" ||
-      path === "/en/news" ||
-      path === "/contatti" ||
-      path === "/en/contact" ||
-      path === "/area-download" ||
-      path === "/whistleblowing" ||
-      path === "/bilancio-di-sostenibilita"
-    );
+    return ColDorciaRoutes.isHeroIntroOnly();
   }
 
   function isTextRevealPage() {
-    const path = (window.location.pathname || "/").replace(/\/$/, "") || "/";
-
-    if (document.body.classList.contains("home")) return true;
-    if (path === "/natura" || path === "/en/nature") return true;
-    if (path === "/storia") return true;
-    if (path === "/vini") return true;
-    if (path === "/annate-storiche") return true;
-    if (path === "/visite") return true;
-    if (path === "/dalla-terra") return true;
-    if (isHeroIntroOnlyPage()) return true;
-
-    return false;
+    return ColDorciaRoutes.isTextReveal();
   }
 
   function isMobile() {
@@ -1922,15 +1962,7 @@ console.log('v.2.9.6 Menu righe — solo JS, nessuna modifica CSS');
     ".menu-overlay, .custom-navbar, .custom-navbar-menu, .footer-desktop, .footer-mobile, .no-parallax, .hero-carousel-wrapper, .hero-carousel, .hero-slide, .hero-slide-bg, .vintage-wrap, .vintage-card, .timeline-section, .timeline-section-mobile, .timeline-content-wrapper, .timeline-slide, .timeline-sidebar";
 
   function isParallaxPage() {
-    const path = (window.location.pathname || "/").replace(/\/$/, "") || "/";
-
-    if (document.body.classList.contains("home") || path === "/") return true;
-    if (path === "/natura" || path === "/en/nature") return true;
-    if (path === "/storia") return true;
-    if (path === "/annate-storiche") return true;
-    if (path === "/visite") return true;
-
-    return false;
+    return ColDorciaRoutes.isParallax();
   }
 
   function getScrollTriggerConfig() {
@@ -2551,8 +2583,7 @@ $(document).ready(function () {
   const DURATION = 0.6;
 
   function isAnnatePage() {
-    const path = (window.location.pathname || "/").replace(/\/$/, "") || "/";
-    return path === "/annate-storiche";
+    return ColDorciaRoutes.isAnnate();
   }
 
   /*
