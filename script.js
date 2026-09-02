@@ -1,4 +1,4 @@
-console.log('v.2.6.9 Fix parallax visite — img absolute nel clip');
+console.log('v.2.7.0 Fix visite — clip con altezza prima di absolute');
 
 
 
@@ -1561,29 +1561,42 @@ console.log('v.2.6.9 Fix parallax visite — img absolute nel clip');
     if (!(frame instanceof HTMLElement)) return null;
 
     const existing = img.closest(".parallax-wrap, [data-parallax-wrap]");
-    if (existing instanceof HTMLElement) {
-      existing.style.overflow = "hidden";
-      return existing;
-    }
+    if (existing instanceof HTMLElement) return existing;
 
     const clip = document.createElement("div");
     clip.className = "parallax-wrap";
     clip.dataset.jsCreated = "true";
-    clip.style.overflow = "hidden";
-    clip.style.position = "relative";
-    clip.style.width = "100%";
-
-    if (frame.classList.contains("div-block-300")) {
-      clip.style.aspectRatio = "1";
-    } else {
-      clip.style.aspectRatio = getImgAspectRatio(img);
-      clip.style.maxWidth = "100%";
-    }
-
     frame.insertBefore(clip, img);
     clip.appendChild(img);
 
     return clip;
+  }
+
+  function prepareClip(clip, img) {
+    const rect = img.getBoundingClientRect();
+    const aspect = getImgAspectRatio(img);
+
+    clip.style.position = "relative";
+    clip.style.overflow = "hidden";
+    clip.style.display = "block";
+
+    // Se il wrap non ha già un'altezza (Webflow), fissala dalle dimensioni
+    // reali dell'immagine PRIMA di toglierla dal flusso.
+    const clipStyle = window.getComputedStyle(clip);
+    const hasHeight =
+      clip.clientHeight > 1 ||
+      (clipStyle.aspectRatio && clipStyle.aspectRatio !== "auto");
+
+    if (!hasHeight && rect.width > 0 && rect.height > 0) {
+      clip.style.width = `${rect.width}px`;
+      clip.style.height = `${rect.height}px`;
+      clip.style.maxWidth = "100%";
+      clip.style.marginLeft = "auto";
+      clip.style.marginRight = "auto";
+    } else {
+      if (!clip.style.width) clip.style.width = "100%";
+      if (!hasHeight) clip.style.aspectRatio = aspect;
+    }
   }
 
   function createParallaxImg(bgUrl) {
@@ -1682,28 +1695,40 @@ console.log('v.2.6.9 Fix parallax visite — img absolute nel clip');
     const clip = ensureParallaxWrap(img);
     if (!clip) return;
 
-    img.dataset.parallaxInit = "true";
-    clip.dataset.parallaxInit = "true";
+    // Aspetta che l'immagine abbia dimensioni reali, poi fissa il clip
+    const run = () => {
+      prepareClip(clip, img);
 
-    clip.style.position = "relative";
-    clip.style.overflow = "hidden";
+      img.dataset.parallaxInit = "true";
+      clip.dataset.parallaxInit = "true";
 
-    gsap.set(img, {
-      position: "absolute",
-      top: 0,
-      left: 0,
-      display: "block",
-      width: "100%",
-      height: `${IMG_SCALE * 100}%`,
-      maxWidth: "none",
-      aspectRatio: "auto",
-      objectFit: "cover",
-      objectPosition: "center center",
-      willChange: "transform"
-    });
+      gsap.set(img, {
+        position: "absolute",
+        top: 0,
+        left: 0,
+        display: "block",
+        width: "100%",
+        height: `${IMG_SCALE * 100}%`,
+        maxWidth: "none",
+        aspectRatio: "auto",
+        objectFit: "cover",
+        objectPosition: "center center",
+        willChange: "transform"
+      });
 
-    const section = clip.closest("section") || clip;
-    applyImageParallax(img, section, IMG_SCALE, INSET_TRAVEL);
+      const section = clip.closest("section") || clip;
+      applyImageParallax(img, section, IMG_SCALE, INSET_TRAVEL);
+    };
+
+    if (img.complete && img.naturalWidth > 0) {
+      run();
+    } else {
+      img.addEventListener("load", run, { once: true });
+      // fallback se load non arriva (cache / lazy)
+      setTimeout(() => {
+        if (img.dataset.parallaxInit !== "true") run();
+      }, 800);
+    }
   }
 
   function initPageParallax() {
