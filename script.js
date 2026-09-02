@@ -1,4 +1,4 @@
-console.log('v.2.9.10 Fix inset Natura — dimensioni clip da contenitore Webflow');
+console.log('v.2.9.11 Visite — animazione orologio, meta e bottone');
 
 // Mappatura percorsi IT / EN per abilitare animazioni su entrambe le lingue
 const ColDorciaRoutes = (() => {
@@ -1670,6 +1670,8 @@ const ColDorciaRoutes = (() => {
   const TITLE_SELECTORS =
     ".title-72-70, .title-250-250, .title-200-170, .title-180-145, .title-350-300, .title-45-45, .title-230-190";
   const TEXT_SELECTORS = ".p-12-14, .p-14-17, .p-14-22";
+  const VISITE_TOUR_SECTIONS =
+    ".white---beige, .white---beige-invertito, .white---beige-invertito-mobile";
   const ABOVE_FOLD_DELAY = 0.7;
   // Classe Webflow con opacity:0 (desktop) — tiene lo spazio; lo script la toglie prima dello split
   const HIDDEN_CLASS = "text-reveal-hide";
@@ -1697,6 +1699,51 @@ const ColDorciaRoutes = (() => {
 
   function isTitle(el) {
     return el.matches(TITLE_SELECTORS);
+  }
+
+  function isVisitePage() {
+    return ColDorciaRoutes.is("visite");
+  }
+
+  function isVisiteMetaText(el) {
+    return (
+      isVisitePage() && !!el.closest(".div-block-403, .div-block-404, .div-block-405")
+    );
+  }
+
+  function getVisiteBlockRevealTargets(scope) {
+    if (!isVisitePage()) return [];
+
+    const blocks = [];
+
+    scope.querySelectorAll(`${VISITE_TOUR_SECTIONS} .div-block-403`).forEach((el) => {
+      if (!(el instanceof HTMLElement)) return;
+      if (el.parentElement?.classList.contains("div-block-404")) return;
+      blocks.push(el);
+    });
+
+    scope.querySelectorAll(`${VISITE_TOUR_SECTIONS} .div-block-404`).forEach((el) => {
+      if (el instanceof HTMLElement) blocks.push(el);
+    });
+
+    scope
+      .querySelectorAll(
+        `${VISITE_TOUR_SECTIONS} a.button-black.border-animation, ${VISITE_TOUR_SECTIONS} a.button-beige.border-animation`
+      )
+      .forEach((el) => {
+        if (el instanceof HTMLElement) blocks.push(el);
+      });
+
+    return blocks;
+  }
+
+  function isAnimatableBlock(el) {
+    if (!(el instanceof HTMLElement)) return false;
+    if (el.closest(EXCLUDED_ANCESTORS)) return false;
+    if (!isVisitePage()) return false;
+    if (el.classList.contains("no-text-reveal")) return false;
+    if (el.dataset.textRevealInit === "true") return false;
+    return true;
   }
 
   function isAboveFold(el) {
@@ -1750,6 +1797,8 @@ const ColDorciaRoutes = (() => {
 
     // hero full-bleed: solo titoli; hero-vino (es. /dalla-terra): anche il testo intro
     if (el.closest(".hero-section") && !isTitle(el)) return false;
+    // Visite: orologio/durata/min. persone animati come blocco unico
+    if (isVisiteMetaText(el)) return false;
     if (el.classList.contains("no-text-reveal")) return false;
     if (el.dataset.textRevealInit === "true") return false;
     if (!el.textContent || !el.textContent.trim()) return false;
@@ -1866,6 +1915,37 @@ const ColDorciaRoutes = (() => {
     });
   }
 
+  function revealBlock(el) {
+    showElementForReveal(el);
+    gsap.set(el, { y: 30, opacity: 0 });
+
+    const animProps = {
+      y: 0,
+      opacity: 1,
+      duration: 1,
+      ease: "power3.inOut",
+      overwrite: true
+    };
+
+    if (shouldRevealOnLoad(el)) {
+      gsap.to(el, {
+        ...animProps,
+        delay: ABOVE_FOLD_DELAY
+      });
+      return;
+    }
+
+    gsap.to(el, {
+      ...animProps,
+      scrollTrigger: {
+        trigger: el,
+        start: "top 85%",
+        toggleActions: "play none none none",
+        ...getScrollTriggerConfig()
+      }
+    });
+  }
+
   function initTextReveal() {
     if (!isTextRevealPage()) return;
 
@@ -1896,6 +1976,12 @@ const ColDorciaRoutes = (() => {
       if (!lines.length) return;
 
       revealElement(el, lines);
+    });
+
+    getVisiteBlockRevealTargets(scope).forEach((el) => {
+      if (!isAnimatableBlock(el)) return;
+      el.dataset.textRevealInit = "true";
+      revealBlock(el);
     });
 
     // Eventuali .text-reveal-hide rimasti (non animabili) → mostrali
