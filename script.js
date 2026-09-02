@@ -1,4 +1,4 @@
-console.log('v.2.9.9 No flash hero — parallax su background-position');
+console.log('v.2.9.10 Fix inset Natura — dimensioni clip da contenitore Webflow');
 
 // Mappatura percorsi IT / EN per abilitare animazioni su entrambe le lingue
 const ColDorciaRoutes = (() => {
@@ -1952,9 +1952,11 @@ const ColDorciaRoutes = (() => {
     ".home-hero-section, .home-vino-section, .home-persone.section-2, .natura-hero-section, .natura-bilancio-di-sostenibilit, .storia-hero-section, .annate-hero, .visite-hero";
   const INSET_IMG_SELECTOR = [
     ".white-section .parallax-wrap img.image-28",
+    ".white-section .div-parallax-wrap img.image-28",
     ".white-section [data-parallax-wrap] img.image-28",
     ".white-section .div-block-300 img.image-28",
     ".home-visite-section .parallax-wrap img.image-38",
+    ".home-visite-section .div-parallax-wrap img.image-38",
     ".home-visite-section [data-parallax-wrap] img.image-38",
     ".home-visite-section .div-block-425 > img.image-38"
   ].join(", ");
@@ -2065,13 +2067,22 @@ const ColDorciaRoutes = (() => {
     return "1";
   }
 
+  function getInsetClipFrame(clip, img) {
+    return (
+      clip.closest(".div-block-300, .div-block-425") ||
+      clip.parentElement ||
+      clip
+    );
+  }
+
   function ensureParallaxWrap(img) {
+    const webflowWrap = img.closest(".div-parallax-wrap, [data-parallax-wrap]");
+    if (webflowWrap instanceof HTMLElement) return webflowWrap;
+
     const frame = img.parentElement;
     if (!(frame instanceof HTMLElement)) return null;
 
-    const existing = img.closest(
-      ".parallax-wrap, .div-parallax-wrap, [data-parallax-wrap]"
-    );
+    const existing = img.closest(".parallax-wrap");
     if (existing instanceof HTMLElement) return existing;
 
     const clip = document.createElement("div");
@@ -2085,37 +2096,50 @@ const ColDorciaRoutes = (() => {
 
   function hasRenderableImageSize(img) {
     if (!(img instanceof HTMLImageElement)) return false;
-    if (img.naturalWidth > 0 && img.naturalHeight > 0) return true;
 
     const rect = img.getBoundingClientRect();
-    return rect.width > 1 && rect.height > 1;
+    if (rect.width > 1 && rect.height > 1) return true;
+
+    const frame = img.closest(".div-block-300, .div-block-425");
+    if (!(frame instanceof HTMLElement)) return false;
+    if (img.naturalWidth < 1 || img.naturalHeight < 1) return false;
+
+    const frameRect = frame.getBoundingClientRect();
+    return frameRect.width > 1 && frameRect.height > 1;
   }
 
   function prepareClip(clip, img) {
-    const rect = img.getBoundingClientRect();
-    const aspect = getImgAspectRatio(img);
+    const frame = getInsetClipFrame(clip, img);
+    const frameRect = frame.getBoundingClientRect();
+    const imgRect = img.getBoundingClientRect();
+
+    let width = imgRect.width > 1 ? imgRect.width : frameRect.width;
+    let height = imgRect.height > 1 ? imgRect.height : frameRect.height;
+
+    if ((width < 1 || height < 1) && img.naturalWidth > 0 && img.naturalHeight > 0) {
+      const aspect = img.naturalWidth / img.naturalHeight;
+      if (width > 1) {
+        height = width / aspect;
+      } else if (height > 1) {
+        width = height * aspect;
+      } else if (frameRect.width > 1) {
+        width = frameRect.width;
+        height = width / aspect;
+      }
+    }
+
+    if (width < 1 || height < 1) return false;
 
     clip.style.position = "relative";
     clip.style.overflow = "hidden";
     clip.style.display = "block";
+    clip.style.width = `${width}px`;
+    clip.style.height = `${height}px`;
+    clip.style.maxWidth = "100%";
+    clip.style.marginLeft = "auto";
+    clip.style.marginRight = "auto";
 
-    // Se il wrap non ha già un'altezza (Webflow), fissala dalle dimensioni
-    // reali dell'immagine PRIMA di toglierla dal flusso.
-    const clipStyle = window.getComputedStyle(clip);
-    const hasHeight =
-      clip.clientHeight > 1 ||
-      (clipStyle.aspectRatio && clipStyle.aspectRatio !== "auto");
-
-    if (!hasHeight && rect.width > 0 && rect.height > 0) {
-      clip.style.width = `${rect.width}px`;
-      clip.style.height = `${rect.height}px`;
-      clip.style.maxWidth = "100%";
-      clip.style.marginLeft = "auto";
-      clip.style.marginRight = "auto";
-    } else {
-      if (!clip.style.width) clip.style.width = "100%";
-      if (!hasHeight) clip.style.aspectRatio = aspect;
-    }
+    return true;
   }
 
   function initBgParallax(container) {
@@ -2157,8 +2181,7 @@ const ColDorciaRoutes = (() => {
     const run = () => {
       if (img.dataset.parallaxInit === "true") return;
       if (!hasRenderableImageSize(img)) return;
-
-      prepareClip(clip, img);
+      if (!prepareClip(clip, img)) return;
 
       img.dataset.parallaxInit = "true";
       clip.dataset.parallaxInit = "true";
@@ -2196,8 +2219,9 @@ const ColDorciaRoutes = (() => {
 
     schedule();
 
-    // Lazy load: inizializza solo quando l'immagine entra (o sta per entrare) nel viewport
+    // Lazy load: inizializza quando il contenitore entra nel viewport
     if (!hasRenderableImageSize(img)) {
+      const observeTarget = getInsetClipFrame(clip, img);
       const observer = new IntersectionObserver(
         (entries) => {
           if (!entries.some((entry) => entry.isIntersecting)) return;
@@ -2209,12 +2233,16 @@ const ColDorciaRoutes = (() => {
             img.loading = "eager";
           }
 
+          if (!img.complete) {
+            img.addEventListener("load", run, { once: true });
+          }
+
           run();
         },
         { rootMargin: "300px 0px" }
       );
 
-      observer.observe(clip);
+      observer.observe(observeTarget);
     }
   }
 
