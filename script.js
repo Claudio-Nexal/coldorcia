@@ -1,4 +1,4 @@
-console.log('v.2.8.2 Animazioni testi + parallax pagina Visite');
+console.log('v.2.8.3 Fix redeclarazione section in parallax');
 
 
 
@@ -1665,8 +1665,8 @@ console.log('v.2.8.2 Animazioni testi + parallax pagina Visite');
 
     // Evita pannelli nascosti (es. versioni mobile invertite su desktop)
     if (window.getComputedStyle(container).display === "none") return;
-    const section = container.closest("section");
-    if (section && window.getComputedStyle(section).display === "none") return;
+    const section = container.closest("section") || container;
+    if (section !== container && window.getComputedStyle(section).display === "none") return;
 
     const bgUrl = extractBgUrl(container);
     if (!bgUrl) return;
@@ -1679,7 +1679,6 @@ console.log('v.2.8.2 Animazioni testi + parallax pagina Visite');
     const img = createParallaxImg(bgUrl);
     container.appendChild(img);
 
-    const section = container.closest("section") || container;
     applyImageParallax(img, section);
   }
 
