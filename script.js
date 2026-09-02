@@ -1,4 +1,4 @@
-console.log('v.2.8.3 Fix redeclarazione section in parallax');
+console.log('v.2.8.4 Parallax hero Visite (e altre) — clip img senza flash');
 
 
 
@@ -1686,35 +1686,67 @@ console.log('v.2.8.3 Fix redeclarazione section in parallax');
     if (!(section instanceof HTMLElement)) return;
     if (section.dataset.parallaxInit === "true") return;
     if (section.closest(EXCLUDED_ANCESTORS)) return;
-    if (!extractBgUrl(section)) return;
+
+    const bgUrl = extractBgUrl(section);
+    if (!bgUrl) return;
 
     section.dataset.parallaxInit = "true";
 
-    // Niente ricreazione DOM: anima solo background-position sul bg CSS esistente.
-    // Evita il flash tipico del swap background → <img>.
-    const computedPos = window.getComputedStyle(section).backgroundPosition || "50% 50%";
+    if (window.getComputedStyle(section).position === "static") {
+      section.style.position = "relative";
+    }
+    section.style.overflow = "hidden";
 
-    section.style.backgroundSize = "cover";
-    section.style.backgroundRepeat = "no-repeat";
-    section.style.backgroundPosition = computedPos;
+    const layer = document.createElement("div");
+    layer.className = "parallax-bg-layer";
+    layer.setAttribute("aria-hidden", "true");
+    layer.style.position = "absolute";
+    layer.style.inset = "0";
+    layer.style.overflow = "hidden";
+    layer.style.zIndex = "0";
+    layer.style.pointerEvents = "none";
 
-    gsap.fromTo(
-      section,
-      { backgroundPosition: "50% 50%" },
-      {
-        backgroundPosition: "50% 70%",
-        ease: "none",
-        immediateRender: false,
-        scrollTrigger: {
-          trigger: section,
-          start: "top top",
-          end: "bottom top",
-          scrub: true,
-          invalidateOnRefresh: true,
-          ...getScrollTriggerConfig()
-        }
+    const img = createParallaxImg(bgUrl);
+    // Parte nascosta: il bg CSS resta visibile finché l'img non è pronta
+    img.style.opacity = "0";
+    layer.appendChild(img);
+    section.insertBefore(layer, section.firstChild);
+
+    const reveal = () => {
+      // Allinea subito la posizione parallax, poi mostra l'img e togli il bg CSS
+      ScrollTrigger.refresh();
+      img.style.opacity = "1";
+      section.style.backgroundImage = "none";
+    };
+
+    Array.from(section.children).forEach((child) => {
+      if (child === layer || !(child instanceof HTMLElement)) return;
+
+      const style = window.getComputedStyle(child);
+
+      if (style.position === "absolute") {
+        if (!child.style.zIndex) child.style.zIndex = "1";
+        return;
       }
-    );
+
+      if (
+        child.classList.contains("w-layout-blockcontainer") ||
+        child.classList.contains("w-container") ||
+        child.classList.contains("container")
+      ) {
+        if (style.position === "static") child.style.position = "relative";
+        child.style.zIndex = "2";
+      }
+    });
+
+    applyImageParallax(img, section);
+
+    if (img.complete && img.naturalWidth > 0) {
+      requestAnimationFrame(reveal);
+    } else {
+      img.addEventListener("load", () => requestAnimationFrame(reveal), { once: true });
+      img.addEventListener("error", () => requestAnimationFrame(reveal), { once: true });
+    }
   }
 
   function initInsetImgParallax(img) {
