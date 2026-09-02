@@ -1,4 +1,4 @@
-console.log('v.2.6.7 Fix parallax wrap visite — aspect ratio corretto');
+console.log('v.2.6.8 Fix vino height + visite parallax-wrap');
 
 
 
@@ -1486,9 +1486,11 @@ console.log('v.2.6.7 Fix parallax wrap visite — aspect ratio corretto');
     ".home-hero-section, .home-vino-section, .home-persone.section-2, .natura-hero-section, .natura-bilancio-di-sostenibilit, .storia-hero-section";
   const INSET_IMG_SELECTOR = [
     ".white-section .parallax-wrap img.image-28",
+    ".white-section [data-parallax-wrap] img.image-28",
     ".white-section .div-block-300 img.image-28",
     ".home-visite-section .parallax-wrap img.image-38",
-    ".home-visite-section .div-block-425 img.image-38"
+    ".home-visite-section [data-parallax-wrap] img.image-38",
+    ".home-visite-section .div-block-425 > img.image-38"
   ].join(", ");
   const EXCLUDED_ANCESTORS =
     ".menu-overlay, .custom-navbar, .custom-navbar-menu, .footer-desktop, .footer-mobile, .no-parallax, .hero-carousel-wrapper, .hero-carousel, .hero-slide, .hero-slide-bg, .timeline-section, .timeline-section-mobile, .timeline-content-wrapper, .timeline-slide, .timeline-sidebar";
@@ -1558,27 +1560,22 @@ console.log('v.2.6.7 Fix parallax wrap visite — aspect ratio corretto');
     const frame = img.parentElement;
     if (!(frame instanceof HTMLElement)) return null;
 
-    const existing = img.closest(".parallax-wrap");
-    if (existing instanceof HTMLElement) return existing;
+    const existing = img.closest(".parallax-wrap, [data-parallax-wrap]");
+    if (existing instanceof HTMLElement) {
+      existing.style.overflow = "hidden";
+      return existing;
+    }
 
     const clip = document.createElement("div");
     clip.className = "parallax-wrap";
+    clip.dataset.jsCreated = "true";
     clip.style.overflow = "hidden";
     clip.style.position = "relative";
-    clip.style.flexShrink = "0";
+    clip.style.width = "100%";
 
-    const rect = img.getBoundingClientRect();
-
-    // Mantieni le dimensioni visuali dell'immagine (es. visite 230/320),
-    // senza forzare un box quadrato full-width.
-    if (rect.width > 0 && rect.height > 0) {
-      clip.style.width = `${rect.width}px`;
-      clip.style.height = `${rect.height}px`;
-    } else if (frame.classList.contains("div-block-300")) {
-      clip.style.width = "100%";
+    if (frame.classList.contains("div-block-300")) {
       clip.style.aspectRatio = "1";
     } else {
-      clip.style.width = "100%";
       clip.style.aspectRatio = getImgAspectRatio(img);
       clip.style.maxWidth = "100%";
     }
@@ -1657,10 +1654,21 @@ console.log('v.2.6.7 Fix parallax wrap visite — aspect ratio corretto');
     Array.from(section.children).forEach((child) => {
       if (child === layer || !(child instanceof HTMLElement)) return;
 
-      if (window.getComputedStyle(child).position === "static") {
-        child.style.position = "relative";
+      const style = window.getComputedStyle(child);
+
+      if (style.position === "absolute") {
+        if (!child.style.zIndex) child.style.zIndex = "1";
+        return;
       }
-      if (!child.style.zIndex) child.style.zIndex = "1";
+
+      if (
+        child.classList.contains("w-layout-blockcontainer") ||
+        child.classList.contains("w-container") ||
+        child.classList.contains("container")
+      ) {
+        if (style.position === "static") child.style.position = "relative";
+        child.style.zIndex = "2";
+      }
     });
 
     applyImageParallax(img, section);
