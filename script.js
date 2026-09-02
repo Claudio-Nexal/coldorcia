@@ -1,4 +1,4 @@
-console.log('v.2.7.8 Zoom Annate — wrap clip + solo img.vintage-img');
+console.log('v.2.7.9 Zoom Annate — bottiglie a dimensione originale');
 
 
 
@@ -2131,17 +2131,17 @@ $(document).ready(function () {
     clip.style.width = "100%";
     clip.style.aspectRatio = "275 / 385";
     clip.style.background = "#EBE5DA";
-    clip.style.display = "flex";
-    clip.style.alignItems = "center";
-    clip.style.justifyContent = "center";
+    clip.style.position = "relative";
 
     img.parentNode.insertBefore(clip, img);
     clip.appendChild(img);
 
-    // bottiglia dentro il frame (come il CSS originale pensava .vintage-img img)
-    img.style.width = "55%";
-    img.style.height = "auto";
-    img.style.maxWidth = "55%";
+    // Mantieni la dimensione originale della bottiglia; zoom solo al hover
+    img.style.width = "100%";
+    img.style.height = "100%";
+    img.style.maxWidth = "none";
+    img.style.objectFit = "contain";
+    img.style.objectPosition = "center center";
     img.style.background = "transparent";
     img.style.display = "block";
     img.style.aspectRatio = "auto";
