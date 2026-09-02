@@ -1,4 +1,4 @@
-console.log('v.2.6.6 Parallax home — escluso carousel');
+console.log('v.2.6.7 Fix parallax wrap visite — aspect ratio corretto');
 
 
 
@@ -1543,6 +1543,17 @@ console.log('v.2.6.6 Parallax home — escluso carousel');
     );
   }
 
+  function getImgAspectRatio(img) {
+    const fromStyle = window.getComputedStyle(img).aspectRatio;
+    if (fromStyle && fromStyle !== "auto") return fromStyle;
+
+    if (img.naturalWidth && img.naturalHeight) {
+      return `${img.naturalWidth} / ${img.naturalHeight}`;
+    }
+
+    return "1";
+  }
+
   function ensureParallaxWrap(img) {
     const frame = img.parentElement;
     if (!(frame instanceof HTMLElement)) return null;
@@ -1552,10 +1563,25 @@ console.log('v.2.6.6 Parallax home — escluso carousel');
 
     const clip = document.createElement("div");
     clip.className = "parallax-wrap";
-    clip.style.width = "100%";
-    clip.style.aspectRatio = "1";
     clip.style.overflow = "hidden";
     clip.style.position = "relative";
+    clip.style.flexShrink = "0";
+
+    const rect = img.getBoundingClientRect();
+
+    // Mantieni le dimensioni visuali dell'immagine (es. visite 230/320),
+    // senza forzare un box quadrato full-width.
+    if (rect.width > 0 && rect.height > 0) {
+      clip.style.width = `${rect.width}px`;
+      clip.style.height = `${rect.height}px`;
+    } else if (frame.classList.contains("div-block-300")) {
+      clip.style.width = "100%";
+      clip.style.aspectRatio = "1";
+    } else {
+      clip.style.width = "100%";
+      clip.style.aspectRatio = getImgAspectRatio(img);
+      clip.style.maxWidth = "100%";
+    }
 
     frame.insertBefore(clip, img);
     clip.appendChild(img);
