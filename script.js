@@ -1,4 +1,4 @@
-console.log('v.2.9.21 Text reveal — wine-club e visite-form');
+console.log('v.2.9.22 Parallax immagini divisorie Annate Storiche');
 
 // Mappatura percorsi IT / EN per abilitare animazioni su entrambe le lingue
 const ColDorciaRoutes = (() => {
@@ -2010,7 +2010,7 @@ const ColDorciaRoutes = (() => {
     ".white---beige-invertito-mobile .div-block-318"
   ].join(", ");
   const SECTION_BG_SELECTORS =
-    ".home-hero-section, .home-vino-section, .home-persone.section-2, .natura-hero-section, .natura-bilancio-di-sostenibilit, .storia-hero-section, .annate-hero, .visite-hero";
+    ".home-hero-section, .home-vino-section, .home-persone.section-2, .natura-hero-section, .natura-bilancio-di-sostenibilit, .storia-hero-section, .annate-hero, .visite-hero, section[class*=\"annate-sec-image-\"]";
   const INSET_IMG_SELECTOR = [
     ".white-section .parallax-wrap img.image-28",
     ".white-section .div-parallax-wrap img.image-28",
