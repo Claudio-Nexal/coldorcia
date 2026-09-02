@@ -1,4 +1,4 @@
-console.log('v.2.9.2 Text reveal area-download, whistleblowing, bilancio');
+console.log('v.2.9.3 Menu apertura Bertani — testi e righe in sequenza');
 
 
 
@@ -96,6 +96,147 @@ console.log('v.2.9.2 Text reveal area-download, whistleblowing, bilancio');
 
     let tl = null;
     let hasInitializedHeaderState = false;
+    let menuTextPrepared = false;
+
+    const MENU_LINK_SELECTORS =
+      ".nav-link-navbar, .menu-link-bottom, .div-block-268 .link-15-36";
+    const MENU_LINE_ANIM = {
+      y: 30,
+      rotation: 2,
+      opacity: 0
+    };
+
+    function wrapMenuLine(line, index) {
+      const wrap = document.createElement("div");
+      wrap.className = "titLine-wrap";
+      wrap.style.overflow = "hidden";
+
+      line.classList.add("titLine", `titLine--${index}`);
+      line.parentNode.insertBefore(wrap, line);
+      wrap.appendChild(line);
+
+      return line;
+    }
+
+    function prepareMenuTextAnimation() {
+      if (menuTextPrepared || !window.SplitText || !menuContent) return false;
+
+      const links = menuContent.querySelectorAll(MENU_LINK_SELECTORS);
+
+      links.forEach((el) => {
+        if (!(el instanceof HTMLElement)) return;
+        if (el.dataset.menuSplitInit === "true") return;
+
+        const label = (el.textContent || "").trim();
+        if (!label || label === "|") return;
+
+        el.dataset.menuSplitInit = "true";
+
+        const split = new SplitText(el, { type: "lines", linesClass: "titLine" });
+        split.lines.forEach((line, index) => wrapMenuLine(line, index));
+      });
+
+      menuTextPrepared = true;
+      resetMenuTextAnimation();
+      return true;
+    }
+
+    function resetMenuTextAnimation() {
+      if (!menuTextPrepared || !menuContent) return;
+
+      gsap.set(menuContent.querySelectorAll(".menu-links"), { opacity: 0 });
+      gsap.set(menuContent.querySelector(".div-block-268"), { opacity: 0 });
+      gsap.set(menuContent.querySelectorAll(".titLine"), {
+        ...MENU_LINE_ANIM
+      });
+    }
+
+    function addMenuTextRevealToTimeline(parentTl, startAt = 0.12) {
+      if (!menuTextPrepared || !menuContent) return;
+
+      const rows = menuContent.querySelectorAll(".menu-links");
+      const revealProps = {
+        y: 0,
+        rotation: 0,
+        opacity: 1,
+        duration: 0.8,
+        ease: "power2.out"
+      };
+
+      rows.forEach((row, index) => {
+        const lines = row.querySelectorAll(".titLine");
+        const offset = startAt + index * 0.08;
+
+        parentTl.to(row, { opacity: 1, duration: 0.01 }, offset);
+
+        if (!lines.length) return;
+
+        parentTl.to(
+          lines,
+          {
+            ...revealProps,
+            stagger: 0.05
+          },
+          offset
+        );
+      });
+
+      const bottomBlock = menuContent.querySelector(".div-block-268");
+      const bottomLines = bottomBlock ? bottomBlock.querySelectorAll(".titLine") : [];
+
+      if (bottomBlock && bottomLines.length) {
+        const bottomStart = startAt + rows.length * 0.08 + 0.04;
+
+        parentTl.to(bottomBlock, { opacity: 1, duration: 0.01 }, bottomStart);
+        parentTl.to(
+          bottomLines,
+          {
+            ...revealProps,
+            stagger: 0.05
+          },
+          bottomStart
+        );
+      }
+    }
+
+    function addMenuTextHideToTimeline(parentTl, startAt = 0) {
+      if (!menuTextPrepared || !menuContent) return;
+
+      const lines = menuContent.querySelectorAll(".titLine");
+      const rows = menuContent.querySelectorAll(".menu-links");
+      const bottomBlock = menuContent.querySelector(".div-block-268");
+
+      if (lines.length) {
+        parentTl.to(
+          lines,
+          {
+            y: -20,
+            rotation: -2,
+            opacity: 0,
+            duration: 0.35,
+            ease: "power2.in",
+            stagger: { each: 0.02, from: "end" }
+          },
+          startAt
+        );
+      }
+
+      parentTl.to(rows, { opacity: 0, duration: 0.2 }, startAt + 0.05);
+
+      if (bottomBlock) {
+        parentTl.to(bottomBlock, { opacity: 0, duration: 0.2 }, startAt + 0.05);
+      }
+    }
+
+    function bootMenuTextAnimation() {
+      const run = () => prepareMenuTextAnimation();
+
+      if (document.fonts && document.fonts.ready) {
+        document.fonts.ready.then(run).catch(run);
+      } else {
+        run();
+      }
+    }
 
     let savedScroll = 0;
     let smoother = null;
@@ -531,11 +672,13 @@ console.log('v.2.9.2 Text reveal area-download, whistleblowing, bilancio');
     });
 
     gsap.set(menuContent, {
-      y: -30,
-      opacity: 0,
+      y: 0,
+      opacity: 1,
       transformOrigin: "50% 0%",
       willChange: "transform,opacity"
     });
+
+    bootMenuTextAnimation();
 
     gsap.set([".menu-link .w-dropdown", ".menu-link a"], {
       clearProps: "transform,opacity"
@@ -1036,9 +1179,15 @@ console.log('v.2.9.2 Text reveal area-download, whistleblowing, bilancio');
 
       isAnimating = true;
 
+      if (window.SplitText) gsap.registerPlugin(SplitText);
+
       lockScroll();
       showHeaderOnScroll();
       showCloseIcon();
+
+      if (!menuTextPrepared) {
+        prepareMenuTextAnimation();
+      }
 
       gsap.set(menuOverlay, {
         display: "block",
@@ -1126,11 +1275,18 @@ console.log('v.2.9.2 Text reveal area-download, whistleblowing, bilancio');
         clipPath: "polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)"
       }, 0);
 
-      tl.to(menuContent, {
-        y: 0,
-        opacity: 1,
-        overwrite: "auto"
-      }, 0.02);
+      if (menuTextPrepared) {
+        resetMenuTextAnimation();
+        gsap.set(menuContent, { y: 0, opacity: 1 });
+        addMenuTextRevealToTimeline(tl, 0.12);
+      } else {
+        gsap.set(menuContent, { y: -30, opacity: 0 });
+        tl.to(menuContent, {
+          y: 0,
+          opacity: 1,
+          overwrite: "auto"
+        }, 0.02);
+      }
     }
 
     function closeMenu() {
@@ -1160,9 +1316,13 @@ console.log('v.2.9.2 Text reveal area-download, whistleblowing, bilancio');
           });
 
           gsap.set(menuContent, {
-            y: -30,
-            opacity: 0
+            y: 0,
+            opacity: menuTextPrepared ? 1 : 0
           });
+
+          if (menuTextPrepared) {
+            resetMenuTextAnimation();
+          }
 
           unlockScroll();
 
@@ -1177,15 +1337,22 @@ console.log('v.2.9.2 Text reveal area-download, whistleblowing, bilancio');
         }
       });
 
-      tl.to(menuContent, {
-        y: -30,
-        opacity: 0,
-        overwrite: "auto"
-      }, 0);
+      if (menuTextPrepared) {
+        addMenuTextHideToTimeline(tl, 0);
+        tl.to(menuOverlay, {
+          clipPath: "polygon(0% 0%, 100% 0%, 100% 0%, 0% 0%)"
+        }, 0.12);
+      } else {
+        tl.to(menuContent, {
+          y: -30,
+          opacity: 0,
+          overwrite: "auto"
+        }, 0);
 
-      tl.to(menuOverlay, {
-        clipPath: "polygon(0% 0%, 100% 0%, 100% 0%, 0% 0%)"
-      }, 0);
+        tl.to(menuOverlay, {
+          clipPath: "polygon(0% 0%, 100% 0%, 100% 0%, 0% 0%)"
+        }, 0);
+      }
     }
 
     window.addEventListener("keydown", (e) => {
