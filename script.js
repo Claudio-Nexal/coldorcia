@@ -1,4 +1,4 @@
-console.log('v.2.8.6 Hero text: display none via .text-reveal-hide, no early hide JS');
+console.log('v.2.8.7 Fix hero display:none Webflow — force show prima dello split');
 
 
 
@@ -1400,16 +1400,23 @@ console.log('v.2.8.6 Hero text: display none via .text-reveal-hide, no early hid
   }
 
   function clearTextRevealHide(root = document) {
-    root.querySelectorAll(`.${HIDDEN_CLASS}`).forEach((el) => {
+    const nodes = root.querySelectorAll(
+      `.${HIDDEN_CLASS}, .hero-section ${TITLE_SELECTORS.split(", ").join(", .hero-section ")}, .hero-vino ${TITLE_SELECTORS.split(", ").join(", .hero-vino ")}, .hero-vino ${TEXT_SELECTORS.split(", ").join(", .hero-vino ")}`
+    );
+
+    nodes.forEach((el) => {
       if (!(el instanceof HTMLElement)) return;
-      el.classList.remove(HIDDEN_CLASS);
-      el.style.display = "";
-      el.style.visibility = "";
-      el.style.opacity = "";
+      showElementForReveal(el);
     });
   }
 
-  function prepareElementForSplit(el) {
+  function naturalDisplay(el) {
+    const tag = el.tagName;
+    if (tag === "SPAN" || tag === "A" || tag === "STRONG" || tag === "EM") return "inline";
+    return "block";
+  }
+
+  function showElementForReveal(el) {
     if (!(el instanceof HTMLElement)) return;
 
     if (el.classList.contains(HIDDEN_CLASS)) {
@@ -1417,10 +1424,22 @@ console.log('v.2.8.6 Hero text: display none via .text-reveal-hide, no early hid
       el.classList.remove(HIDDEN_CLASS);
     }
 
-    // Necessario: SplitText deve misurare il layout (display:none → linee sbagliate)
-    el.style.display = "";
-    el.style.visibility = "visible";
-    el.style.opacity = "1";
+    // Webflow applica display:none direttamente sul testo (CSS), non solo via classe:
+    // serve override inline !important, altrimenti SplitText non misura e resta nascosto.
+    const computed = window.getComputedStyle(el).display;
+    if (computed === "none" || el.style.display === "none") {
+      el.dataset.wasTextRevealHide = "true";
+      el.style.setProperty("display", naturalDisplay(el), "important");
+    }
+
+    el.style.setProperty("visibility", "visible");
+    el.style.setProperty("opacity", "1");
+  }
+
+  function prepareElementForSplit(el) {
+    showElementForReveal(el);
+    // Reflow: SplitText deve leggere larghezza/righe reali
+    void el.offsetWidth;
   }
 
   function splitElement(el) {
