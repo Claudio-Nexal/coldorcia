@@ -1,4 +1,4 @@
-console.log('v.2.7.0 Fix visite — clip con altezza prima di absolute');
+console.log('v.2.7.1 Text reveal pagina Vini — esclusa griglia schede');
 
 
 
@@ -1328,7 +1328,7 @@ console.log('v.2.7.0 Fix visite — clip con altezza prima di absolute');
   const TEXT_SELECTORS = ".p-12-14, .p-14-17, .p-14-22";
   const ABOVE_FOLD_DELAY = 0.7;
   const EXCLUDED_ANCESTORS =
-    ".menu-overlay, .custom-navbar, .custom-navbar-menu, .hero-carousel, .hero-slide, .footer-desktop, .footer-mobile, .no-text-reveal, .news-card, .wine-card, .timeline-section, .timeline-section-mobile, .timeline-content-wrapper, .timeline-slide, .timeline-sidebar";
+    ".menu-overlay, .custom-navbar, .custom-navbar-menu, .hero-carousel, .hero-slide, .footer-desktop, .footer-mobile, .no-text-reveal, .news-card, .wine-card, .griglia-vini, .timeline-section, .timeline-section-mobile, .timeline-content-wrapper, .timeline-slide, .timeline-sidebar";
 
   function isTextRevealPage() {
     const path = (window.location.pathname || "/").replace(/\/$/, "") || "/";
@@ -1336,6 +1336,7 @@ console.log('v.2.7.0 Fix visite — clip con altezza prima di absolute');
     if (document.body.classList.contains("home")) return true;
     if (path === "/natura" || path === "/en/nature") return true;
     if (path === "/storia") return true;
+    if (path === "/vini") return true;
 
     return false;
   }
