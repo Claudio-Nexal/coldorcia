@@ -1,4 +1,4 @@
-console.log('v.2.9.5 Menu righe — border rimossi, espansione dal centro');
+console.log('v.2.9.6 Menu righe — solo JS, nessuna modifica CSS');
 
 
 
@@ -135,26 +135,26 @@ console.log('v.2.9.5 Menu righe — border rimossi, espansione dal centro');
         line = document.createElement("span");
         line.className = "menu-row-line";
         line.setAttribute("aria-hidden", "true");
-        Object.assign(line.style, {
-          position: "absolute",
-          left: "0",
-          right: "0",
-          bottom: "0",
-          height: "1.5px",
-          width: "100%",
-          display: "block",
-          backgroundColor: dividerColor,
-          transformOrigin: "center center",
-          pointerEvents: "none"
-        });
+        line.style.cssText = [
+          "position:absolute",
+          "left:0",
+          "right:0",
+          "bottom:0",
+          "width:100%",
+          "height:1.5px",
+          "display:block",
+          `background-color:${dividerColor}`,
+          "transform-origin:center center",
+          "pointer-events:none",
+          "transform:scaleX(0)"
+        ].join(";");
 
         row.appendChild(line);
       }
 
-      row.classList.add("is-menu-animated");
-      row.style.position = "relative";
-      row.style.borderTop = "none";
-      row.style.borderBottom = "none";
+      row.style.setProperty("position", "relative", "important");
+      row.style.setProperty("border-top", "none", "important");
+      row.style.setProperty("border-bottom", "none", "important");
 
       return line;
     }
