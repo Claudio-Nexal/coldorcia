@@ -1,4 +1,4 @@
-console.log('v.2.6.8 Fix vino height + visite parallax-wrap');
+console.log('v.2.6.9 Fix parallax visite — img absolute nel clip');
 
 
 
@@ -1685,11 +1685,18 @@ console.log('v.2.6.8 Fix vino height + visite parallax-wrap');
     img.dataset.parallaxInit = "true";
     clip.dataset.parallaxInit = "true";
 
+    clip.style.position = "relative";
+    clip.style.overflow = "hidden";
+
     gsap.set(img, {
+      position: "absolute",
+      top: 0,
+      left: 0,
       display: "block",
       width: "100%",
       height: `${IMG_SCALE * 100}%`,
       maxWidth: "none",
+      aspectRatio: "auto",
       objectFit: "cover",
       objectPosition: "center center",
       willChange: "transform"
