@@ -1,4 +1,4 @@
-console.log('v.2.9.1 Text reveal /contatti — solo titolo e testo hero');
+console.log('v.2.9.2 Text reveal area-download, whistleblowing, bilancio');
 
 
 
@@ -1324,7 +1324,7 @@ console.log('v.2.9.1 Text reveal /contatti — solo titolo e testo hero');
 (() => {
   const MOBILE_MAX = 767;
   const TITLE_SELECTORS =
-    ".title-72-70, .title-250-250, .title-180-145, .title-350-300, .title-45-45, .title-230-190";
+    ".title-72-70, .title-250-250, .title-200-170, .title-180-145, .title-350-300, .title-45-45, .title-230-190";
   const TEXT_SELECTORS = ".p-12-14, .p-14-17, .p-14-22";
   const ABOVE_FOLD_DELAY = 0.7;
   // Classe Webflow con opacity:0 (desktop) — tiene lo spazio; lo script la toglie prima dello split
@@ -1340,7 +1340,10 @@ console.log('v.2.9.1 Text reveal /contatti — solo titolo e testo hero');
       path === "/news" ||
       path === "/en/news" ||
       path === "/contatti" ||
-      path === "/en/contact"
+      path === "/en/contact" ||
+      path === "/area-download" ||
+      path === "/whistleblowing" ||
+      path === "/bilancio-di-sostenibilita"
     );
   }
 
@@ -1411,7 +1414,8 @@ console.log('v.2.9.1 Text reveal /contatti — solo titolo e testo hero');
     if (!(el instanceof HTMLElement)) return false;
     if (el.closest(EXCLUDED_ANCESTORS)) return false;
 
-    // /persone, /news, /contatti: solo titolo + paragrafo intro in hero
+    // /persone, /news, /contatti, /area-download, /whistleblowing, /bilancio:
+    // solo titolo in hero; testo solo se presente in .div-block-282
     if (isHeroIntroOnlyPage()) {
       if (!el.closest(".hero-persone, .hero-bilancio, section.section")) return false;
       if (isTitle(el)) {
