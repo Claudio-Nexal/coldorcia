@@ -1,4 +1,4 @@
-console.log('v.2.7.3 Zoom leggero hover immagini wine-card');
+console.log('v.2.7.4 Fix zoom wine-card — CSS hover dopo rebuild griglia');
 
 
 
@@ -2101,56 +2101,80 @@ $(document).ready(function () {
 
 
 
-// animazione card vino — zoom leggero sull'immagine al hover
+// animazione card vino — zoom leggero sull'immagine (CSS, dopo rebuild griglia)
 (() => {
-  const HOVER_SCALE = 1.05;
-  const DURATION = 0.5;
+  const STYLE_ID = "wine-card-hover-style";
+  const HOVER_SCALE = 1.06;
+
+  function injectHoverCSS() {
+    if (document.getElementById(STYLE_ID)) return;
+
+    const style = document.createElement("style");
+    style.id = STYLE_ID;
+    style.textContent = `
+      .wine-card .wine-card-image {
+        transform-origin: 50% 50%;
+        transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+        will-change: transform;
+      }
+      .wine-card:hover .wine-card-image {
+        transform: scale(${HOVER_SCALE}) !important;
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
+  function neutralizeCard(card) {
+    if (!(card instanceof HTMLElement)) return;
+    if (card.dataset.wineHoverCss === "true") return;
+
+    const img = card.querySelector(".wine-card-image");
+    if (!img) return;
+
+    // Rimuove i listener GSAP dello script Webflow clonando il nodo
+    const clean = card.cloneNode(true);
+    clean.dataset.wineHoverCss = "true";
+
+    if (window.gsap) {
+      const cleanImg = clean.querySelector(".wine-card-image");
+      if (cleanImg) {
+        gsap.killTweensOf(cleanImg);
+        gsap.set(cleanImg, { clearProps: "transform" });
+      }
+    }
+
+    card.replaceWith(clean);
+  }
 
   function initWineCardHover() {
-    if (!window.gsap) return;
+    injectHoverCSS();
+    document.querySelectorAll(".wine-card").forEach(neutralizeCard);
+  }
 
-    const cards = document.querySelectorAll(".wine-card");
-    if (!cards.length) return;
+  function boot() {
+    // Lo script in pagina ricostruisce la griglia in Webflow.push:
+    // aspettiamo e poi ripuliamo i listener che si annullano a vicenda.
+    const run = () => initWineCardHover();
 
-    cards.forEach((card) => {
-      if (card.dataset.wineHoverInit === "true") return;
+    const Webflow = window.Webflow || [];
+    Webflow.push(() => {
+      setTimeout(run, 50);
+      setTimeout(run, 400);
+    });
 
-      const img = card.querySelector(".wine-card-image");
-      if (!img) return;
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", () => setTimeout(run, 500));
+    } else {
+      setTimeout(run, 500);
+    }
 
-      card.dataset.wineHoverInit = "true";
-
-      gsap.set(img, {
-        transformOrigin: "50% 50%",
-        force3D: true
-      });
-
-      card.addEventListener("mouseenter", () => {
-        gsap.to(img, {
-          scale: HOVER_SCALE,
-          duration: DURATION,
-          ease: "power2.out",
-          overwrite: true
-        });
-      });
-
-      card.addEventListener("mouseleave", () => {
-        gsap.to(img, {
-          scale: 1,
-          duration: DURATION,
-          ease: "power2.out",
-          overwrite: true
-        });
-      });
+    // Rebuild su resize (stesso timing dello script pagina)
+    let resizeTimer;
+    window.addEventListener("resize", () => {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(run, 280);
     });
   }
 
-  const Webflow = window.Webflow || [];
-  Webflow.push(initWineCardHover);
-
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", initWineCardHover);
-  } else {
-    initWineCardHover();
-  }
+  boot();
 })();
