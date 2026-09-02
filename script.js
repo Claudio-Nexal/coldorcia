@@ -1,4 +1,4 @@
-console.log('v.2.8.9 Text reveal /persone — solo titolo e testo hero');
+console.log('v.2.9.0 Text reveal /news — solo titolo e testo hero');
 
 
 
@@ -1332,9 +1332,14 @@ console.log('v.2.8.9 Text reveal /persone — solo titolo e testo hero');
   const EXCLUDED_ANCESTORS =
     ".menu-overlay, .custom-navbar, .custom-navbar-menu, .hero-carousel, .hero-slide, .footer-desktop, .footer-mobile, .no-text-reveal, .news-card, .wine-card, .griglia-vini, .ancore-annate, .vintage-wrap, .vintage-card, .vintage-slider, .vintage-timeline, .timeline-section, .timeline-section-mobile, .timeline-content-wrapper, .timeline-slide, .timeline-sidebar";
 
-  function isPersonePage() {
+  function isHeroIntroOnlyPage() {
     const path = (window.location.pathname || "/").replace(/\/$/, "") || "/";
-    return path === "/persone" || path === "/en/people";
+    return (
+      path === "/persone" ||
+      path === "/en/people" ||
+      path === "/news" ||
+      path === "/en/news"
+    );
   }
 
   function isTextRevealPage() {
@@ -1347,7 +1352,7 @@ console.log('v.2.8.9 Text reveal /persone — solo titolo e testo hero');
     if (path === "/annate-storiche") return true;
     if (path === "/visite") return true;
     if (path === "/dalla-terra") return true;
-    if (path === "/persone" || path === "/en/people") return true;
+    if (isHeroIntroOnlyPage()) return true;
 
     return false;
   }
@@ -1382,9 +1387,15 @@ console.log('v.2.8.9 Text reveal /persone — solo titolo e testo hero');
   function shouldRevealOnLoad(el) {
     // Testi hero partiti da opacity:0 → reveal al load
     if (wasHeroHidden(el)) return true;
-    if (el.closest(".hero-vino, .hero-persone .div-block-282")) return true;
+    if (
+      el.closest(
+        ".hero-vino, .hero-persone .div-block-282, .hero-bilancio .div-block-282"
+      )
+    ) {
+      return true;
+    }
     if (!isTitle(el)) return false;
-    if (el.closest(".hero-section, .hero-persone")) return true;
+    if (el.closest(".hero-section, .hero-persone, .hero-bilancio")) return true;
     return isAboveFold(el);
   }
 
@@ -1392,9 +1403,9 @@ console.log('v.2.8.9 Text reveal /persone — solo titolo e testo hero');
     if (!(el instanceof HTMLElement)) return false;
     if (el.closest(EXCLUDED_ANCESTORS)) return false;
 
-    // /persone: solo titolo + paragrafo intro in hero (no credits/link)
-    if (isPersonePage()) {
-      if (!el.closest(".hero-persone")) return false;
+    // /persone, /news: solo titolo + paragrafo intro in hero
+    if (isHeroIntroOnlyPage()) {
+      if (!el.closest(".hero-persone, .hero-bilancio")) return false;
       if (isTitle(el)) return true;
       return !!el.closest(".div-block-282");
     }
@@ -1430,9 +1441,12 @@ console.log('v.2.8.9 Text reveal /persone — solo titolo e testo hero');
       titleIn(".hero-section"),
       titleIn(".hero-vino"),
       titleIn(".hero-persone"),
+      titleIn(".hero-bilancio"),
       textIn(".hero-vino"),
       ".hero-persone .div-block-282 " +
-        TEXT_SELECTORS.split(", ").join(", .hero-persone .div-block-282 ")
+        TEXT_SELECTORS.split(", ").join(", .hero-persone .div-block-282 "),
+      ".hero-bilancio .div-block-282 " +
+        TEXT_SELECTORS.split(", ").join(", .hero-bilancio .div-block-282 ")
     ].join(", ");
   }
 
