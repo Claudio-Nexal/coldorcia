@@ -1,4 +1,4 @@
-console.log('v.2.9.14 Hero parallax — object-position, niente zoom');
+console.log('v.2.9.15 Anti-flash bg — img sopra, poi rimuovi bg CSS');
 
 // Mappatura percorsi IT / EN per abilitare animazioni su entrambe le lingue
 const ColDorciaRoutes = (() => {
@@ -2069,9 +2069,17 @@ const ColDorciaRoutes = (() => {
   }
 
   function revealParallaxImg(img, host) {
-    ScrollTrigger.refresh();
+    // 1. Mostra l'img sopra il bg CSS (nessun vuoto)
     img.style.opacity = "1";
-    host.style.backgroundImage = "none";
+    void img.offsetHeight;
+
+    // 2. Al frame successivo togli il bg — già coperto dall'img
+    requestAnimationFrame(() => {
+      host.style.backgroundImage = "none";
+      requestAnimationFrame(() => {
+        if (window.ScrollTrigger) ScrollTrigger.refresh();
+      });
+    });
   }
 
   function bindParallaxImgReveal(img, host) {
