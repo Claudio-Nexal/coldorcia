@@ -1,4 +1,4 @@
-console.log('v.2.8.1 No flash hero — bg-position parallax + CSS antifouc');
+console.log('v.2.8.2 Animazioni testi + parallax pagina Visite');
 
 
 
@@ -1338,6 +1338,7 @@ console.log('v.2.8.1 No flash hero — bg-position parallax + CSS antifouc');
     if (path === "/storia") return true;
     if (path === "/vini") return true;
     if (path === "/annate-storiche") return true;
+    if (path === "/visite") return true;
 
     return false;
   }
@@ -1506,10 +1507,24 @@ console.log('v.2.8.1 No flash hero — bg-position parallax + CSS antifouc');
   const IMG_SCALE = 1.15;
   const IMG_TRAVEL = 8;
   const INSET_TRAVEL = 6;
-  const BG_SELECTORS =
-    ".white---beige .div-block-294, .white---beige .div-block-301, .white---beige .div-block-319";
+  const BG_SELECTORS = [
+    ".white---beige .div-block-294",
+    ".white---beige .div-block-301",
+    ".white---beige .div-block-319",
+    // Visite — pannelli immagine full-size
+    ".white---beige .div-block-312",
+    ".white---beige .div-block-314",
+    ".white---beige .div-block-316",
+    ".white---beige .div-block-317",
+    ".white---beige-invertito .div-block-313",
+    ".white---beige-invertito .div-block-315",
+    ".white---beige-invertito .div-block-318",
+    ".white---beige-invertito-mobile .div-block-313",
+    ".white---beige-invertito-mobile .div-block-315",
+    ".white---beige-invertito-mobile .div-block-318"
+  ].join(", ");
   const SECTION_BG_SELECTORS =
-    ".home-hero-section, .home-vino-section, .home-persone.section-2, .natura-hero-section, .natura-bilancio-di-sostenibilit, .storia-hero-section, .annate-hero";
+    ".home-hero-section, .home-vino-section, .home-persone.section-2, .natura-hero-section, .natura-bilancio-di-sostenibilit, .storia-hero-section, .annate-hero, .visite-hero";
   const INSET_IMG_SELECTOR = [
     ".white-section .parallax-wrap img.image-28",
     ".white-section [data-parallax-wrap] img.image-28",
@@ -1528,6 +1543,7 @@ console.log('v.2.8.1 No flash hero — bg-position parallax + CSS antifouc');
     if (path === "/natura" || path === "/en/nature") return true;
     if (path === "/storia") return true;
     if (path === "/annate-storiche") return true;
+    if (path === "/visite") return true;
 
     return false;
   }
@@ -1646,6 +1662,11 @@ console.log('v.2.8.1 No flash hero — bg-position parallax + CSS antifouc');
     if (!(container instanceof HTMLElement)) return;
     if (container.dataset.parallaxInit === "true") return;
     if (container.closest(EXCLUDED_ANCESTORS)) return;
+
+    // Evita pannelli nascosti (es. versioni mobile invertite su desktop)
+    if (window.getComputedStyle(container).display === "none") return;
+    const section = container.closest("section");
+    if (section && window.getComputedStyle(section).display === "none") return;
 
     const bgUrl = extractBgUrl(container);
     if (!bgUrl) return;
