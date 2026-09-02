@@ -1,4 +1,4 @@
-console.log('v.2.9.13 Parallax ripristinato — img layer + anti-flash hero');
+console.log('v.2.9.14 Hero parallax — object-position, niente zoom');
 
 // Mappatura percorsi IT / EN per abilitare animazioni su entrambe le lingue
 const ColDorciaRoutes = (() => {
@@ -1958,6 +1958,7 @@ const ColDorciaRoutes = (() => {
   const IMG_SCALE = 1.15;
   const IMG_TRAVEL = 8;
   const INSET_TRAVEL = 6;
+  const SECTION_BG_TRAVEL = 4;
   const BG_SELECTORS = [
     ".white---beige .div-block-294",
     ".white---beige .div-block-301",
@@ -2012,6 +2013,22 @@ const ColDorciaRoutes = (() => {
     return -(((scale - 1) / 2) / scale) * 100;
   }
 
+  function parseBgPercent(value, fallback = 50) {
+    if (!value || value === "center") return fallback;
+    if (value === "top" || value === "left") return 0;
+    if (value === "bottom" || value === "right") return 100;
+    if (value.endsWith("%")) return parseFloat(value);
+    return fallback;
+  }
+
+  function getBgObjectPosition(el) {
+    const pos = window.getComputedStyle(el).backgroundPosition || "50% 50%";
+    const parts = pos.trim().split(/\s+/);
+    const x = parts[0] || "50%";
+    const y = parseBgPercent(parts[1] || parts[0], 50);
+    return { x, y };
+  }
+
   function createParallaxImg(bgUrl) {
     const img = document.createElement("img");
     img.src = bgUrl;
@@ -2028,6 +2045,26 @@ const ColDorciaRoutes = (() => {
     img.style.objectFit = "cover";
     img.style.objectPosition = "center center";
     img.style.willChange = "transform";
+    return img;
+  }
+
+  function createSectionParallaxImg(bgUrl, host) {
+    const img = document.createElement("img");
+    img.src = bgUrl;
+    img.alt = "";
+    img.decoding = "async";
+    img.className = "parallax-inner-img";
+    img.style.position = "absolute";
+    img.style.top = "0";
+    img.style.left = "0";
+    img.style.display = "block";
+    img.style.width = "100%";
+    img.style.height = "100%";
+    img.style.maxWidth = "none";
+    img.style.objectFit = "cover";
+    const { x, y } = getBgObjectPosition(host);
+    img.style.objectPosition = `${x} ${y}%`;
+    img.style.willChange = "object-position";
     return img;
   }
 
@@ -2066,6 +2103,27 @@ const ColDorciaRoutes = (() => {
         ease: "none",
         scrollTrigger: {
           trigger,
+          start: "top bottom",
+          end: "bottom top",
+          scrub: true,
+          invalidateOnRefresh: true,
+          ...getScrollTriggerConfig()
+        }
+      }
+    );
+  }
+
+  function applySectionParallax(img, section, travel = SECTION_BG_TRAVEL) {
+    const { x, y } = getBgObjectPosition(section);
+
+    gsap.fromTo(
+      img,
+      { objectPosition: `${x} ${y - travel}%` },
+      {
+        objectPosition: `${x} ${y + travel}%`,
+        ease: "none",
+        scrollTrigger: {
+          trigger: section,
           start: "top bottom",
           end: "bottom top",
           scrub: true,
@@ -2211,7 +2269,7 @@ const ColDorciaRoutes = (() => {
     layer.style.zIndex = "0";
     layer.style.pointerEvents = "none";
 
-    const img = createParallaxImg(bgUrl);
+    const img = createSectionParallaxImg(bgUrl, section);
     img.style.opacity = "0";
     layer.appendChild(img);
     section.insertBefore(layer, section.firstChild);
@@ -2236,7 +2294,7 @@ const ColDorciaRoutes = (() => {
       }
     });
 
-    applyImageParallax(img, section);
+    applySectionParallax(img, section);
     bindParallaxImgReveal(img, section);
   }
 
