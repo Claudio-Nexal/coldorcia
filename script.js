@@ -1,4 +1,4 @@
-console.log('v.2.9.8 Fix parallax inset — attende lazy load immagini');
+console.log('v.2.9.9 No flash hero — parallax su background-position');
 
 // Mappatura percorsi IT / EN per abilitare animazioni su entrambe le lingue
 const ColDorciaRoutes = (() => {
@@ -1984,6 +1984,55 @@ const ColDorciaRoutes = (() => {
     return -(((scale - 1) / 2) / scale) * 100;
   }
 
+  function parseBgAxis(value, fallbackPercent) {
+    if (!value || value === "center") return fallbackPercent;
+    if (value === "top" || value === "left") return 0;
+    if (value === "bottom" || value === "right") return 100;
+    if (value.endsWith("%")) return parseFloat(value);
+    return fallbackPercent;
+  }
+
+  function getBgPositionAxes(el) {
+    const pos = window.getComputedStyle(el).backgroundPosition || "50% 50%";
+    const parts = pos.trim().split(/\s+/);
+    const x = parts[0] || "50%";
+    const yToken = parts[1] || parts[0] || "50%";
+
+    return {
+      x,
+      y: parseBgAxis(yToken, 50)
+    };
+  }
+
+  function applyBgPositionParallax(el, trigger, travel = IMG_TRAVEL) {
+    const computed = window.getComputedStyle(el);
+    const { x, y } = getBgPositionAxes(el);
+
+    if (!computed.backgroundSize || computed.backgroundSize === "auto") {
+      el.style.backgroundSize = "cover";
+    }
+    if (computed.backgroundRepeat === "repeat") {
+      el.style.backgroundRepeat = "no-repeat";
+    }
+
+    gsap.fromTo(
+      el,
+      { backgroundPosition: `${x} ${y - travel}%` },
+      {
+        backgroundPosition: `${x} ${y + travel}%`,
+        ease: "none",
+        scrollTrigger: {
+          trigger,
+          start: "top bottom",
+          end: "bottom top",
+          scrub: true,
+          invalidateOnRefresh: true,
+          ...getScrollTriggerConfig()
+        }
+      }
+    );
+  }
+
   function applyImageParallax(img, trigger, scale = IMG_SCALE, travel = IMG_TRAVEL) {
     const centerOffset = getCenterOffset(scale);
 
@@ -2069,22 +2118,6 @@ const ColDorciaRoutes = (() => {
     }
   }
 
-  function createParallaxImg(bgUrl) {
-    const img = document.createElement("img");
-    img.src = bgUrl;
-    img.alt = "";
-    img.decoding = "async";
-    img.className = "parallax-inner-img";
-    img.style.display = "block";
-    img.style.width = "100%";
-    img.style.height = `${IMG_SCALE * 100}%`;
-    img.style.maxWidth = "none";
-    img.style.objectFit = "cover";
-    img.style.objectPosition = "center center";
-    img.style.willChange = "transform";
-    return img;
-  }
-
   function initBgParallax(container) {
     if (!(container instanceof HTMLElement)) return;
     if (container.dataset.parallaxInit === "true") return;
@@ -2095,18 +2128,10 @@ const ColDorciaRoutes = (() => {
     const section = container.closest("section") || container;
     if (section !== container && window.getComputedStyle(section).display === "none") return;
 
-    const bgUrl = extractBgUrl(container);
-    if (!bgUrl) return;
+    if (!extractBgUrl(container)) return;
 
     container.dataset.parallaxInit = "true";
-    container.style.backgroundImage = "none";
-    container.style.overflow = "hidden";
-    container.style.position = "relative";
-
-    const img = createParallaxImg(bgUrl);
-    container.appendChild(img);
-
-    applyImageParallax(img, section);
+    applyBgPositionParallax(container, section);
   }
 
   function initSectionBgParallax(section) {
@@ -2114,66 +2139,11 @@ const ColDorciaRoutes = (() => {
     if (section.dataset.parallaxInit === "true") return;
     if (section.closest(EXCLUDED_ANCESTORS)) return;
 
-    const bgUrl = extractBgUrl(section);
-    if (!bgUrl) return;
+    if (!extractBgUrl(section)) return;
 
     section.dataset.parallaxInit = "true";
-
-    if (window.getComputedStyle(section).position === "static") {
-      section.style.position = "relative";
-    }
-    section.style.overflow = "hidden";
-
-    const layer = document.createElement("div");
-    layer.className = "parallax-bg-layer";
-    layer.setAttribute("aria-hidden", "true");
-    layer.style.position = "absolute";
-    layer.style.inset = "0";
-    layer.style.overflow = "hidden";
-    layer.style.zIndex = "0";
-    layer.style.pointerEvents = "none";
-
-    const img = createParallaxImg(bgUrl);
-    // Parte nascosta: il bg CSS resta visibile finché l'img non è pronta
-    img.style.opacity = "0";
-    layer.appendChild(img);
-    section.insertBefore(layer, section.firstChild);
-
-    const reveal = () => {
-      // Allinea subito la posizione parallax, poi mostra l'img e togli il bg CSS
-      ScrollTrigger.refresh();
-      img.style.opacity = "1";
-      section.style.backgroundImage = "none";
-    };
-
-    Array.from(section.children).forEach((child) => {
-      if (child === layer || !(child instanceof HTMLElement)) return;
-
-      const style = window.getComputedStyle(child);
-
-      if (style.position === "absolute") {
-        if (!child.style.zIndex) child.style.zIndex = "1";
-        return;
-      }
-
-      if (
-        child.classList.contains("w-layout-blockcontainer") ||
-        child.classList.contains("w-container") ||
-        child.classList.contains("container")
-      ) {
-        if (style.position === "static") child.style.position = "relative";
-        child.style.zIndex = "2";
-      }
-    });
-
-    applyImageParallax(img, section);
-
-    if (img.complete && img.naturalWidth > 0) {
-      requestAnimationFrame(reveal);
-    } else {
-      img.addEventListener("load", () => requestAnimationFrame(reveal), { once: true });
-      img.addEventListener("error", () => requestAnimationFrame(reveal), { once: true });
-    }
+    // Nessun swap DOM: anima il background CSS esistente → zero flash al load.
+    applyBgPositionParallax(section, section);
   }
 
   function initInsetImgParallax(img) {
