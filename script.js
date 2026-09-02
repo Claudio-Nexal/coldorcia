@@ -1,4 +1,4 @@
-console.log('v.2.8.8 Hero anti-FOUC con opacity:0 (tiene lo spazio)');
+console.log('v.2.8.9 Text reveal /persone — solo titolo e testo hero');
 
 
 
@@ -1332,6 +1332,11 @@ console.log('v.2.8.8 Hero anti-FOUC con opacity:0 (tiene lo spazio)');
   const EXCLUDED_ANCESTORS =
     ".menu-overlay, .custom-navbar, .custom-navbar-menu, .hero-carousel, .hero-slide, .footer-desktop, .footer-mobile, .no-text-reveal, .news-card, .wine-card, .griglia-vini, .ancore-annate, .vintage-wrap, .vintage-card, .vintage-slider, .vintage-timeline, .timeline-section, .timeline-section-mobile, .timeline-content-wrapper, .timeline-slide, .timeline-sidebar";
 
+  function isPersonePage() {
+    const path = (window.location.pathname || "/").replace(/\/$/, "") || "/";
+    return path === "/persone" || path === "/en/people";
+  }
+
   function isTextRevealPage() {
     const path = (window.location.pathname || "/").replace(/\/$/, "") || "/";
 
@@ -1342,6 +1347,7 @@ console.log('v.2.8.8 Hero anti-FOUC con opacity:0 (tiene lo spazio)');
     if (path === "/annate-storiche") return true;
     if (path === "/visite") return true;
     if (path === "/dalla-terra") return true;
+    if (path === "/persone" || path === "/en/people") return true;
 
     return false;
   }
@@ -1376,14 +1382,23 @@ console.log('v.2.8.8 Hero anti-FOUC con opacity:0 (tiene lo spazio)');
   function shouldRevealOnLoad(el) {
     // Testi hero partiti da opacity:0 → reveal al load
     if (wasHeroHidden(el)) return true;
+    if (el.closest(".hero-vino, .hero-persone .div-block-282")) return true;
     if (!isTitle(el)) return false;
-    if (el.closest(".hero-section, .hero-vino")) return true;
+    if (el.closest(".hero-section, .hero-persone")) return true;
     return isAboveFold(el);
   }
 
   function isAnimatable(el) {
     if (!(el instanceof HTMLElement)) return false;
     if (el.closest(EXCLUDED_ANCESTORS)) return false;
+
+    // /persone: solo titolo + paragrafo intro in hero (no credits/link)
+    if (isPersonePage()) {
+      if (!el.closest(".hero-persone")) return false;
+      if (isTitle(el)) return true;
+      return !!el.closest(".div-block-282");
+    }
+
     // hero full-bleed: solo titoli; hero-vino (es. /dalla-terra): anche il testo intro
     if (el.closest(".hero-section") && !isTitle(el)) return false;
     if (el.classList.contains("no-text-reveal")) return false;
@@ -1414,7 +1429,10 @@ console.log('v.2.8.8 Hero anti-FOUC con opacity:0 (tiene lo spazio)');
       `.${HIDDEN_CLASS}`,
       titleIn(".hero-section"),
       titleIn(".hero-vino"),
-      textIn(".hero-vino")
+      titleIn(".hero-persone"),
+      textIn(".hero-vino"),
+      ".hero-persone .div-block-282 " +
+        TEXT_SELECTORS.split(", ").join(", .hero-persone .div-block-282 ")
     ].join(", ");
   }
 
