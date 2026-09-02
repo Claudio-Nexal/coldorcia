@@ -1,4 +1,4 @@
-console.log('v.2.9.3 Menu apertura Bertani — testi e righe in sequenza');
+console.log('v.2.9.4 Menu righe — espansione dal centro (scaleX)');
 
 
 
@@ -118,8 +118,28 @@ console.log('v.2.9.3 Menu apertura Bertani — testi e righe in sequenza');
       return line;
     }
 
+    function ensureMenuRowLine(row) {
+      if (!(row instanceof HTMLElement)) return null;
+
+      let line = row.querySelector(".menu-row-line");
+
+      if (!line) {
+        line = document.createElement("span");
+        line.className = "menu-row-line";
+        line.setAttribute("aria-hidden", "true");
+        row.appendChild(line);
+      }
+
+      row.classList.add("is-menu-animated");
+      return line;
+    }
+
     function prepareMenuTextAnimation() {
       if (menuTextPrepared || !window.SplitText || !menuContent) return false;
+
+      menuContent.querySelectorAll(".menu-links").forEach((row) => {
+        ensureMenuRowLine(row);
+      });
 
       const links = menuContent.querySelectorAll(MENU_LINK_SELECTORS);
 
@@ -144,7 +164,11 @@ console.log('v.2.9.3 Menu apertura Bertani — testi e righe in sequenza');
     function resetMenuTextAnimation() {
       if (!menuTextPrepared || !menuContent) return;
 
-      gsap.set(menuContent.querySelectorAll(".menu-links"), { opacity: 0 });
+      gsap.set(menuContent.querySelectorAll(".menu-links"), { opacity: 1 });
+      gsap.set(menuContent.querySelectorAll(".menu-row-line"), {
+        scaleX: 0,
+        transformOrigin: "50% 50%"
+      });
       gsap.set(menuContent.querySelector(".div-block-268"), { opacity: 0 });
       gsap.set(menuContent.querySelectorAll(".titLine"), {
         ...MENU_LINE_ANIM
@@ -162,12 +186,21 @@ console.log('v.2.9.3 Menu apertura Bertani — testi e righe in sequenza');
         duration: 0.8,
         ease: "power2.out"
       };
+      const dividerProps = {
+        scaleX: 1,
+        duration: 0.8,
+        ease: "power2.out",
+        transformOrigin: "50% 50%"
+      };
 
       rows.forEach((row, index) => {
+        const divider = row.querySelector(".menu-row-line");
         const lines = row.querySelectorAll(".titLine");
         const offset = startAt + index * 0.08;
 
-        parentTl.to(row, { opacity: 1, duration: 0.01 }, offset);
+        if (divider) {
+          parentTl.to(divider, { ...dividerProps }, offset);
+        }
 
         if (!lines.length) return;
 
@@ -203,7 +236,7 @@ console.log('v.2.9.3 Menu apertura Bertani — testi e righe in sequenza');
       if (!menuTextPrepared || !menuContent) return;
 
       const lines = menuContent.querySelectorAll(".titLine");
-      const rows = menuContent.querySelectorAll(".menu-links");
+      const dividers = menuContent.querySelectorAll(".menu-row-line");
       const bottomBlock = menuContent.querySelector(".div-block-268");
 
       if (lines.length) {
@@ -221,7 +254,19 @@ console.log('v.2.9.3 Menu apertura Bertani — testi e righe in sequenza');
         );
       }
 
-      parentTl.to(rows, { opacity: 0, duration: 0.2 }, startAt + 0.05);
+      if (dividers.length) {
+        parentTl.to(
+          dividers,
+          {
+            scaleX: 0,
+            duration: 0.35,
+            ease: "power2.in",
+            transformOrigin: "50% 50%",
+            stagger: { each: 0.02, from: "end" }
+          },
+          startAt
+        );
+      }
 
       if (bottomBlock) {
         parentTl.to(bottomBlock, { opacity: 0, duration: 0.2 }, startAt + 0.05);
@@ -677,6 +722,17 @@ console.log('v.2.9.3 Menu apertura Bertani — testi e righe in sequenza');
       transformOrigin: "50% 0%",
       willChange: "transform,opacity"
     });
+
+    if (menuContent) {
+      menuContent.querySelectorAll(".menu-links").forEach((row) => {
+        ensureMenuRowLine(row);
+      });
+
+      gsap.set(menuContent.querySelectorAll(".menu-row-line"), {
+        scaleX: 0,
+        transformOrigin: "50% 50%"
+      });
+    }
 
     bootMenuTextAnimation();
 
