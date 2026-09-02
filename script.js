@@ -1,4 +1,4 @@
-console.log('v.2.9.7 Percorsi EN — animazioni su tutte le pagine inglesi');
+console.log('v.2.9.8 Fix parallax inset — attende lazy load immagini');
 
 // Mappatura percorsi IT / EN per abilitare animazioni su entrambe le lingue
 const ColDorciaRoutes = (() => {
@@ -2020,7 +2020,9 @@ const ColDorciaRoutes = (() => {
     const frame = img.parentElement;
     if (!(frame instanceof HTMLElement)) return null;
 
-    const existing = img.closest(".parallax-wrap, [data-parallax-wrap]");
+    const existing = img.closest(
+      ".parallax-wrap, .div-parallax-wrap, [data-parallax-wrap]"
+    );
     if (existing instanceof HTMLElement) return existing;
 
     const clip = document.createElement("div");
@@ -2030,6 +2032,14 @@ const ColDorciaRoutes = (() => {
     clip.appendChild(img);
 
     return clip;
+  }
+
+  function hasRenderableImageSize(img) {
+    if (!(img instanceof HTMLImageElement)) return false;
+    if (img.naturalWidth > 0 && img.naturalHeight > 0) return true;
+
+    const rect = img.getBoundingClientRect();
+    return rect.width > 1 && rect.height > 1;
   }
 
   function prepareClip(clip, img) {
@@ -2174,8 +2184,10 @@ const ColDorciaRoutes = (() => {
     const clip = ensureParallaxWrap(img);
     if (!clip) return;
 
-    // Aspetta che l'immagine abbia dimensioni reali, poi fissa il clip
     const run = () => {
+      if (img.dataset.parallaxInit === "true") return;
+      if (!hasRenderableImageSize(img)) return;
+
       prepareClip(clip, img);
 
       img.dataset.parallaxInit = "true";
@@ -2197,16 +2209,42 @@ const ColDorciaRoutes = (() => {
 
       const section = clip.closest("section") || clip;
       applyImageParallax(img, section, IMG_SCALE, INSET_TRAVEL);
+      ScrollTrigger.refresh();
     };
 
-    if (img.complete && img.naturalWidth > 0) {
-      run();
-    } else {
+    const schedule = () => {
+      if (img.dataset.parallaxInit === "true") return;
+
+      if (hasRenderableImageSize(img)) {
+        run();
+        return;
+      }
+
       img.addEventListener("load", run, { once: true });
-      // fallback se load non arriva (cache / lazy)
-      setTimeout(() => {
-        if (img.dataset.parallaxInit !== "true") run();
-      }, 800);
+      img.addEventListener("error", run, { once: true });
+    };
+
+    schedule();
+
+    // Lazy load: inizializza solo quando l'immagine entra (o sta per entrare) nel viewport
+    if (!hasRenderableImageSize(img)) {
+      const observer = new IntersectionObserver(
+        (entries) => {
+          if (!entries.some((entry) => entry.isIntersecting)) return;
+          observer.disconnect();
+
+          if (img.dataset.parallaxInit === "true") return;
+
+          if (img.loading === "lazy" && !img.complete) {
+            img.loading = "eager";
+          }
+
+          run();
+        },
+        { rootMargin: "300px 0px" }
+      );
+
+      observer.observe(clip);
     }
   }
 
