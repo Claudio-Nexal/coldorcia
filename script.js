@@ -1,4 +1,4 @@
-console.log('v.2.9.20 Titoli — entrata leggermente anticipata');
+console.log('v.2.9.21 Text reveal — wine-club e visite-form');
 
 // Mappatura percorsi IT / EN per abilitare animazioni su entrambe le lingue
 const ColDorciaRoutes = (() => {
@@ -15,7 +15,9 @@ const ColDorciaRoutes = (() => {
     contatti: ["/contatti", "/en/contacts"],
     areaDownload: ["/area-download", "/en/download-area"],
     whistleblowing: ["/whistleblowing", "/en/whistleblowing"],
-    bilancio: ["/bilancio-di-sostenibilita", "/en/sustainability-report"]
+    bilancio: ["/bilancio-di-sostenibilita", "/en/sustainability-report"],
+    wineClub: ["/wine-club", "/en/wine-club"],
+    visiteForm: ["/visite-form"]
   };
 
   function path() {
@@ -29,6 +31,10 @@ const ColDorciaRoutes = (() => {
 
   function isHome() {
     return document.body.classList.contains("home") || is("home");
+  }
+
+  function isFormIntroPage() {
+    return is("wineClub", "visiteForm");
   }
 
   function isHeroIntroOnly() {
@@ -48,6 +54,7 @@ const ColDorciaRoutes = (() => {
       return true;
     }
     if (isHeroIntroOnly()) return true;
+    if (isFormIntroPage()) return true;
     return false;
   }
 
@@ -60,7 +67,7 @@ const ColDorciaRoutes = (() => {
     return is("annate");
   }
 
-  return { path, is, isHome, isHeroIntroOnly, isTextReveal, isParallax, isAnnate };
+  return { path, is, isHome, isHeroIntroOnly, isFormIntroPage, isTextReveal, isParallax, isAnnate };
 })();
 
 
@@ -1679,6 +1686,10 @@ const ColDorciaRoutes = (() => {
   const EXCLUDED_ANCESTORS =
     ".menu-overlay, .custom-navbar, .custom-navbar-menu, .hero-carousel, .hero-slide, .footer-desktop, .footer-mobile, .no-text-reveal, .news-card, .wine-card, .griglia-vini, .ancore-annate, .vintage-wrap, .vintage-card, .vintage-slider, .vintage-timeline, .timeline-section, .timeline-section-mobile, .timeline-content-wrapper, .timeline-slide, .timeline-sidebar";
 
+  function isFormIntroPage() {
+    return ColDorciaRoutes.isFormIntroPage();
+  }
+
   function isHeroIntroOnlyPage() {
     return ColDorciaRoutes.isHeroIntroOnly();
   }
@@ -1724,6 +1735,13 @@ const ColDorciaRoutes = (() => {
     ) {
       return true;
     }
+    if (
+      el.closest(
+        ".section-visite-form .div-block-281, .section-visite-form .div-block-282, .section-visite-form .div-block-544"
+      )
+    ) {
+      return true;
+    }
     if (!isTitle(el)) return false;
     if (
       el.closest(
@@ -1749,6 +1767,13 @@ const ColDorciaRoutes = (() => {
         return true;
       }
       return !!el.closest(".div-block-282");
+    }
+
+    // /wine-club, /visite-form: titolo in .div-block-281 + testo intro
+    if (isFormIntroPage()) {
+      if (!el.closest(".section-visite-form")) return false;
+      if (isTitle(el)) return !!el.closest(".div-block-281");
+      return !!el.closest(".div-block-282, .div-block-544");
     }
 
     // hero full-bleed: solo titoli; hero-vino (es. /dalla-terra): anche il testo intro
@@ -1791,7 +1816,13 @@ const ColDorciaRoutes = (() => {
       "section.section .div-block-281 " +
         TITLE_SELECTORS.split(", ").join(", section.section .div-block-281 "),
       "section.section .div-block-282 " +
-        TEXT_SELECTORS.split(", ").join(", section.section .div-block-282 ")
+        TEXT_SELECTORS.split(", ").join(", section.section .div-block-282 "),
+      "section.section-visite-form .div-block-281 " +
+        TITLE_SELECTORS.split(", ").join(", section.section-visite-form .div-block-281 "),
+      "section.section-visite-form .div-block-282 " +
+        TEXT_SELECTORS.split(", ").join(", section.section-visite-form .div-block-282 "),
+      "section.section-visite-form .div-block-544 " +
+        TEXT_SELECTORS.split(", ").join(", section.section-visite-form .div-block-544 ")
     ].join(", ");
   }
 
