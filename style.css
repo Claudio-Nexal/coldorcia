@@ -1,4 +1,4 @@
-/* v.1.7 */
+/* v.1.7.1 */
 
 
 /* Hero parallax — layer + img al 115% (come script.js) */
@@ -15,6 +15,7 @@
   position: relative;
   overflow: hidden;
 	height: 115%;
+	width: 100%;
 }
 
 .parallax-bg-layer {
