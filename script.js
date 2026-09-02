@@ -1,4 +1,4 @@
-console.log('v.2.5.3 Entrata testi stile Bertani');
+console.log('v.2.5.4 Esclusione testi con no-text-reveal');
 
 
 
@@ -1348,7 +1348,7 @@ console.log('v.2.5.3 Entrata testi stile Bertani');
   const TITLE_SELECTORS = ".title-72-70, .title-250-250, .title-180-145";
   const TEXT_SELECTORS = ".p-12-14, .p-14-17, .p-14-22";
   const EXCLUDED_ANCESTORS =
-    ".menu-overlay, .custom-navbar, .custom-navbar-menu, .hero-carousel, .hero-slide";
+    ".menu-overlay, .custom-navbar, .custom-navbar-menu, .hero-carousel, .hero-slide, .footer-desktop, .footer-mobile, .no-text-reveal";
 
   function isMobile() {
     return window.matchMedia(`(max-width: ${MOBILE_MAX}px)`).matches;
@@ -1364,6 +1364,7 @@ console.log('v.2.5.3 Entrata testi stile Bertani');
   function isAnimatable(el) {
     if (!(el instanceof HTMLElement)) return false;
     if (el.closest(EXCLUDED_ANCESTORS)) return false;
+    if (el.classList.contains("no-text-reveal")) return false;
     if (el.dataset.textRevealInit === "true") return false;
     if (!el.textContent || !el.textContent.trim()) return false;
     return true;
