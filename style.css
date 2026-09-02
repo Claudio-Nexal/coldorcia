@@ -1,6 +1,43 @@
 /* v.1.6.1 */
 
 
+/* Hero parallax — layer + img al 115% (come script.js) */
+
+.home-hero-section,
+.natura-hero-section,
+.storia-hero-section,
+.annate-hero,
+.visite-hero,
+.home-vino-section,
+.home-persone.section-2,
+.natura-bilancio-di-sostenibilit,
+.hero-section {
+  position: relative;
+  overflow: hidden;
+}
+
+.parallax-bg-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.parallax-bg-layer .parallax-inner-img,
+.hero-section > .parallax-inner-img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: block;
+  width: 100%;
+  height: 115%;
+  max-width: none;
+  object-fit: cover;
+  object-position: center center;
+  will-change: transform;
+}
+
 /* Menu */
 a.nav-link-navbar.w--current{
   color: white;
