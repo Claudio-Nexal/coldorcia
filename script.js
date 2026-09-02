@@ -1,4 +1,4 @@
-console.log('v.2.6.3 Parallax inset — clip wrapper interno');
+console.log('v.2.6.4 Parallax hero + bilancio sostenibilità Natura');
 
 
 
@@ -1480,6 +1480,8 @@ console.log('v.2.6.3 Parallax inset — clip wrapper interno');
   const IMG_TRAVEL = 8;
   const INSET_TRAVEL = 6;
   const BG_SELECTORS = ".white---beige .div-block-294, .white---beige .div-block-301";
+  const SECTION_BG_SELECTORS =
+    ".natura-hero-section, .natura-bilancio-di-sostenibilit";
   const INSET_IMG_SELECTOR =
     ".white-section .parallax-wrap img.image-28, .white-section .div-block-300 img.image-28";
   const EXCLUDED_ANCESTORS =
@@ -1550,6 +1552,22 @@ console.log('v.2.6.3 Parallax inset — clip wrapper interno');
     return clip;
   }
 
+  function createParallaxImg(bgUrl) {
+    const img = document.createElement("img");
+    img.src = bgUrl;
+    img.alt = "";
+    img.decoding = "async";
+    img.className = "parallax-inner-img";
+    img.style.display = "block";
+    img.style.width = "100%";
+    img.style.height = `${IMG_SCALE * 100}%`;
+    img.style.maxWidth = "none";
+    img.style.objectFit = "cover";
+    img.style.objectPosition = "center center";
+    img.style.willChange = "transform";
+    return img;
+  }
+
   function initBgParallax(container) {
     if (!(container instanceof HTMLElement)) return;
     if (container.dataset.parallaxInit === "true") return;
@@ -1563,22 +1581,51 @@ console.log('v.2.6.3 Parallax inset — clip wrapper interno');
     container.style.overflow = "hidden";
     container.style.position = "relative";
 
-    const img = document.createElement("img");
-    img.src = bgUrl;
-    img.alt = "";
-    img.decoding = "async";
-    img.className = "parallax-inner-img";
-    img.style.display = "block";
-    img.style.width = "100%";
-    img.style.height = `${IMG_SCALE * 100}%`;
-    img.style.maxWidth = "none";
-    img.style.objectFit = "cover";
-    img.style.objectPosition = "center center";
-    img.style.willChange = "transform";
-
+    const img = createParallaxImg(bgUrl);
     container.appendChild(img);
 
     const section = container.closest("section") || container;
+    applyImageParallax(img, section);
+  }
+
+  function initSectionBgParallax(section) {
+    if (!(section instanceof HTMLElement)) return;
+    if (section.dataset.parallaxInit === "true") return;
+    if (section.closest(EXCLUDED_ANCESTORS)) return;
+
+    const bgUrl = extractBgUrl(section);
+    if (!bgUrl) return;
+
+    section.dataset.parallaxInit = "true";
+    section.style.backgroundImage = "none";
+
+    if (window.getComputedStyle(section).position === "static") {
+      section.style.position = "relative";
+    }
+    section.style.overflow = "hidden";
+
+    const layer = document.createElement("div");
+    layer.className = "parallax-bg-layer";
+    layer.setAttribute("aria-hidden", "true");
+    layer.style.position = "absolute";
+    layer.style.inset = "0";
+    layer.style.overflow = "hidden";
+    layer.style.zIndex = "0";
+    layer.style.pointerEvents = "none";
+
+    const img = createParallaxImg(bgUrl);
+    layer.appendChild(img);
+    section.insertBefore(layer, section.firstChild);
+
+    Array.from(section.children).forEach((child) => {
+      if (child === layer || !(child instanceof HTMLElement)) return;
+
+      if (window.getComputedStyle(child).position === "static") {
+        child.style.position = "relative";
+      }
+      if (!child.style.zIndex) child.style.zIndex = "1";
+    });
+
     applyImageParallax(img, section);
   }
 
@@ -1615,14 +1662,16 @@ console.log('v.2.6.3 Parallax inset — clip wrapper interno');
 
     const scope = document.querySelector(".content-container") || document.body;
     const bgContainers = scope.querySelectorAll(BG_SELECTORS);
+    const sectionBgs = scope.querySelectorAll(SECTION_BG_SELECTORS);
     const insetImages = scope.querySelectorAll(INSET_IMG_SELECTOR);
 
-    if (!bgContainers.length && !insetImages.length) return;
+    if (!bgContainers.length && !sectionBgs.length && !insetImages.length) return;
 
     window.__PARALLAX_INIT__ = true;
     gsap.registerPlugin(ScrollTrigger);
 
     bgContainers.forEach(initBgParallax);
+    sectionBgs.forEach(initSectionBgParallax);
     insetImages.forEach(initInsetImgParallax);
 
     ScrollTrigger.refresh();
