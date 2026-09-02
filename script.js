@@ -1,4 +1,4 @@
-console.log('v.2.5.4 Esclusione testi con no-text-reveal');
+console.log('v.2.5.5 Entrata testi pagina Natura');
 
 
 
@@ -1345,10 +1345,20 @@ console.log('v.2.5.4 Esclusione testi con no-text-reveal');
 // entrata titoli e testi — dissolvenza + movimento (stile Bertani)
 (() => {
   const MOBILE_MAX = 767;
-  const TITLE_SELECTORS = ".title-72-70, .title-250-250, .title-180-145";
+  const TITLE_SELECTORS =
+    ".title-72-70, .title-250-250, .title-180-145, .title-350-300, .title-45-45, .title-230-190";
   const TEXT_SELECTORS = ".p-12-14, .p-14-17, .p-14-22";
   const EXCLUDED_ANCESTORS =
-    ".menu-overlay, .custom-navbar, .custom-navbar-menu, .hero-carousel, .hero-slide, .footer-desktop, .footer-mobile, .no-text-reveal";
+    ".menu-overlay, .custom-navbar, .custom-navbar-menu, .hero-carousel, .hero-slide, .hero-section, .footer-desktop, .footer-mobile, .no-text-reveal";
+
+  function isTextRevealPage() {
+    const path = (window.location.pathname || "/").replace(/\/$/, "") || "/";
+
+    if (document.body.classList.contains("home")) return true;
+    if (path === "/natura" || path === "/en/nature") return true;
+
+    return false;
+  }
 
   function isMobile() {
     return window.matchMedia(`(max-width: ${MOBILE_MAX}px)`).matches;
@@ -1410,7 +1420,7 @@ console.log('v.2.5.4 Esclusione testi con no-text-reveal');
 
   function initTextReveal() {
     if (!window.gsap || !window.ScrollTrigger || !window.SplitText) return;
-    if (!document.body.classList.contains("home")) return;
+    if (!isTextRevealPage()) return;
     if (isMobile()) return;
     if (window.__TEXT_REVEAL_INIT__) return;
     window.__TEXT_REVEAL_INIT__ = true;
