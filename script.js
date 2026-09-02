@@ -1,4 +1,4 @@
-console.log('v.2.7.1 Text reveal pagina Vini — esclusa griglia schede');
+console.log('v.2.7.2 Annate storiche — text reveal + parallax hero');
 
 
 
@@ -1328,7 +1328,7 @@ console.log('v.2.7.1 Text reveal pagina Vini — esclusa griglia schede');
   const TEXT_SELECTORS = ".p-12-14, .p-14-17, .p-14-22";
   const ABOVE_FOLD_DELAY = 0.7;
   const EXCLUDED_ANCESTORS =
-    ".menu-overlay, .custom-navbar, .custom-navbar-menu, .hero-carousel, .hero-slide, .footer-desktop, .footer-mobile, .no-text-reveal, .news-card, .wine-card, .griglia-vini, .timeline-section, .timeline-section-mobile, .timeline-content-wrapper, .timeline-slide, .timeline-sidebar";
+    ".menu-overlay, .custom-navbar, .custom-navbar-menu, .hero-carousel, .hero-slide, .footer-desktop, .footer-mobile, .no-text-reveal, .news-card, .wine-card, .griglia-vini, .ancore-annate, .vintage-wrap, .vintage-card, .vintage-slider, .vintage-timeline, .timeline-section, .timeline-section-mobile, .timeline-content-wrapper, .timeline-slide, .timeline-sidebar";
 
   function isTextRevealPage() {
     const path = (window.location.pathname || "/").replace(/\/$/, "") || "/";
@@ -1337,6 +1337,7 @@ console.log('v.2.7.1 Text reveal pagina Vini — esclusa griglia schede');
     if (path === "/natura" || path === "/en/nature") return true;
     if (path === "/storia") return true;
     if (path === "/vini") return true;
+    if (path === "/annate-storiche") return true;
 
     return false;
   }
@@ -1484,7 +1485,7 @@ console.log('v.2.7.1 Text reveal pagina Vini — esclusa griglia schede');
   const BG_SELECTORS =
     ".white---beige .div-block-294, .white---beige .div-block-301, .white---beige .div-block-319";
   const SECTION_BG_SELECTORS =
-    ".home-hero-section, .home-vino-section, .home-persone.section-2, .natura-hero-section, .natura-bilancio-di-sostenibilit, .storia-hero-section";
+    ".home-hero-section, .home-vino-section, .home-persone.section-2, .natura-hero-section, .natura-bilancio-di-sostenibilit, .storia-hero-section, .annate-hero";
   const INSET_IMG_SELECTOR = [
     ".white-section .parallax-wrap img.image-28",
     ".white-section [data-parallax-wrap] img.image-28",
@@ -1494,7 +1495,7 @@ console.log('v.2.7.1 Text reveal pagina Vini — esclusa griglia schede');
     ".home-visite-section .div-block-425 > img.image-38"
   ].join(", ");
   const EXCLUDED_ANCESTORS =
-    ".menu-overlay, .custom-navbar, .custom-navbar-menu, .footer-desktop, .footer-mobile, .no-parallax, .hero-carousel-wrapper, .hero-carousel, .hero-slide, .hero-slide-bg, .timeline-section, .timeline-section-mobile, .timeline-content-wrapper, .timeline-slide, .timeline-sidebar";
+    ".menu-overlay, .custom-navbar, .custom-navbar-menu, .footer-desktop, .footer-mobile, .no-parallax, .hero-carousel-wrapper, .hero-carousel, .hero-slide, .hero-slide-bg, .vintage-wrap, .vintage-card, .timeline-section, .timeline-section-mobile, .timeline-content-wrapper, .timeline-slide, .timeline-sidebar";
 
   function isParallaxPage() {
     const path = (window.location.pathname || "/").replace(/\/$/, "") || "/";
@@ -1502,6 +1503,7 @@ console.log('v.2.7.1 Text reveal pagina Vini — esclusa griglia schede');
     if (document.body.classList.contains("home") || path === "/") return true;
     if (path === "/natura" || path === "/en/nature") return true;
     if (path === "/storia") return true;
+    if (path === "/annate-storiche") return true;
 
     return false;
   }
