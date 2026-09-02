@@ -1,4 +1,4 @@
-console.log('v.2.5.5 Entrata testi pagina Natura');
+console.log('v.2.5.6 Entrata titoli above-the-fold con delay');
 
 
 
@@ -1257,21 +1257,6 @@ console.log('v.2.5.5 Entrata testi pagina Natura');
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 // Smooth Scroll con ScrollSmoother - Setup su .content-container (solo Desktop)
 (() => {
   function initSmoothScroll() {
@@ -1335,21 +1320,15 @@ console.log('v.2.5.5 Entrata testi pagina Natura');
 
 
 
-
-
-
-
-
-
-
 // entrata titoli e testi — dissolvenza + movimento (stile Bertani)
 (() => {
   const MOBILE_MAX = 767;
   const TITLE_SELECTORS =
     ".title-72-70, .title-250-250, .title-180-145, .title-350-300, .title-45-45, .title-230-190";
   const TEXT_SELECTORS = ".p-12-14, .p-14-17, .p-14-22";
+  const ABOVE_FOLD_DELAY = 0.7;
   const EXCLUDED_ANCESTORS =
-    ".menu-overlay, .custom-navbar, .custom-navbar-menu, .hero-carousel, .hero-slide, .hero-section, .footer-desktop, .footer-mobile, .no-text-reveal";
+    ".menu-overlay, .custom-navbar, .custom-navbar-menu, .hero-carousel, .hero-slide, .footer-desktop, .footer-mobile, .no-text-reveal";
 
   function isTextRevealPage() {
     const path = (window.location.pathname || "/").replace(/\/$/, "") || "/";
@@ -1371,9 +1350,25 @@ console.log('v.2.5.5 Entrata testi pagina Natura');
     return {};
   }
 
+  function isTitle(el) {
+    return el.matches(TITLE_SELECTORS);
+  }
+
+  function isAboveFold(el) {
+    const rect = el.getBoundingClientRect();
+    return rect.top < window.innerHeight * 0.85 && rect.bottom > 0;
+  }
+
+  function shouldRevealOnLoad(el) {
+    if (!isTitle(el)) return false;
+    if (el.closest(".hero-section")) return true;
+    return isAboveFold(el);
+  }
+
   function isAnimatable(el) {
     if (!(el instanceof HTMLElement)) return false;
     if (el.closest(EXCLUDED_ANCESTORS)) return false;
+    if (el.closest(".hero-section") && !isTitle(el)) return false;
     if (el.classList.contains("no-text-reveal")) return false;
     if (el.dataset.textRevealInit === "true") return false;
     if (!el.textContent || !el.textContent.trim()) return false;
@@ -1402,13 +1397,25 @@ console.log('v.2.5.5 Entrata testi pagina Natura');
   }
 
   function revealElement(el, lines) {
-    gsap.to(lines, {
+    const animProps = {
       y: 0,
       opacity: 1,
       stagger: 0.1,
       duration: 1,
       ease: "power3.inOut",
-      overwrite: true,
+      overwrite: true
+    };
+
+    if (shouldRevealOnLoad(el)) {
+      gsap.to(lines, {
+        ...animProps,
+        delay: ABOVE_FOLD_DELAY
+      });
+      return;
+    }
+
+    gsap.to(lines, {
+      ...animProps,
       scrollTrigger: {
         trigger: el,
         start: "top 85%",
@@ -1578,14 +1585,6 @@ $(document).ready(function () {
 
 
 
-
-
-
-
-
-
-
-
 // creazione griglia altri vini in pagina vino singolo
 (function () {
   var Webflow = window.Webflow || [];
@@ -1658,18 +1657,6 @@ $(document).ready(function () {
     window.addEventListener('resize', apply);
   });
 })();
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -1800,16 +1787,6 @@ $(document).ready(function () {
     initBorderDrawButtons();
   }
 })();
-
-
-
-
-
-
-
-
-
-
 
 
 
