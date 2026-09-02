@@ -1,4 +1,4 @@
-console.log('v.2.9.18 Hero parallax — yPercent come i pannelli');
+console.log('v.2.9.20 Titoli — entrata leggermente anticipata');
 
 // Mappatura percorsi IT / EN per abilitare animazioni su entrambe le lingue
 const ColDorciaRoutes = (() => {
@@ -1671,6 +1671,9 @@ const ColDorciaRoutes = (() => {
     ".title-72-70, .title-250-250, .title-200-170, .title-180-145, .title-350-300, .title-45-45, .title-230-190";
   const TEXT_SELECTORS = ".p-12-14, .p-14-17, .p-14-22";
   const ABOVE_FOLD_DELAY = 0.7;
+  const TITLE_ABOVE_FOLD_DELAY = 0.45;
+  const TITLE_SCROLL_START = "top 90%";
+  const TEXT_SCROLL_START = "top 85%";
   // Classe Webflow con opacity:0 (desktop) — tiene lo spazio; lo script la toglie prima dello split
   const HIDDEN_CLASS = "text-reveal-hide";
   const EXCLUDED_ANCESTORS =
@@ -1850,7 +1853,7 @@ const ColDorciaRoutes = (() => {
     if (shouldRevealOnLoad(el)) {
       gsap.to(targets, {
         ...animProps,
-        delay: ABOVE_FOLD_DELAY
+        delay: isTitle(el) ? TITLE_ABOVE_FOLD_DELAY : ABOVE_FOLD_DELAY
       });
       return;
     }
@@ -1859,7 +1862,7 @@ const ColDorciaRoutes = (() => {
       ...animProps,
       scrollTrigger: {
         trigger: el,
-        start: "top 85%",
+        start: isTitle(el) ? TITLE_SCROLL_START : TEXT_SCROLL_START,
         toggleActions: "play none none none",
         ...getScrollTriggerConfig()
       }
