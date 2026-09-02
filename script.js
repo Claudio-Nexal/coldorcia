@@ -1,4 +1,4 @@
-console.log('v.2.8.7 Fix hero display:none Webflow — force show prima dello split');
+console.log('v.2.8.8 Hero anti-FOUC con opacity:0 (tiene lo spazio)');
 
 
 
@@ -1327,7 +1327,7 @@ console.log('v.2.8.7 Fix hero display:none Webflow — force show prima dello sp
     ".title-72-70, .title-250-250, .title-180-145, .title-350-300, .title-45-45, .title-230-190";
   const TEXT_SELECTORS = ".p-12-14, .p-14-17, .p-14-22";
   const ABOVE_FOLD_DELAY = 0.7;
-  // Classe Webflow con display:none (desktop) — lo script la toglie prima dello split
+  // Classe Webflow con opacity:0 (desktop) — tiene lo spazio; lo script la toglie prima dello split
   const HIDDEN_CLASS = "text-reveal-hide";
   const EXCLUDED_ANCESTORS =
     ".menu-overlay, .custom-navbar, .custom-navbar-menu, .hero-carousel, .hero-slide, .footer-desktop, .footer-mobile, .no-text-reveal, .news-card, .wine-card, .griglia-vini, .ancore-annate, .vintage-wrap, .vintage-card, .vintage-slider, .vintage-timeline, .timeline-section, .timeline-section-mobile, .timeline-content-wrapper, .timeline-slide, .timeline-sidebar";
@@ -1366,11 +1366,16 @@ console.log('v.2.8.7 Fix hero display:none Webflow — force show prima dello sp
     return rect.top < window.innerHeight * 0.85 && rect.bottom > 0;
   }
 
+  function wasHeroHidden(el) {
+    return (
+      el.classList.contains(HIDDEN_CLASS) ||
+      el.dataset.wasTextRevealHide === "true"
+    );
+  }
+
   function shouldRevealOnLoad(el) {
-    // Hero nascosti via .text-reveal-hide: titolo + testo sopra-the-fold
-    if (el.classList.contains(HIDDEN_CLASS) || el.dataset.wasTextRevealHide === "true") {
-      return true;
-    }
+    // Testi hero partiti da opacity:0 → reveal al load
+    if (wasHeroHidden(el)) return true;
     if (!isTitle(el)) return false;
     if (el.closest(".hero-section, .hero-vino")) return true;
     return isAboveFold(el);
@@ -1399,46 +1404,51 @@ console.log('v.2.8.7 Fix hero display:none Webflow — force show prima dello sp
     return line;
   }
 
-  function clearTextRevealHide(root = document) {
-    const nodes = root.querySelectorAll(
-      `.${HIDDEN_CLASS}, .hero-section ${TITLE_SELECTORS.split(", ").join(", .hero-section ")}, .hero-vino ${TITLE_SELECTORS.split(", ").join(", .hero-vino ")}, .hero-vino ${TEXT_SELECTORS.split(", ").join(", .hero-vino ")}`
-    );
+  function heroHiddenSelector() {
+    const titleIn = (scope) =>
+      `${scope} ${TITLE_SELECTORS.split(", ").join(`, ${scope} `)}`;
+    const textIn = (scope) =>
+      `${scope} ${TEXT_SELECTORS.split(", ").join(`, ${scope} `)}`;
 
-    nodes.forEach((el) => {
+    return [
+      `.${HIDDEN_CLASS}`,
+      titleIn(".hero-section"),
+      titleIn(".hero-vino"),
+      textIn(".hero-vino")
+    ].join(", ");
+  }
+
+  function clearTextRevealHide(root = document) {
+    root.querySelectorAll(heroHiddenSelector()).forEach((el) => {
       if (!(el instanceof HTMLElement)) return;
       showElementForReveal(el);
     });
   }
 
-  function naturalDisplay(el) {
-    const tag = el.tagName;
-    if (tag === "SPAN" || tag === "A" || tag === "STRONG" || tag === "EM") return "inline";
-    return "block";
-  }
-
   function showElementForReveal(el) {
     if (!(el instanceof HTMLElement)) return;
 
-    if (el.classList.contains(HIDDEN_CLASS)) {
+    const computedOpacity = window.getComputedStyle(el).opacity;
+    const isHidden =
+      el.classList.contains(HIDDEN_CLASS) ||
+      computedOpacity === "0" ||
+      el.style.opacity === "0";
+
+    if (isHidden) {
       el.dataset.wasTextRevealHide = "true";
+    }
+
+    if (el.classList.contains(HIDDEN_CLASS)) {
       el.classList.remove(HIDDEN_CLASS);
     }
 
-    // Webflow applica display:none direttamente sul testo (CSS), non solo via classe:
-    // serve override inline !important, altrimenti SplitText non misura e resta nascosto.
-    const computed = window.getComputedStyle(el).display;
-    if (computed === "none" || el.style.display === "none") {
-      el.dataset.wasTextRevealHide = "true";
-      el.style.setProperty("display", naturalDisplay(el), "important");
-    }
-
+    // Parent a opacity:1 (override Webflow): le linee SplitText partono a 0
+    el.style.setProperty("opacity", "1", "important");
     el.style.setProperty("visibility", "visible");
-    el.style.setProperty("opacity", "1");
   }
 
   function prepareElementForSplit(el) {
     showElementForReveal(el);
-    // Reflow: SplitText deve leggere larghezza/righe reali
     void el.offsetWidth;
   }
 
