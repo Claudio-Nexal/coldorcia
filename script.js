@@ -1,4 +1,4 @@
-console.log('v.2.5.9 Fix parallax img/bg containers');
+console.log('v.2.6.0 Parallax test prima sezione Natura');
 
 
 
@@ -1473,33 +1473,16 @@ console.log('v.2.5.9 Fix parallax img/bg containers');
 })();
 
 
-// parallax immagini — clip container + ScrollTrigger (stile Bertani)
+// parallax immagini — test prima sezione "Le pratiche in vigna" (Natura)
 (() => {
   const DESKTOP_MIN = 992;
-  const IMG_SCALE = 1.2;
-  const IMG_TRAVEL = 10;
-  const IMG_SELECTORS = [
-    ".parallax-img",
-    "[data-parallax='img']",
-    ".white-section .div-block-300 img",
-    ".home-visite-section .div-block-425 img"
-  ].join(", ");
-  const BG_SELECTORS = [
-    ".parallax-bg",
-    "[data-parallax='bg']",
-    ".white---beige .div-block-294",
-    ".white---beige .div-block-301"
-  ].join(", ");
-  const EXCLUDED_ANCESTORS =
-    ".menu-overlay, .custom-navbar, .custom-navbar-menu, .footer-desktop, .footer-mobile, .news-card, .wine-card, .hero-carousel, .no-parallax";
+  const TARGET_SELECTOR = ".white---beige .div-block-294";
+  const IMG_SCALE = 1.15;
+  const IMG_TRAVEL = 8;
 
-  function isParallaxPage() {
+  function isNaturaPage() {
     const path = (window.location.pathname || "/").replace(/\/$/, "") || "/";
-
-    if (document.body.classList.contains("home")) return true;
-    if (path === "/natura" || path === "/en/nature") return true;
-
-    return false;
+    return path === "/natura" || path === "/en/nature";
   }
 
   function getScrollTriggerConfig() {
@@ -1509,57 +1492,52 @@ console.log('v.2.5.9 Fix parallax img/bg containers');
     return {};
   }
 
-  function hasBgImage(el) {
+  function extractBgUrl(el) {
     const bg = window.getComputedStyle(el).backgroundImage;
-    return !!bg && bg !== "none";
+    if (!bg || bg === "none") return "";
+
+    const match = bg.match(/url\((['"]?)(.*?)\1\)/);
+    return match ? match[2] : "";
   }
 
-  function getClipContainer(img) {
-    const explicit = img.closest(".parallax-wrap, [data-parallax-container]");
-    if (explicit instanceof HTMLElement) return explicit;
+  function initPraticheParallax(container) {
+    if (!(container instanceof HTMLElement)) return;
+    if (container.dataset.parallaxInit === "true") return;
 
-    const parent = img.parentElement;
-    if (parent instanceof HTMLElement) return parent;
+    const bgUrl = extractBgUrl(container);
+    if (!bgUrl) return;
 
-    return null;
-  }
+    container.dataset.parallaxInit = "true";
+    container.style.backgroundImage = "none";
+    container.style.overflow = "hidden";
+    container.style.position = "relative";
 
-  function initClipImgParallax(img) {
-    if (!(img instanceof HTMLImageElement)) return;
-    if (img.dataset.parallaxInit === "true") return;
+    const img = document.createElement("img");
+    img.src = bgUrl;
+    img.alt = "";
+    img.decoding = "async";
+    img.className = "parallax-inner-img";
+    img.style.display = "block";
+    img.style.width = "100%";
+    img.style.height = `${IMG_SCALE * 100}%`;
+    img.style.maxWidth = "none";
+    img.style.objectFit = "cover";
+    img.style.objectPosition = "center center";
+    img.style.willChange = "transform";
 
-    const container = getClipContainer(img);
-    if (!container || container.closest(EXCLUDED_ANCESTORS)) return;
+    container.appendChild(img);
 
-    img.dataset.parallaxInit = "true";
-    container.classList.add("parallax-wrap");
-
-    if (window.getComputedStyle(container).overflow === "visible") {
-      container.style.overflow = "hidden";
-    }
-
-    const scale = parseFloat(img.getAttribute("data-parallax-scale")) || IMG_SCALE;
-    const travel = parseFloat(img.getAttribute("data-parallax-amount")) || IMG_TRAVEL;
-    const centerOffset = -(((scale - 1) / 2) / scale) * 100;
-
-    gsap.set(img, {
-      display: "block",
-      width: "100%",
-      height: `${scale * 100}%`,
-      maxWidth: "none",
-      objectFit: "cover",
-      objectPosition: "center center",
-      willChange: "transform"
-    });
+    const centerOffset = -(((IMG_SCALE - 1) / 2) / IMG_SCALE) * 100;
+    const section = container.closest("section") || container;
 
     gsap.fromTo(
       img,
-      { yPercent: centerOffset - travel },
+      { yPercent: centerOffset - IMG_TRAVEL },
       {
-        yPercent: centerOffset + travel,
+        yPercent: centerOffset + IMG_TRAVEL,
         ease: "none",
         scrollTrigger: {
-          trigger: container,
+          trigger: section,
           start: "top bottom",
           end: "bottom top",
           scrub: true,
@@ -1570,63 +1548,26 @@ console.log('v.2.5.9 Fix parallax img/bg containers');
     );
   }
 
-  function initBgParallax(el) {
-    if (!(el instanceof HTMLElement)) return;
-    if (el.dataset.parallaxInit === "true") return;
-    if (!hasBgImage(el)) return;
-
-    el.dataset.parallaxInit = "true";
-    el.classList.add("parallax-bg");
-
-    const start = el.getAttribute("data-parallax-bg-start") || "50% 28%";
-    const end = el.getAttribute("data-parallax-bg-end") || "50% 72%";
-
-    gsap.fromTo(
-      el,
-      { backgroundPosition: start },
-      {
-        backgroundPosition: end,
-        ease: "none",
-        scrollTrigger: {
-          trigger: el,
-          start: "top bottom",
-          end: "bottom top",
-          scrub: true,
-          invalidateOnRefresh: true,
-          ...getScrollTriggerConfig()
-        }
-      }
-    );
-  }
-
-  function initParallaxImages() {
+  function initParallaxTest() {
     if (!window.gsap || !window.ScrollTrigger) return;
-    if (!isParallaxPage()) return;
+    if (!isNaturaPage()) return;
     if (window.innerWidth < DESKTOP_MIN) return;
     if (window.__PARALLAX_INIT__) return;
-    window.__PARALLAX_INIT__ = true;
 
+    const container = document.querySelector(TARGET_SELECTOR);
+    if (!container) return;
+
+    window.__PARALLAX_INIT__ = true;
     gsap.registerPlugin(ScrollTrigger);
 
-    const scope = document.querySelector(".content-container") || document.body;
-
-    scope.querySelectorAll(IMG_SELECTORS).forEach((el) => {
-      if (el.closest(EXCLUDED_ANCESTORS)) return;
-      initClipImgParallax(el);
-    });
-
-    scope.querySelectorAll(BG_SELECTORS).forEach((el) => {
-      if (el.closest(EXCLUDED_ANCESTORS)) return;
-      initBgParallax(el);
-    });
-
+    initPraticheParallax(container);
     ScrollTrigger.refresh();
   }
 
-  function bootParallaxImages() {
+  function bootParallaxTest() {
     const run = () => {
       requestAnimationFrame(() => {
-        setTimeout(initParallaxImages, 400);
+        setTimeout(initParallaxTest, 400);
       });
     };
 
@@ -1636,13 +1577,15 @@ console.log('v.2.5.9 Fix parallax img/bg containers');
       run();
     }
 
-    window.addEventListener("load", () => ScrollTrigger.refresh());
+    window.addEventListener("load", () => {
+      if (window.ScrollTrigger) ScrollTrigger.refresh();
+    });
   }
 
   if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", bootParallaxImages);
+    document.addEventListener("DOMContentLoaded", bootParallaxTest);
   } else {
-    bootParallaxImages();
+    bootParallaxTest();
   }
 })();
 
