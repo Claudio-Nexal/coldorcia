@@ -1,4 +1,4 @@
-console.log('v.2.5.6 Entrata titoli above-the-fold con delay');
+console.log('v.2.5.8 Parallax immagini stile Bertani');
 
 
 
@@ -1328,7 +1328,7 @@ console.log('v.2.5.6 Entrata titoli above-the-fold con delay');
   const TEXT_SELECTORS = ".p-12-14, .p-14-17, .p-14-22";
   const ABOVE_FOLD_DELAY = 0.7;
   const EXCLUDED_ANCESTORS =
-    ".menu-overlay, .custom-navbar, .custom-navbar-menu, .hero-carousel, .hero-slide, .footer-desktop, .footer-mobile, .no-text-reveal";
+    ".menu-overlay, .custom-navbar, .custom-navbar-menu, .hero-carousel, .hero-slide, .footer-desktop, .footer-mobile, .no-text-reveal, .news-card, .wine-card";
 
   function isTextRevealPage() {
     const path = (window.location.pathname || "/").replace(/\/$/, "") || "/";
@@ -1469,6 +1469,120 @@ console.log('v.2.5.6 Entrata titoli above-the-fold con delay');
     document.addEventListener("DOMContentLoaded", bootTextReveal);
   } else {
     bootTextReveal();
+  }
+})();
+
+
+// parallax immagini — stile Bertani (ScrollSmoother effects)
+(() => {
+  const DESKTOP_MIN = 992;
+  const DEFAULT_SPEED = 0.85;
+  const PARALLAX_SELECTORS = [
+    ".parallax-img",
+    "[data-parallax]",
+    ".white-section .div-block-300 img",
+    ".white---beige .div-block-294",
+    ".white---beige .div-block-301",
+    ".home-visite-section .image-38"
+  ].join(", ");
+  const EXCLUDED_ANCESTORS =
+    ".menu-overlay, .custom-navbar, .custom-navbar-menu, .footer-desktop, .footer-mobile, .news-card, .wine-card, .hero-carousel, .no-parallax";
+
+  function isParallaxPage() {
+    const path = (window.location.pathname || "/").replace(/\/$/, "") || "/";
+
+    if (document.body.classList.contains("home")) return true;
+    if (path === "/natura" || path === "/en/nature") return true;
+
+    return false;
+  }
+
+  function getParallaxSpeed(el) {
+    const raw = el.getAttribute("data-parallax-speed") || el.getAttribute("data-parallax");
+    if (raw === "auto") return "auto";
+    const speed = parseFloat(raw);
+    return Number.isFinite(speed) ? speed : DEFAULT_SPEED;
+  }
+
+  function prepareParallaxWrap(el) {
+    if (!(el instanceof HTMLElement)) return;
+
+    const isImage = el.tagName === "IMG";
+    const wrap = isImage ? el.parentElement : el;
+
+    if (!(wrap instanceof HTMLElement) || wrap.classList.contains("parallax-wrap")) return;
+
+    wrap.classList.add("parallax-wrap");
+
+    const style = window.getComputedStyle(wrap);
+    if (style.overflow === "visible") wrap.style.overflow = "hidden";
+
+    if (isImage && getParallaxSpeed(el) === "auto") {
+      el.style.width = "100%";
+      el.style.height = "115%";
+      el.style.objectFit = "cover";
+      el.style.objectPosition = "center";
+    }
+  }
+
+  function collectParallaxElements() {
+    const scope = document.querySelector(".content-container") || document.body;
+
+    return [...scope.querySelectorAll(PARALLAX_SELECTORS)].filter((el) => {
+      if (!(el instanceof HTMLElement)) return false;
+      if (el.closest(EXCLUDED_ANCESTORS)) return false;
+      if (el.dataset.parallaxInit === "true") return false;
+      return true;
+    });
+  }
+
+  function initParallaxImages() {
+    if (!window.gsap || !window.ScrollTrigger || !window.ScrollSmoother) return;
+    if (!isParallaxPage()) return;
+    if (window.innerWidth < DESKTOP_MIN) return;
+
+    const smoother = ScrollSmoother.get();
+    if (!smoother) return;
+
+    const elements = collectParallaxElements();
+    if (!elements.length) return;
+
+    elements.forEach((el) => {
+      el.dataset.parallaxInit = "true";
+      prepareParallaxWrap(el);
+
+      const speed = getParallaxSpeed(el);
+      el.setAttribute("data-speed", String(speed));
+      smoother.effects(el);
+    });
+
+    ScrollTrigger.refresh();
+  }
+
+  function bootParallaxImages() {
+    const run = () => {
+      requestAnimationFrame(() => {
+        setTimeout(initParallaxImages, 350);
+      });
+    };
+
+    const refreshAfterImages = () => {
+      ScrollTrigger.refresh();
+    };
+
+    if (document.fonts && document.fonts.ready) {
+      document.fonts.ready.then(run).catch(run);
+    } else {
+      run();
+    }
+
+    window.addEventListener("load", refreshAfterImages);
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", bootParallaxImages);
+  } else {
+    bootParallaxImages();
   }
 })();
 
