@@ -1,4 +1,4 @@
-console.log('v.2.6.4 Parallax hero + bilancio sostenibilità Natura');
+console.log('v.2.6.5 Parallax + text reveal pagina Storia');
 
 
 
@@ -1328,13 +1328,14 @@ console.log('v.2.6.4 Parallax hero + bilancio sostenibilità Natura');
   const TEXT_SELECTORS = ".p-12-14, .p-14-17, .p-14-22";
   const ABOVE_FOLD_DELAY = 0.7;
   const EXCLUDED_ANCESTORS =
-    ".menu-overlay, .custom-navbar, .custom-navbar-menu, .hero-carousel, .hero-slide, .footer-desktop, .footer-mobile, .no-text-reveal, .news-card, .wine-card";
+    ".menu-overlay, .custom-navbar, .custom-navbar-menu, .hero-carousel, .hero-slide, .footer-desktop, .footer-mobile, .no-text-reveal, .news-card, .wine-card, .timeline-section, .timeline-section-mobile, .timeline-content-wrapper, .timeline-slide, .timeline-sidebar";
 
   function isTextRevealPage() {
     const path = (window.location.pathname || "/").replace(/\/$/, "") || "/";
 
     if (document.body.classList.contains("home")) return true;
     if (path === "/natura" || path === "/en/nature") return true;
+    if (path === "/storia") return true;
 
     return false;
   }
@@ -1473,23 +1474,28 @@ console.log('v.2.6.4 Parallax hero + bilancio sostenibilità Natura');
 })();
 
 
-// parallax immagini — Natura (full-size bg + immagini inset con clip wrapper)
+// parallax immagini — Natura + Storia (full-size bg, section bg, inset con clip)
 (() => {
   const DESKTOP_MIN = 992;
   const IMG_SCALE = 1.15;
   const IMG_TRAVEL = 8;
   const INSET_TRAVEL = 6;
-  const BG_SELECTORS = ".white---beige .div-block-294, .white---beige .div-block-301";
+  const BG_SELECTORS =
+    ".white---beige .div-block-294, .white---beige .div-block-301, .white---beige .div-block-319";
   const SECTION_BG_SELECTORS =
-    ".natura-hero-section, .natura-bilancio-di-sostenibilit";
+    ".natura-hero-section, .natura-bilancio-di-sostenibilit, .storia-hero-section, .home-persone.section-2";
   const INSET_IMG_SELECTOR =
     ".white-section .parallax-wrap img.image-28, .white-section .div-block-300 img.image-28";
   const EXCLUDED_ANCESTORS =
-    ".menu-overlay, .custom-navbar, .custom-navbar-menu, .footer-desktop, .footer-mobile, .no-parallax";
+    ".menu-overlay, .custom-navbar, .custom-navbar-menu, .footer-desktop, .footer-mobile, .no-parallax, .timeline-section, .timeline-section-mobile, .timeline-content-wrapper, .timeline-slide, .timeline-sidebar";
 
-  function isNaturaPage() {
+  function isParallaxPage() {
     const path = (window.location.pathname || "/").replace(/\/$/, "") || "/";
-    return path === "/natura" || path === "/en/nature";
+    return (
+      path === "/natura" ||
+      path === "/en/nature" ||
+      path === "/storia"
+    );
   }
 
   function getScrollTriggerConfig() {
@@ -1654,9 +1660,9 @@ console.log('v.2.6.4 Parallax hero + bilancio sostenibilità Natura');
     applyImageParallax(img, section, IMG_SCALE, INSET_TRAVEL);
   }
 
-  function initNaturaParallax() {
+  function initPageParallax() {
     if (!window.gsap || !window.ScrollTrigger) return;
-    if (!isNaturaPage()) return;
+    if (!isParallaxPage()) return;
     if (window.innerWidth < DESKTOP_MIN) return;
     if (window.__PARALLAX_INIT__) return;
 
@@ -1677,10 +1683,10 @@ console.log('v.2.6.4 Parallax hero + bilancio sostenibilità Natura');
     ScrollTrigger.refresh();
   }
 
-  function bootNaturaParallax() {
+  function bootPageParallax() {
     const run = () => {
       requestAnimationFrame(() => {
-        setTimeout(initNaturaParallax, 400);
+        setTimeout(initPageParallax, 400);
       });
     };
 
@@ -1696,9 +1702,9 @@ console.log('v.2.6.4 Parallax hero + bilancio sostenibilità Natura');
   }
 
   if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", bootNaturaParallax);
+    document.addEventListener("DOMContentLoaded", bootPageParallax);
   } else {
-    bootNaturaParallax();
+    bootPageParallax();
   }
 })();
 
