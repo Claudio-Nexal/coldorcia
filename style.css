@@ -1,23 +1,5 @@
 /* v.1.7.1 */
 
-
-/* Hero parallax — layer + img al 115% (come script.js) */
-
-.home-hero-section,
-.natura-hero-section,
-.storia-hero-section,
-.annate-hero,
-.visite-hero,
-.home-vino-section,
-.home-persone.section-2,
-.natura-bilancio-di-sostenibilit,
-.hero-section {
-  position: relative;
-  overflow: hidden;
-	height: 115%;
-	width: 100%;
-}
-
 /* Menu */
 a.nav-link-navbar.w--current{
   color: white;
