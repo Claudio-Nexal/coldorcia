@@ -1,4 +1,4 @@
-console.log('v.2.9.16 Anti-flash — img allineata al bg CSS, poi swap');
+console.log('v.2.9.17 Parallax hero ripristinato + anti-flash reveal');
 
 // Mappatura percorsi IT / EN per abilitare animazioni su entrambe le lingue
 const ColDorciaRoutes = (() => {
@@ -2112,7 +2112,6 @@ const ColDorciaRoutes = (() => {
       {
         yPercent: centerOffset + travel,
         ease: "none",
-        immediateRender: false,
         scrollTrigger: {
           trigger,
           start: "top bottom",
@@ -2125,8 +2124,8 @@ const ColDorciaRoutes = (() => {
     );
   }
 
-  function applySectionParallax(img, section, travel = SECTION_BG_TRAVEL) {
-    const { x, y } = getBgObjectPosition(section);
+  function applySectionParallax(img, section, travel = SECTION_BG_TRAVEL, bgPos) {
+    const { x, y } = bgPos || getBgObjectPosition(section);
 
     gsap.fromTo(
       img,
@@ -2134,7 +2133,6 @@ const ColDorciaRoutes = (() => {
       {
         objectPosition: `${x} ${y + travel}%`,
         ease: "none",
-        immediateRender: false,
         scrollTrigger: {
           trigger: section,
           start: "top bottom",
@@ -2254,9 +2252,8 @@ const ColDorciaRoutes = (() => {
     img.style.opacity = "0";
     container.appendChild(img);
 
-    // Allinea al bg CSS prima del reveal; il parallax parte solo dopo lo swap
-    gsap.set(img, { yPercent: getCenterOffset(IMG_SCALE) });
-    bindParallaxImgReveal(img, container, () => applyImageParallax(img, section));
+    applyImageParallax(img, section);
+    bindParallaxImgReveal(img, container);
   }
 
   function initSectionBgParallax(section) {
@@ -2266,6 +2263,8 @@ const ColDorciaRoutes = (() => {
 
     const bgUrl = extractBgUrl(section);
     if (!bgUrl) return;
+
+    const bgPos = getBgObjectPosition(section);
 
     section.dataset.parallaxInit = "true";
 
@@ -2308,7 +2307,8 @@ const ColDorciaRoutes = (() => {
       }
     });
 
-    bindParallaxImgReveal(img, section, () => applySectionParallax(img, section));
+    applySectionParallax(img, section, SECTION_BG_TRAVEL, bgPos);
+    bindParallaxImgReveal(img, section);
   }
 
   function initInsetImgParallax(img) {
