@@ -1,4 +1,4 @@
-console.log('v.2.9.15 Anti-flash bg — img sopra, poi rimuovi bg CSS');
+console.log('v.2.9.16 Anti-flash — img allineata al bg CSS, poi swap');
 
 // Mappatura percorsi IT / EN per abilitare animazioni su entrambe le lingue
 const ColDorciaRoutes = (() => {
@@ -2068,36 +2068,39 @@ const ColDorciaRoutes = (() => {
     return img;
   }
 
-  function revealParallaxImg(img, host) {
-    // 1. Mostra l'img sopra il bg CSS (nessun vuoto)
+  function revealParallaxImg(img, host, onRevealed) {
+    // 1. Mostra l'img sopra il bg CSS (stesso frame, nessun buco)
     img.style.opacity = "1";
-    void img.offsetHeight;
 
-    // 2. Al frame successivo togli il bg — già coperto dall'img
+    // 2. Aspetta 2 frame così il browser dipinge l'img prima di togliere il bg
     requestAnimationFrame(() => {
-      host.style.backgroundImage = "none";
       requestAnimationFrame(() => {
-        if (window.ScrollTrigger) ScrollTrigger.refresh();
+        host.style.backgroundImage = "none";
+        if (typeof onRevealed === "function") onRevealed();
+        requestAnimationFrame(() => {
+          if (window.ScrollTrigger) ScrollTrigger.refresh();
+        });
       });
     });
   }
 
-  function bindParallaxImgReveal(img, host) {
+  function bindParallaxImgReveal(img, host, onRevealed) {
+    const runReveal = () => {
+      const reveal = () => revealParallaxImg(img, host, onRevealed);
+      if (img.decode) {
+        img.decode().then(reveal).catch(reveal);
+        return;
+      }
+      requestAnimationFrame(reveal);
+    };
+
     if (img.complete && img.naturalWidth > 0) {
-      requestAnimationFrame(() => revealParallaxImg(img, host));
+      runReveal();
       return;
     }
 
-    img.addEventListener(
-      "load",
-      () => requestAnimationFrame(() => revealParallaxImg(img, host)),
-      { once: true }
-    );
-    img.addEventListener(
-      "error",
-      () => requestAnimationFrame(() => revealParallaxImg(img, host)),
-      { once: true }
-    );
+    img.addEventListener("load", runReveal, { once: true });
+    img.addEventListener("error", runReveal, { once: true });
   }
 
   function applyImageParallax(img, trigger, scale = IMG_SCALE, travel = IMG_TRAVEL) {
@@ -2109,6 +2112,7 @@ const ColDorciaRoutes = (() => {
       {
         yPercent: centerOffset + travel,
         ease: "none",
+        immediateRender: false,
         scrollTrigger: {
           trigger,
           start: "top bottom",
@@ -2130,6 +2134,7 @@ const ColDorciaRoutes = (() => {
       {
         objectPosition: `${x} ${y + travel}%`,
         ease: "none",
+        immediateRender: false,
         scrollTrigger: {
           trigger: section,
           start: "top bottom",
@@ -2249,8 +2254,9 @@ const ColDorciaRoutes = (() => {
     img.style.opacity = "0";
     container.appendChild(img);
 
-    applyImageParallax(img, section);
-    bindParallaxImgReveal(img, container);
+    // Allinea al bg CSS prima del reveal; il parallax parte solo dopo lo swap
+    gsap.set(img, { yPercent: getCenterOffset(IMG_SCALE) });
+    bindParallaxImgReveal(img, container, () => applyImageParallax(img, section));
   }
 
   function initSectionBgParallax(section) {
@@ -2302,8 +2308,7 @@ const ColDorciaRoutes = (() => {
       }
     });
 
-    applySectionParallax(img, section);
-    bindParallaxImgReveal(img, section);
+    bindParallaxImgReveal(img, section, () => applySectionParallax(img, section));
   }
 
   function initInsetImgParallax(img) {
