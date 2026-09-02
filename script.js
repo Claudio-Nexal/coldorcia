@@ -1,4 +1,4 @@
-console.log('v.2.7.2 Annate storiche — text reveal + parallax hero');
+console.log('v.2.7.3 Zoom leggero hover immagini wine-card');
 
 
 
@@ -2101,42 +2101,56 @@ $(document).ready(function () {
 
 
 
-//animazione card vino
-var Webflow = Webflow || [];
-Webflow.push(function () {
- if (!window.gsap) return;
+// animazione card vino — zoom leggero sull'immagine al hover
+(() => {
+  const HOVER_SCALE = 1.05;
+  const DURATION = 0.5;
 
- const cards = document.querySelectorAll(".wine-card");
- if (!cards.length) return;
+  function initWineCardHover() {
+    if (!window.gsap) return;
 
- cards.forEach((card) => {
-   const img = card.querySelector(".wine-card-image");
-   if (!img) return;
+    const cards = document.querySelectorAll(".wine-card");
+    if (!cards.length) return;
 
-   // salva lo scale originale UNA volta (quello “di default”)
-   const originalScale = (() => {
-     const v = parseFloat(gsap.getProperty(img, "scale"));
-     return isFinite(v) && v > 0 ? v : 1;
-   })();
+    cards.forEach((card) => {
+      if (card.dataset.wineHoverInit === "true") return;
 
-   const targetScale = originalScale * (65 / 60);
+      const img = card.querySelector(".wine-card-image");
+      if (!img) return;
 
-   card.addEventListener("mouseenter", () => {
-     gsap.to(img, {
-       scale: targetScale,
-       duration: 0.35,
-       ease: "power2.out",
-       overwrite: true,
-     });
-   });
+      card.dataset.wineHoverInit = "true";
 
-   card.addEventListener("mouseleave", () => {
-     gsap.to(img, {
-       scale: originalScale,
-       duration: 0.35,
-       ease: "power2.out",
-       overwrite: true,
-     });
-   });
- });
-});
+      gsap.set(img, {
+        transformOrigin: "50% 50%",
+        force3D: true
+      });
+
+      card.addEventListener("mouseenter", () => {
+        gsap.to(img, {
+          scale: HOVER_SCALE,
+          duration: DURATION,
+          ease: "power2.out",
+          overwrite: true
+        });
+      });
+
+      card.addEventListener("mouseleave", () => {
+        gsap.to(img, {
+          scale: 1,
+          duration: DURATION,
+          ease: "power2.out",
+          overwrite: true
+        });
+      });
+    });
+  }
+
+  const Webflow = window.Webflow || [];
+  Webflow.push(initWineCardHover);
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initWineCardHover);
+  } else {
+    initWineCardHover();
+  }
+})();
