@@ -1,4 +1,4 @@
-console.log('v.2.8.5 Text reveal /dalla-terra — solo titolo e testo hero');
+console.log('v.2.8.6 Hero text: display none via .text-reveal-hide, no early hide JS');
 
 
 
@@ -1327,6 +1327,8 @@ console.log('v.2.8.5 Text reveal /dalla-terra — solo titolo e testo hero');
     ".title-72-70, .title-250-250, .title-180-145, .title-350-300, .title-45-45, .title-230-190";
   const TEXT_SELECTORS = ".p-12-14, .p-14-17, .p-14-22";
   const ABOVE_FOLD_DELAY = 0.7;
+  // Classe Webflow con display:none (desktop) — lo script la toglie prima dello split
+  const HIDDEN_CLASS = "text-reveal-hide";
   const EXCLUDED_ANCESTORS =
     ".menu-overlay, .custom-navbar, .custom-navbar-menu, .hero-carousel, .hero-slide, .footer-desktop, .footer-mobile, .no-text-reveal, .news-card, .wine-card, .griglia-vini, .ancore-annate, .vintage-wrap, .vintage-card, .vintage-slider, .vintage-timeline, .timeline-section, .timeline-section-mobile, .timeline-content-wrapper, .timeline-slide, .timeline-sidebar";
 
@@ -1365,6 +1367,10 @@ console.log('v.2.8.5 Text reveal /dalla-terra — solo titolo e testo hero');
   }
 
   function shouldRevealOnLoad(el) {
+    // Hero nascosti via .text-reveal-hide: titolo + testo sopra-the-fold
+    if (el.classList.contains(HIDDEN_CLASS) || el.dataset.wasTextRevealHide === "true") {
+      return true;
+    }
     if (!isTitle(el)) return false;
     if (el.closest(".hero-section, .hero-vino")) return true;
     return isAboveFold(el);
@@ -1393,30 +1399,32 @@ console.log('v.2.8.5 Text reveal /dalla-terra — solo titolo e testo hero');
     return line;
   }
 
-  function hideHeroTitlesEarly() {
-    if (!isTextRevealPage() || isMobile()) return;
-
-    const scopes = [".hero-section", ".hero-vino"];
-    scopes.forEach((scope) => {
-      document
-        .querySelectorAll(`${scope} ${TITLE_SELECTORS.split(", ").join(`, ${scope} `)}`)
-        .forEach((el) => {
-          if (!(el instanceof HTMLElement)) return;
-          el.style.opacity = "0";
-          el.style.visibility = "hidden";
-        });
+  function clearTextRevealHide(root = document) {
+    root.querySelectorAll(`.${HIDDEN_CLASS}`).forEach((el) => {
+      if (!(el instanceof HTMLElement)) return;
+      el.classList.remove(HIDDEN_CLASS);
+      el.style.display = "";
+      el.style.visibility = "";
+      el.style.opacity = "";
     });
   }
 
-  function prepareHeroTitle(el) {
+  function prepareElementForSplit(el) {
     if (!(el instanceof HTMLElement)) return;
-    // Rimuove lo hide early: le linee SplitText gestiscono l'opacity
+
+    if (el.classList.contains(HIDDEN_CLASS)) {
+      el.dataset.wasTextRevealHide = "true";
+      el.classList.remove(HIDDEN_CLASS);
+    }
+
+    // Necessario: SplitText deve misurare il layout (display:none → linee sbagliate)
+    el.style.display = "";
     el.style.visibility = "visible";
     el.style.opacity = "1";
   }
 
   function splitElement(el) {
-    if (el.closest(".hero-section, .hero-vino")) prepareHeroTitle(el);
+    prepareElementForSplit(el);
 
     const split = new SplitText(el, { type: "lines", linesClass: "titLine" });
     const lines = split.lines.map((line, index) => wrapLine(line, index));
@@ -1456,9 +1464,18 @@ console.log('v.2.8.5 Text reveal /dalla-terra — solo titolo e testo hero');
   }
 
   function initTextReveal() {
-    if (!window.gsap || !window.ScrollTrigger || !window.SplitText) return;
     if (!isTextRevealPage()) return;
-    if (isMobile()) return;
+
+    // Mobile: niente split, ma togli display:none altrimenti i testi restano invisibili
+    if (isMobile()) {
+      clearTextRevealHide();
+      return;
+    }
+
+    if (!window.gsap || !window.ScrollTrigger || !window.SplitText) {
+      clearTextRevealHide();
+      return;
+    }
     if (window.__TEXT_REVEAL_INIT__) return;
     window.__TEXT_REVEAL_INIT__ = true;
 
@@ -1478,13 +1495,13 @@ console.log('v.2.8.5 Text reveal /dalla-terra — solo titolo e testo hero');
       revealElement(el, lines);
     });
 
+    // Eventuali .text-reveal-hide rimasti (non animabili) → mostrali
+    clearTextRevealHide(scope);
+
     ScrollTrigger.refresh();
   }
 
   function bootTextReveal() {
-    // Nasconde subito i titoli hero per evitare il flash prima dello split
-    hideHeroTitlesEarly();
-
     const run = () => {
       requestAnimationFrame(() => {
         setTimeout(initTextReveal, 150);
