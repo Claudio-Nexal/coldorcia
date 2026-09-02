@@ -1,4 +1,4 @@
-console.log('v.2.7.7 Zoom solo img schede Annate — stile /vini + slick');
+console.log('v.2.7.8 Zoom Annate — wrap clip + solo img.vintage-img');
 
 
 
@@ -2101,7 +2101,7 @@ $(document).ready(function () {
 
 
 
-// zoom leggero SOLO sull'immagine delle schede Annate (stesso pattern di /vini)
+// zoom schede Annate — stesso pattern /vini (scale solo sull'img, clip sul contenitore)
 (() => {
   const HOVER_SCALE = 1.08;
   const DURATION = 0.6;
@@ -2111,40 +2111,65 @@ $(document).ready(function () {
     return path === "/annate-storiche";
   }
 
-  function getCardImage(card) {
-    if (!(card instanceof HTMLElement)) return null;
+  /*
+    In Webflow .vintage-img è l'<img> stessa (non un div wrapper).
+    Per avere lo stesso effetto di /vini serve un contenitore con overflow:hidden
+    e zoom solo sull'immagine della bottiglia.
+  */
+  function ensureImageClip(img) {
+    if (!(img instanceof HTMLImageElement)) return null;
 
-    // Carousel / card standard: zoom solo dell'img dentro il box clip
-    const inClip = card.querySelector(".vintage-img img");
-    if (inClip) return inClip;
-
-    // Card statiche senza carousel
-    if (card.classList.contains("vintage-card-nocarousel")) {
-      return card.querySelector("img");
+    const parent = img.parentElement;
+    if (parent instanceof HTMLElement && parent.dataset.vintageClip === "true") {
+      return { clip: parent, img };
     }
 
-    return null;
+    const clip = document.createElement("div");
+    clip.className = "vintage-img-clip";
+    clip.dataset.vintageClip = "true";
+    clip.style.overflow = "hidden";
+    clip.style.width = "100%";
+    clip.style.aspectRatio = "275 / 385";
+    clip.style.background = "#EBE5DA";
+    clip.style.display = "flex";
+    clip.style.alignItems = "center";
+    clip.style.justifyContent = "center";
+
+    img.parentNode.insertBefore(clip, img);
+    clip.appendChild(img);
+
+    // bottiglia dentro il frame (come il CSS originale pensava .vintage-img img)
+    img.style.width = "55%";
+    img.style.height = "auto";
+    img.style.maxWidth = "55%";
+    img.style.background = "transparent";
+    img.style.display = "block";
+    img.style.aspectRatio = "auto";
+
+    return { clip, img };
   }
 
   function bindCard(card) {
     if (!(card instanceof HTMLElement)) return;
     if (card.dataset.vintageZoomInit === "true") return;
 
-    const img = getCardImage(card);
-    if (!img) return;
+    const bottleImg = card.querySelector("img.vintage-img");
+    if (!bottleImg) return;
 
+    const prepared = ensureImageClip(bottleImg);
+    if (!prepared) return;
+
+    const { clip, img } = prepared;
     card.dataset.vintageZoomInit = "true";
 
-    const clip = card.querySelector(".vintage-img");
-    if (clip instanceof HTMLElement) {
-      clip.style.overflow = "hidden";
-    }
+    // come /vini: overflow sul contenitore card/clip, zoom sull'img
+    card.style.overflow = "hidden";
+    clip.style.overflow = "hidden";
+    img.style.willChange = "transform";
+    img.style.transformOrigin = "center center";
 
     if (window.gsap) {
-      gsap.set(img, {
-        transformOrigin: "center center",
-        willChange: "transform"
-      });
+      gsap.set(img, { transformOrigin: "center center" });
 
       card.addEventListener("mouseenter", () => {
         gsap.to(img, {
@@ -2167,7 +2192,6 @@ $(document).ready(function () {
     }
 
     img.style.transition = "transform 0.6s cubic-bezier(0.22, 1, 0.36, 1)";
-    img.style.transformOrigin = "center center";
 
     card.addEventListener("mouseenter", () => {
       img.style.transform = `scale(${HOVER_SCALE})`;
@@ -2191,16 +2215,15 @@ $(document).ready(function () {
 
     const run = () => bindAllVintageCards();
 
-    // Dopo initVintage / Slick della pagina
+    // Dopo initVintage + Slick della pagina
     setTimeout(run, 500);
     setTimeout(run, 1200);
-    window.addEventListener("load", () => setTimeout(run, 300));
+    window.addEventListener("load", () => setTimeout(run, 400));
 
-    // Slick ricrea slide/clone: ribind quando aggiorna
     if (window.jQuery) {
       window.jQuery(document).on(
         "init reInit setPosition",
-        ".vintage-slider .w-dyn-items, .vintage-dots-inner",
+        ".vintage-slider .w-dyn-items",
         () => setTimeout(run, 50)
       );
     }
