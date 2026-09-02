@@ -1,4 +1,4 @@
-console.log('v.2.5.2 Modifiche a menu');
+console.log('v.2.5.3 Entrata testi stile Bertani');
 
 
 
@@ -1341,6 +1341,120 @@ console.log('v.2.5.2 Modifiche a menu');
 
 
 
+
+// entrata titoli e testi — dissolvenza + movimento (stile Bertani)
+(() => {
+  const MOBILE_MAX = 767;
+  const TITLE_SELECTORS = ".title-72-70, .title-250-250, .title-180-145";
+  const TEXT_SELECTORS = ".p-12-14, .p-14-17, .p-14-22";
+  const EXCLUDED_ANCESTORS =
+    ".menu-overlay, .custom-navbar, .custom-navbar-menu, .hero-carousel, .hero-slide";
+
+  function isMobile() {
+    return window.matchMedia(`(max-width: ${MOBILE_MAX}px)`).matches;
+  }
+
+  function getScrollTriggerConfig() {
+    if (document.querySelector("#smooth-wrapper") && window.ScrollSmoother) {
+      return { scroller: "#smooth-wrapper" };
+    }
+    return {};
+  }
+
+  function isAnimatable(el) {
+    if (!(el instanceof HTMLElement)) return false;
+    if (el.closest(EXCLUDED_ANCESTORS)) return false;
+    if (el.dataset.textRevealInit === "true") return false;
+    if (!el.textContent || !el.textContent.trim()) return false;
+    return true;
+  }
+
+  function wrapLine(line, index) {
+    const wrap = document.createElement("div");
+    wrap.className = "titLine-wrap";
+    wrap.style.overflow = "hidden";
+
+    line.classList.add("titLine", `titLine--${index}`);
+    line.parentNode.insertBefore(wrap, line);
+    wrap.appendChild(line);
+
+    return line;
+  }
+
+  function splitElement(el) {
+    const split = new SplitText(el, { type: "lines", linesClass: "titLine" });
+    const lines = split.lines.map((line, index) => wrapLine(line, index));
+
+    gsap.set(lines, { y: 30, opacity: 0 });
+
+    return lines;
+  }
+
+  function revealElement(el, lines) {
+    gsap.to(lines, {
+      y: 0,
+      opacity: 1,
+      stagger: 0.1,
+      duration: 1,
+      ease: "power3.inOut",
+      overwrite: true,
+      scrollTrigger: {
+        trigger: el,
+        start: "top 85%",
+        toggleActions: "play none none none",
+        ...getScrollTriggerConfig()
+      }
+    });
+  }
+
+  function initTextReveal() {
+    if (!window.gsap || !window.ScrollTrigger || !window.SplitText) return;
+    if (!document.body.classList.contains("home")) return;
+    if (isMobile()) return;
+    if (window.__TEXT_REVEAL_INIT__) return;
+    window.__TEXT_REVEAL_INIT__ = true;
+
+    gsap.registerPlugin(ScrollTrigger, SplitText);
+
+    const scope = document.querySelector(".content-container") || document.body;
+    const elements = scope.querySelectorAll(`${TITLE_SELECTORS}, ${TEXT_SELECTORS}`);
+
+    elements.forEach((el) => {
+      if (!isAnimatable(el)) return;
+
+      el.dataset.textRevealInit = "true";
+
+      const lines = splitElement(el);
+      if (!lines.length) return;
+
+      revealElement(el, lines);
+    });
+
+    ScrollTrigger.refresh();
+  }
+
+  function bootTextReveal() {
+    const run = () => {
+      requestAnimationFrame(() => {
+        setTimeout(initTextReveal, 150);
+      });
+    };
+
+    if (document.fonts && document.fonts.ready) {
+      document.fonts.ready.then(run).catch(run);
+    } else {
+      run();
+    }
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", bootTextReveal);
+  } else {
+    bootTextReveal();
+  }
+})();
+
+
 /* =======================
    NEWS: SLICK CAROUSEL (stesse impostazioni dei vini)
    ======================= */
@@ -1728,13 +1842,3 @@ Webflow.push(function () {
    });
  });
 });
-
-
-
-
-
-
-
-
-
-
