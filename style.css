@@ -18,28 +18,6 @@
 	width: 100%;
 }
 
-.parallax-bg-layer {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  overflow: hidden;
-  pointer-events: none;
-}
-
-.parallax-bg-layer .parallax-inner-img,
-.hero-section > .parallax-inner-img {
-  position: absolute;
-  top: 0;
-  left: 0;
-  display: block;
-  width: 100%;
-  height: 115%;
-  max-width: none;
-  object-fit: cover;
-  object-position: center center;
-  will-change: transform;
-}
-
 /* Menu */
 a.nav-link-navbar.w--current{
   color: white;
