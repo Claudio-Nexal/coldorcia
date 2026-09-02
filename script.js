@@ -1,4 +1,4 @@
-console.log('v.2.7.9 Zoom Annate — bottiglie a dimensione originale');
+console.log('v.2.8.0 Fix FOUC titolo hero + flash bg parallax');
 
 
 
@@ -1390,7 +1390,28 @@ console.log('v.2.7.9 Zoom Annate — bottiglie a dimensione originale');
     return line;
   }
 
+  function hideHeroTitlesEarly() {
+    if (!isTextRevealPage() || isMobile()) return;
+
+    document
+      .querySelectorAll(`.hero-section ${TITLE_SELECTORS.split(", ").join(", .hero-section ")}`)
+      .forEach((el) => {
+        if (!(el instanceof HTMLElement)) return;
+        el.style.opacity = "0";
+        el.style.visibility = "hidden";
+      });
+  }
+
+  function prepareHeroTitle(el) {
+    if (!(el instanceof HTMLElement)) return;
+    // Rimuove lo hide early: le linee SplitText gestiscono l'opacity
+    el.style.visibility = "visible";
+    el.style.opacity = "1";
+  }
+
   function splitElement(el) {
+    if (el.closest(".hero-section")) prepareHeroTitle(el);
+
     const split = new SplitText(el, { type: "lines", linesClass: "titLine" });
     const lines = split.lines.map((line, index) => wrapLine(line, index));
 
@@ -1455,6 +1476,9 @@ console.log('v.2.7.9 Zoom Annate — bottiglie a dimensione originale');
   }
 
   function bootTextReveal() {
+    // Nasconde subito i titoli hero per evitare il flash prima dello split
+    hideHeroTitlesEarly();
+
     const run = () => {
       requestAnimationFrame(() => {
         setTimeout(initTextReveal, 150);
@@ -1647,7 +1671,6 @@ console.log('v.2.7.9 Zoom Annate — bottiglie a dimensione originale');
     if (!bgUrl) return;
 
     section.dataset.parallaxInit = "true";
-    section.style.backgroundImage = "none";
 
     if (window.getComputedStyle(section).position === "static") {
       section.style.position = "relative";
@@ -1664,8 +1687,22 @@ console.log('v.2.7.9 Zoom Annate — bottiglie a dimensione originale');
     layer.style.pointerEvents = "none";
 
     const img = createParallaxImg(bgUrl);
+    img.style.opacity = "0";
     layer.appendChild(img);
     section.insertBefore(layer, section.firstChild);
+
+    const activateLayer = () => {
+      img.style.opacity = "1";
+      // Rimuove il bg CSS solo quando l'img parallax è pronta → niente flash
+      section.style.backgroundImage = "none";
+    };
+
+    if (img.complete && img.naturalWidth > 0) {
+      activateLayer();
+    } else {
+      img.addEventListener("load", activateLayer, { once: true });
+      img.addEventListener("error", activateLayer, { once: true });
+    }
 
     Array.from(section.children).forEach((child) => {
       if (child === layer || !(child instanceof HTMLElement)) return;
