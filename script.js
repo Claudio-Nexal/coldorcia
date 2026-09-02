@@ -1,4 +1,4 @@
-console.log('v.2.7.4 Fix zoom wine-card — CSS hover dopo rebuild griglia');
+console.log('v.2.7.6 Zoom hover solo schede Annate Storiche');
 
 
 
@@ -2101,10 +2101,17 @@ $(document).ready(function () {
 
 
 
-// animazione card vino — zoom leggero sull'immagine (CSS, dopo rebuild griglia)
+// zoom leggero immagini schede Annate Storiche — classe .is-zoomed
 (() => {
-  const STYLE_ID = "wine-card-hover-style";
-  const HOVER_SCALE = 1.06;
+  const STYLE_ID = "vintage-card-hover-style";
+  const HOVER_SCALE = 1.08;
+  const CARD_SELECTOR = ".vintage-card, .vintage-card-nocarousel";
+  const IMG_SELECTOR = ".vintage-img img, .vintage-card-nocarousel img";
+
+  function isAnnatePage() {
+    const path = (window.location.pathname || "/").replace(/\/$/, "") || "/";
+    return path === "/annate-storiche";
+  }
 
   function injectHoverCSS() {
     if (document.getElementById(STYLE_ID)) return;
@@ -2112,69 +2119,84 @@ $(document).ready(function () {
     const style = document.createElement("style");
     style.id = STYLE_ID;
     style.textContent = `
-      .wine-card .wine-card-image {
+      .vintage-img img,
+      .vintage-card-nocarousel img {
         transform-origin: 50% 50%;
-        transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+        transition: transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
         will-change: transform;
       }
-      .wine-card:hover .wine-card-image {
+
+      .vintage-card.is-zoomed .vintage-img img,
+      .vintage-card-nocarousel.is-zoomed img {
         transform: scale(${HOVER_SCALE}) !important;
       }
     `;
     document.head.appendChild(style);
   }
 
-  function neutralizeCard(card) {
-    if (!(card instanceof HTMLElement)) return;
-    if (card.dataset.wineHoverCss === "true") return;
+  function getCardFromEvent(target) {
+    if (!(target instanceof Element)) return null;
+    return target.closest(CARD_SELECTOR);
+  }
 
-    const img = card.querySelector(".wine-card-image");
+  function getCardImage(card) {
+    if (card.classList.contains("vintage-card-nocarousel")) {
+      return card.querySelector("img");
+    }
+    return card.querySelector(".vintage-img img") || card.querySelector("img");
+  }
+
+  function setZoom(card, on) {
+    if (!card) return;
+
+    const img = getCardImage(card);
     if (!img) return;
 
-    // Rimuove i listener GSAP dello script Webflow clonando il nodo
-    const clean = card.cloneNode(true);
-    clean.dataset.wineHoverCss = "true";
+    if (window.gsap) gsap.killTweensOf(img);
 
-    if (window.gsap) {
-      const cleanImg = clean.querySelector(".wine-card-image");
-      if (cleanImg) {
-        gsap.killTweensOf(cleanImg);
-        gsap.set(cleanImg, { clearProps: "transform" });
-      }
-    }
-
-    card.replaceWith(clean);
+    card.classList.toggle("is-zoomed", on);
   }
 
-  function initWineCardHover() {
+  function initVintageCardHover() {
+    if (!isAnnatePage()) return;
+
     injectHoverCSS();
-    document.querySelectorAll(".wine-card").forEach(neutralizeCard);
+
+    if (window.__VINTAGE_CARD_HOVER__) return;
+    window.__VINTAGE_CARD_HOVER__ = true;
+
+    document.addEventListener(
+      "pointerover",
+      (e) => {
+        const card = getCardFromEvent(e.target);
+        if (!card) return;
+
+        const related = e.relatedTarget instanceof Element ? e.relatedTarget : null;
+        if (related && card.contains(related)) return;
+
+        setZoom(card, true);
+      },
+      true
+    );
+
+    document.addEventListener(
+      "pointerout",
+      (e) => {
+        const card = getCardFromEvent(e.target);
+        if (!card) return;
+
+        const related = e.relatedTarget instanceof Element ? e.relatedTarget : null;
+        if (related && card.contains(related)) return;
+
+        setZoom(card, false);
+      },
+      true
+    );
   }
 
-  function boot() {
-    // Lo script in pagina ricostruisce la griglia in Webflow.push:
-    // aspettiamo e poi ripuliamo i listener che si annullano a vicenda.
-    const run = () => initWineCardHover();
-
-    const Webflow = window.Webflow || [];
-    Webflow.push(() => {
-      setTimeout(run, 50);
-      setTimeout(run, 400);
-    });
-
-    if (document.readyState === "loading") {
-      document.addEventListener("DOMContentLoaded", () => setTimeout(run, 500));
-    } else {
-      setTimeout(run, 500);
-    }
-
-    // Rebuild su resize (stesso timing dello script pagina)
-    let resizeTimer;
-    window.addEventListener("resize", () => {
-      clearTimeout(resizeTimer);
-      resizeTimer = setTimeout(run, 280);
-    });
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initVintageCardHover);
+  } else {
+    initVintageCardHover();
   }
-
-  boot();
 })();
