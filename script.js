@@ -1,4 +1,4 @@
-console.log('v.2.9.4 Menu righe — espansione dal centro (scaleX)');
+console.log('v.2.9.5 Menu righe — border rimossi, espansione dal centro');
 
 
 
@@ -97,6 +97,7 @@ console.log('v.2.9.4 Menu righe — espansione dal centro (scaleX)');
     let tl = null;
     let hasInitializedHeaderState = false;
     let menuTextPrepared = false;
+    let menuLinesReady = false;
 
     const MENU_LINK_SELECTORS =
       ".nav-link-navbar, .menu-link-bottom, .div-block-268 .link-15-36";
@@ -105,6 +106,108 @@ console.log('v.2.9.4 Menu righe — espansione dal centro (scaleX)');
       rotation: 2,
       opacity: 0
     };
+    const MENU_DIVIDER_REVEAL = {
+      scaleX: 1,
+      duration: 0.8,
+      ease: "power2.out",
+      transformOrigin: "50% 50%"
+    };
+
+    function getMenuDividerColor(row) {
+      const styles = window.getComputedStyle(row);
+      const borderColor = styles.borderBottomColor;
+
+      if (borderColor && borderColor !== "rgba(0, 0, 0, 0)" && borderColor !== "transparent") {
+        return borderColor;
+      }
+
+      return "#e1dbd2";
+    }
+
+    function ensureMenuRowLine(row) {
+      if (!(row instanceof HTMLElement)) return null;
+
+      let line = row.querySelector(".menu-row-line");
+
+      if (!line) {
+        const dividerColor = getMenuDividerColor(row);
+
+        line = document.createElement("span");
+        line.className = "menu-row-line";
+        line.setAttribute("aria-hidden", "true");
+        Object.assign(line.style, {
+          position: "absolute",
+          left: "0",
+          right: "0",
+          bottom: "0",
+          height: "1.5px",
+          width: "100%",
+          display: "block",
+          backgroundColor: dividerColor,
+          transformOrigin: "center center",
+          pointerEvents: "none"
+        });
+
+        row.appendChild(line);
+      }
+
+      row.classList.add("is-menu-animated");
+      row.style.position = "relative";
+      row.style.borderTop = "none";
+      row.style.borderBottom = "none";
+
+      return line;
+    }
+
+    function initMenuRowLines() {
+      if (!menuContent) return;
+
+      menuContent.querySelectorAll(".menu-links").forEach((row) => {
+        ensureMenuRowLine(row);
+      });
+
+      menuLinesReady = menuContent.querySelectorAll(".menu-row-line").length > 0;
+      resetMenuRowLines();
+    }
+
+    function resetMenuRowLines() {
+      if (!menuLinesReady || !menuContent) return;
+
+      gsap.set(menuContent.querySelectorAll(".menu-row-line"), {
+        scaleX: 0,
+        transformOrigin: "50% 50%"
+      });
+    }
+
+    function addMenuRowLinesRevealToTimeline(parentTl, startAt = 0.12) {
+      if (!menuLinesReady || !menuContent) return;
+
+      menuContent.querySelectorAll(".menu-links").forEach((row, index) => {
+        const divider = row.querySelector(".menu-row-line");
+        if (!divider) return;
+
+        parentTl.to(divider, { ...MENU_DIVIDER_REVEAL }, startAt + index * 0.08);
+      });
+    }
+
+    function addMenuRowLinesHideToTimeline(parentTl, startAt = 0) {
+      if (!menuLinesReady || !menuContent) return;
+
+      const dividers = menuContent.querySelectorAll(".menu-row-line");
+      if (!dividers.length) return;
+
+      parentTl.to(
+        dividers,
+        {
+          scaleX: 0,
+          duration: 0.35,
+          ease: "power2.in",
+          transformOrigin: "50% 50%",
+          stagger: { each: 0.02, from: "end" }
+        },
+        startAt
+      );
+    }
 
     function wrapMenuLine(line, index) {
       const wrap = document.createElement("div");
@@ -118,28 +221,8 @@ console.log('v.2.9.4 Menu righe — espansione dal centro (scaleX)');
       return line;
     }
 
-    function ensureMenuRowLine(row) {
-      if (!(row instanceof HTMLElement)) return null;
-
-      let line = row.querySelector(".menu-row-line");
-
-      if (!line) {
-        line = document.createElement("span");
-        line.className = "menu-row-line";
-        line.setAttribute("aria-hidden", "true");
-        row.appendChild(line);
-      }
-
-      row.classList.add("is-menu-animated");
-      return line;
-    }
-
     function prepareMenuTextAnimation() {
       if (menuTextPrepared || !window.SplitText || !menuContent) return false;
-
-      menuContent.querySelectorAll(".menu-links").forEach((row) => {
-        ensureMenuRowLine(row);
-      });
 
       const links = menuContent.querySelectorAll(MENU_LINK_SELECTORS);
 
@@ -164,11 +247,6 @@ console.log('v.2.9.4 Menu righe — espansione dal centro (scaleX)');
     function resetMenuTextAnimation() {
       if (!menuTextPrepared || !menuContent) return;
 
-      gsap.set(menuContent.querySelectorAll(".menu-links"), { opacity: 1 });
-      gsap.set(menuContent.querySelectorAll(".menu-row-line"), {
-        scaleX: 0,
-        transformOrigin: "50% 50%"
-      });
       gsap.set(menuContent.querySelector(".div-block-268"), { opacity: 0 });
       gsap.set(menuContent.querySelectorAll(".titLine"), {
         ...MENU_LINE_ANIM
@@ -186,21 +264,10 @@ console.log('v.2.9.4 Menu righe — espansione dal centro (scaleX)');
         duration: 0.8,
         ease: "power2.out"
       };
-      const dividerProps = {
-        scaleX: 1,
-        duration: 0.8,
-        ease: "power2.out",
-        transformOrigin: "50% 50%"
-      };
 
       rows.forEach((row, index) => {
-        const divider = row.querySelector(".menu-row-line");
         const lines = row.querySelectorAll(".titLine");
         const offset = startAt + index * 0.08;
-
-        if (divider) {
-          parentTl.to(divider, { ...dividerProps }, offset);
-        }
 
         if (!lines.length) return;
 
@@ -236,7 +303,6 @@ console.log('v.2.9.4 Menu righe — espansione dal centro (scaleX)');
       if (!menuTextPrepared || !menuContent) return;
 
       const lines = menuContent.querySelectorAll(".titLine");
-      const dividers = menuContent.querySelectorAll(".menu-row-line");
       const bottomBlock = menuContent.querySelector(".div-block-268");
 
       if (lines.length) {
@@ -248,20 +314,6 @@ console.log('v.2.9.4 Menu righe — espansione dal centro (scaleX)');
             opacity: 0,
             duration: 0.35,
             ease: "power2.in",
-            stagger: { each: 0.02, from: "end" }
-          },
-          startAt
-        );
-      }
-
-      if (dividers.length) {
-        parentTl.to(
-          dividers,
-          {
-            scaleX: 0,
-            duration: 0.35,
-            ease: "power2.in",
-            transformOrigin: "50% 50%",
             stagger: { each: 0.02, from: "end" }
           },
           startAt
@@ -723,17 +775,7 @@ console.log('v.2.9.4 Menu righe — espansione dal centro (scaleX)');
       willChange: "transform,opacity"
     });
 
-    if (menuContent) {
-      menuContent.querySelectorAll(".menu-links").forEach((row) => {
-        ensureMenuRowLine(row);
-      });
-
-      gsap.set(menuContent.querySelectorAll(".menu-row-line"), {
-        scaleX: 0,
-        transformOrigin: "50% 50%"
-      });
-    }
-
+    initMenuRowLines();
     bootMenuTextAnimation();
 
     gsap.set([".menu-link .w-dropdown", ".menu-link a"], {
@@ -1245,6 +1287,10 @@ console.log('v.2.9.4 Menu righe — espansione dal centro (scaleX)');
         prepareMenuTextAnimation();
       }
 
+      if (!menuLinesReady) {
+        initMenuRowLines();
+      }
+
       gsap.set(menuOverlay, {
         display: "block",
         pointerEvents: "auto",
@@ -1331,11 +1377,14 @@ console.log('v.2.9.4 Menu righe — espansione dal centro (scaleX)');
         clipPath: "polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)"
       }, 0);
 
+      gsap.set(menuContent, { y: 0, opacity: 1 });
+      resetMenuRowLines();
+      addMenuRowLinesRevealToTimeline(tl, 0.12);
+
       if (menuTextPrepared) {
         resetMenuTextAnimation();
-        gsap.set(menuContent, { y: 0, opacity: 1 });
         addMenuTextRevealToTimeline(tl, 0.12);
-      } else {
+      } else if (!menuLinesReady) {
         gsap.set(menuContent, { y: -30, opacity: 0 });
         tl.to(menuContent, {
           y: 0,
@@ -1380,6 +1429,10 @@ console.log('v.2.9.4 Menu righe — espansione dal centro (scaleX)');
             resetMenuTextAnimation();
           }
 
+          if (menuLinesReady) {
+            resetMenuRowLines();
+          }
+
           unlockScroll();
 
           isScrolledFromTop = getCurrentScrollY() > 1;
@@ -1393,8 +1446,14 @@ console.log('v.2.9.4 Menu righe — espansione dal centro (scaleX)');
         }
       });
 
+      addMenuRowLinesHideToTimeline(tl, 0);
+
       if (menuTextPrepared) {
         addMenuTextHideToTimeline(tl, 0);
+        tl.to(menuOverlay, {
+          clipPath: "polygon(0% 0%, 100% 0%, 100% 0%, 0% 0%)"
+        }, 0.12);
+      } else if (menuLinesReady) {
         tl.to(menuOverlay, {
           clipPath: "polygon(0% 0%, 100% 0%, 100% 0%, 0% 0%)"
         }, 0.12);
