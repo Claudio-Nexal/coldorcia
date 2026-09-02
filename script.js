@@ -1,4 +1,4 @@
-console.log('v.2.6.1 Parallax Natura — full-size + immagini con padding');
+console.log('v.2.6.2 Fix parallax immagini con padding — colonna fissa');
 
 
 
@@ -1473,13 +1473,14 @@ console.log('v.2.6.1 Parallax Natura — full-size + immagini con padding');
 })();
 
 
-// parallax immagini — Natura (full-size bg + immagini con padding)
+// parallax immagini — Natura (full-size bg + colonne immagine con padding)
 (() => {
   const DESKTOP_MIN = 992;
   const IMG_SCALE = 1.15;
   const IMG_TRAVEL = 8;
+  const COLUMN_TRAVEL = 24;
   const BG_SELECTORS = ".white---beige .div-block-294, .white---beige .div-block-301";
-  const CLIP_IMG_SELECTOR = ".white-section .div-block-300 img.image-28";
+  const INSET_COLUMN_SELECTOR = ".white-section .div-block-299";
   const EXCLUDED_ANCESTORS =
     ".menu-overlay, .custom-navbar, .custom-navbar-menu, .footer-desktop, .footer-mobile, .no-parallax";
 
@@ -1507,7 +1508,7 @@ console.log('v.2.6.1 Parallax Natura — full-size + immagini con padding');
     return -(((scale - 1) / 2) / scale) * 100;
   }
 
-  function applyParallax(img, trigger, scale = IMG_SCALE, travel = IMG_TRAVEL) {
+  function applyImageParallax(img, trigger, scale = IMG_SCALE, travel = IMG_TRAVEL) {
     const centerOffset = getCenterOffset(scale);
 
     gsap.fromTo(
@@ -1515,6 +1516,25 @@ console.log('v.2.6.1 Parallax Natura — full-size + immagini con padding');
       { yPercent: centerOffset - travel },
       {
         yPercent: centerOffset + travel,
+        ease: "none",
+        scrollTrigger: {
+          trigger,
+          start: "top bottom",
+          end: "bottom top",
+          scrub: true,
+          invalidateOnRefresh: true,
+          ...getScrollTriggerConfig()
+        }
+      }
+    );
+  }
+
+  function applyColumnParallax(column, trigger, travel = COLUMN_TRAVEL) {
+    gsap.fromTo(
+      column,
+      { y: -travel / 2 },
+      {
+        y: travel / 2,
         ease: "none",
         scrollTrigger: {
           trigger,
@@ -1557,33 +1577,18 @@ console.log('v.2.6.1 Parallax Natura — full-size + immagini con padding');
     container.appendChild(img);
 
     const section = container.closest("section") || container;
-    applyParallax(img, section);
+    applyImageParallax(img, section);
   }
 
-  function initClipImgParallax(img) {
-    if (!(img instanceof HTMLImageElement)) return;
-    if (img.dataset.parallaxInit === "true") return;
-    if (img.closest(EXCLUDED_ANCESTORS)) return;
+  function initInsetColumnParallax(column) {
+    if (!(column instanceof HTMLElement)) return;
+    if (column.dataset.parallaxInit === "true") return;
+    if (column.closest(EXCLUDED_ANCESTORS)) return;
 
-    const container = img.parentElement;
-    if (!(container instanceof HTMLElement)) return;
+    column.dataset.parallaxInit = "true";
 
-    img.dataset.parallaxInit = "true";
-    container.dataset.parallaxInit = "true";
-    container.style.overflow = "hidden";
-
-    gsap.set(img, {
-      display: "block",
-      width: "100%",
-      height: `${IMG_SCALE * 100}%`,
-      maxWidth: "none",
-      objectFit: "cover",
-      objectPosition: "center center",
-      willChange: "transform"
-    });
-
-    const section = container.closest("section") || container;
-    applyParallax(img, section);
+    const section = column.closest("section") || column;
+    applyColumnParallax(column, section);
   }
 
   function initNaturaParallax() {
@@ -1594,15 +1599,15 @@ console.log('v.2.6.1 Parallax Natura — full-size + immagini con padding');
 
     const scope = document.querySelector(".content-container") || document.body;
     const bgContainers = scope.querySelectorAll(BG_SELECTORS);
-    const clipImages = scope.querySelectorAll(CLIP_IMG_SELECTOR);
+    const insetColumns = scope.querySelectorAll(INSET_COLUMN_SELECTOR);
 
-    if (!bgContainers.length && !clipImages.length) return;
+    if (!bgContainers.length && !insetColumns.length) return;
 
     window.__PARALLAX_INIT__ = true;
     gsap.registerPlugin(ScrollTrigger);
 
     bgContainers.forEach(initBgParallax);
-    clipImages.forEach(initClipImgParallax);
+    insetColumns.forEach(initInsetColumnParallax);
 
     ScrollTrigger.refresh();
   }
