@@ -1,4 +1,4 @@
-console.log('v.2.6.5 Parallax + text reveal pagina Storia');
+console.log('v.2.6.6 Parallax home — escluso carousel');
 
 
 
@@ -1474,7 +1474,7 @@ console.log('v.2.6.5 Parallax + text reveal pagina Storia');
 })();
 
 
-// parallax immagini — Natura + Storia (full-size bg, section bg, inset con clip)
+// parallax immagini — Home, Natura, Storia (full-size bg, section bg, inset con clip)
 (() => {
   const DESKTOP_MIN = 992;
   const IMG_SCALE = 1.15;
@@ -1483,19 +1483,24 @@ console.log('v.2.6.5 Parallax + text reveal pagina Storia');
   const BG_SELECTORS =
     ".white---beige .div-block-294, .white---beige .div-block-301, .white---beige .div-block-319";
   const SECTION_BG_SELECTORS =
-    ".natura-hero-section, .natura-bilancio-di-sostenibilit, .storia-hero-section, .home-persone.section-2";
-  const INSET_IMG_SELECTOR =
-    ".white-section .parallax-wrap img.image-28, .white-section .div-block-300 img.image-28";
+    ".home-hero-section, .home-vino-section, .home-persone.section-2, .natura-hero-section, .natura-bilancio-di-sostenibilit, .storia-hero-section";
+  const INSET_IMG_SELECTOR = [
+    ".white-section .parallax-wrap img.image-28",
+    ".white-section .div-block-300 img.image-28",
+    ".home-visite-section .parallax-wrap img.image-38",
+    ".home-visite-section .div-block-425 img.image-38"
+  ].join(", ");
   const EXCLUDED_ANCESTORS =
-    ".menu-overlay, .custom-navbar, .custom-navbar-menu, .footer-desktop, .footer-mobile, .no-parallax, .timeline-section, .timeline-section-mobile, .timeline-content-wrapper, .timeline-slide, .timeline-sidebar";
+    ".menu-overlay, .custom-navbar, .custom-navbar-menu, .footer-desktop, .footer-mobile, .no-parallax, .hero-carousel-wrapper, .hero-carousel, .hero-slide, .hero-slide-bg, .timeline-section, .timeline-section-mobile, .timeline-content-wrapper, .timeline-slide, .timeline-sidebar";
 
   function isParallaxPage() {
     const path = (window.location.pathname || "/").replace(/\/$/, "") || "/";
-    return (
-      path === "/natura" ||
-      path === "/en/nature" ||
-      path === "/storia"
-    );
+
+    if (document.body.classList.contains("home") || path === "/") return true;
+    if (path === "/natura" || path === "/en/nature") return true;
+    if (path === "/storia") return true;
+
+    return false;
   }
 
   function getScrollTriggerConfig() {
